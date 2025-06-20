@@ -836,10 +836,13 @@
         </div>
     </footer>
     
+    <!-- Load shared scripts -->
+    <script src="../js/config.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // API base URL
-            const API_BASE_URL = 'http://localhost:2000/api';
+            const API_BASE_URL = CONFIG.API.BASE_URL;
             
             // DOM elements
             const profilePlaceholder = document.getElementById('profile-placeholder');

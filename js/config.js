@@ -3,19 +3,23 @@
  * Central configuration for the application
  */
 
+const isLocalDevelopment = window.location.hostname === 'localhost' || 
+                          window.location.hostname === '127.0.0.1';
+
 const CONFIG = {
-    // API Configuration
     API: {
-        BASE_URL: 'http://44.202.144.180:8000/api', // Your EC2 Flask server
-        TIMEOUT: 30000, // 30 seconds request timeout
-        RETRY_ATTEMPTS: 2 // Number of retry attempts for failed requests
+        // Auto-detect development vs production
+        BASE_URL: isLocalDevelopment ? 'http://localhost:2000/api' : 'http://44.202.144.180:2000/api',
+        
+        TIMEOUT: 30000,
+        RETRY_ATTEMPTS: 2
     },
     
-    // Authentication
+    // Rest of your config remains the same...
     AUTH: {
-        TOKEN_KEY: 'token', // localStorage key for the auth token
-        USER_KEY: 'user', // localStorage key for the user data
-        SESSION_DURATION: 30 // Number of days that a session lasts
+        TOKEN_KEY: 'token',
+        USER_KEY: 'user',
+        SESSION_DURATION: 30
     },
     
     ROUTES: {
@@ -78,6 +82,7 @@ const CONFIG = {
 
 // Log configuration on load for debugging
 console.log('🔧 AvatarCommerce Config Loaded');
+console.log('🔧 Environment:', isLocalDevelopment ? 'Local Development' : 'Production');
 console.log('🔧 API Base URL:', CONFIG.API.BASE_URL);
 console.log('🔧 Current Origin:', window.location.origin);
 console.log('🔧 Expected S3 Origin:', CONFIG.FRONTEND.S3_ORIGIN);
