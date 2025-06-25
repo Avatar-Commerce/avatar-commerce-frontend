@@ -98,6 +98,7 @@
         .user-info {
             display: flex;
             align-items: center;
+            margin-bottom: 15px;
         }
         
         .user-avatar {
@@ -105,7 +106,6 @@
             height: 40px;
             border-radius: 50%;
             background-color: #5e60ce;
-            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -119,7 +119,7 @@
         
         .user-name {
             font-weight: 600;
-            margin-bottom: 2px;
+            font-size: 0.9rem;
         }
         
         .user-role {
@@ -128,29 +128,27 @@
         }
         
         .logout-btn {
-            display: block;
-            background-color: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: rgba(255, 255, 255, 0.8);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
             border-radius: 4px;
-            padding: 8px 12px;
-            margin-top: 15px;
             cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
+            font-size: 0.85rem;
+            transition: background-color 0.3s;
             width: 100%;
         }
         
         .logout-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
+            background-color: rgba(255, 255, 255, 0.2);
         }
         
         /* Main content */
         .main-content {
-            flex: 1;
             margin-left: 260px;
-            padding: 20px;
+            flex: 1;
+            padding: 30px;
+            max-width: calc(100vw - 260px);
         }
         
         .header {
@@ -158,259 +156,26 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
         }
         
         .page-title {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 600;
             color: #333;
         }
         
-        .header-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
+        .preview-chat-link {
             background-color: #5e60ce;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
             font-weight: 500;
             transition: background-color 0.3s;
-            text-decoration: none;
         }
         
-        .btn:hover {
-            background-color: #4d4eb9;
-        }
-        
-        .btn:disabled {
-            background-color: #a5a6e0;
-            cursor: not-allowed;
-        }
-        
-        .btn i {
-            margin-right: 6px;
-        }
-        
-        .btn-secondary {
-            background-color: #f1f1fe;
-            color: #5e60ce;
-            border: 1px solid #ddd;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #e5e5fb;
-        }
-        
-        /* Avatar setup styles */
-        .setup-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .setup-panel {
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        
-        .panel-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .panel-body {
-            padding: 20px;
-        }
-        
-        /* Upload area */
-        .upload-area {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: all 0.3s;
-            position: relative;
-        }
-        
-        .upload-area.dragover {
-            border-color: #5e60ce;
-            background-color: rgba(94, 96, 206, 0.05);
-        }
-        
-        .upload-area.disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-        
-        .upload-icon {
-            font-size: 40px;
-            color: #5e60ce;
-            margin-bottom: 15px;
-        }
-        
-        .upload-text {
-            margin-bottom: 15px;
-            color: #666;
-        }
-        
-        .file-input {
-            display: none;
-        }
-        
-        /* Preview area */
-        .preview-container {
-            display: none;
-            margin-top: 20px;
-        }
-        
-        .preview-area {
-            width: 100%;
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        .preview-img {
-            width: 100%;
-            border-radius: 8px;
-            max-height: 300px;
-            object-fit: cover;
-        }
-        
-        .preview-file-info {
-            background-color: #f8fafc;
-            border-radius: 6px;
-            padding: 10px 15px;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-        
-        .preview-filename {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .preview-filesize {
-            color: #666;
-        }
-        
-        .preview-actions {
-            display: flex;
-            gap: 10px;
-        }
-        
-        /* Loading states */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            display: none;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(94, 96, 206, 0.2);
-            border-radius: 50%;
-            border-top-color: #5e60ce;
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 15px;
-        }
-        
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-        
-        .loading-text {
-            font-weight: 500;
-            color: #333;
-        }
-        
-        /* Avatar preview */
-        .avatar-preview {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            padding: 20px;
-        }
-        
-        .avatar-preview-placeholder {
-            width: 200px;
-            height: 200px;
-            border-radius: 8px;
-            background-color: #f1f1fe;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #5e60ce;
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
-        
-        .avatar-preview-image {
-            width: 200px;
-            height: 200px;
-            border-radius: 8px;
-            object-fit: cover;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .avatar-preview-video {
-            width: 100%;
-            max-width: 320px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .avatar-status {
-            font-weight: 500;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        
-        .avatar-id {
-            font-size: 0.9rem;
-            color: #666;
-            background-color: #f8fafc;
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            display: none;
+        .preview-chat-link:hover {
+            background-color: #4c4fb8;
         }
         
         /* Alert */
@@ -421,16 +186,16 @@
             display: none;
         }
         
-        .alert-danger {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            border: 1px solid #f87171;
-        }
-        
         .alert-success {
             background-color: #dcfce7;
             color: #166534;
             border: 1px solid #86efac;
+        }
+        
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #f87171;
         }
         
         .alert-warning {
@@ -439,199 +204,397 @@
             border: 1px solid #fde68a;
         }
         
+        .alert-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        /* Cards */
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8fafc;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #5e60ce;
+            background-color: rgba(94, 96, 206, 0.02);
+        }
+        
+        .upload-area.dragover {
+            border-color: #5e60ce;
+            background-color: rgba(94, 96, 206, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #5e60ce;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background-color: #5e60ce;
+            color: #fff;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4c4fb8;
+        }
+        
+        .btn-secondary {
+            background-color: #f1f1fe;
+            color: #5e60ce;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #e5e5fb;
+        }
+        
+        .btn-success {
+            background-color: #22c55e;
+            color: #fff;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background-color: #16a34a;
+        }
+        
+        .btn-danger {
+            background-color: #ef4444;
+            color: #fff;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            background-color: #dc2626;
+        }
+        
+        /* Preview */
+        .preview-container {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .preview-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .preview-info {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .preview-filename {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .preview-filesize {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Avatar status section */
+        .avatar-status-section {
+            display: none;
+        }
+        
+        .status-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .status-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .status-text.status-training {
+            color: #f59e0b;
+        }
+        
+        .status-text.status-ready {
+            color: #10b981;
+        }
+        
+        .status-text.status-error {
+            color: #ef4444;
+        }
+        
+        .status-text.status-pending {
+            color: #6b7280;
+        }
+        
+        .avatar-id-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #666;
+            background-color: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        
+        .avatar-preview {
+            text-align: center;
+            margin: 20px 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            background-color: #f9fafb;
+        }
+        
+        .preview-placeholder {
+            color: #9ca3af;
+        }
+        
+        .preview-image-avatar, .preview-video {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .avatar-controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        /* Video generation section */
+        .video-generation-section {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #5e60ce;
+            box-shadow: 0 0 0 3px rgba(94, 96, 206, 0.1);
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .loading-spinner {
+            font-size: 2rem;
+            color: #5e60ce;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1.1rem;
+            color: #333;
+        }
+        
         /* Instructions */
         .instructions {
-            margin-top: 20px;
-            background-color: #f8fafc;
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
             border-radius: 8px;
-            padding: 15px 20px;
+            padding: 20px;
+            margin-top: 20px;
         }
         
         .instructions-title {
             font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
+            color: #0c4a6e;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .instructions-list {
-            list-style-position: inside;
-            color: #555;
-            font-size: 0.95rem;
+            list-style: none;
+            color: #075985;
         }
         
         .instructions-list li {
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .instructions-list li:before {
+            content: "✓";
+            color: #059669;
+            font-weight: bold;
+            margin-top: 2px;
         }
         
         /* Responsive design */
         @media (max-width: 1024px) {
-            .setup-container {
-                grid-template-columns: 1fr;
+            .main-content {
+                margin-left: 0;
+                max-width: 100vw;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
             }
         }
         
         @media (max-width: 768px) {
-            .sidebar {
-                width: 70px;
-                overflow: visible;
+            .main-content {
+                padding: 20px;
             }
             
-            .sidebar-header {
-                padding: 20px 0;
-                text-align: center;
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
             }
             
-            .logo {
-                font-size: 1.2rem;
+            .page-title {
+                font-size: 1.5rem;
             }
             
-            .logo span {
-                display: none;
+            .avatar-controls {
+                flex-direction: column;
+                align-items: center;
             }
             
-            .menu-category {
-                display: none;
-            }
-            
-            .menu-item span {
-                display: none;
-            }
-            
-            .menu-item {
-                padding: 15px 0;
+            .btn {
+                width: 100%;
+                max-width: 250px;
                 justify-content: center;
             }
-            
-            .menu-item i {
-                margin-right: 0;
-                font-size: 1.3rem;
-            }
-            
-            .sidebar-footer {
-                display: none;
-            }
-            
-            .main-content {
-                margin-left: 70px;
-            }
         }
-
-        .avatar-browser-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 80vh;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #666;
-        }
-
-        .modal-body {
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .avatar-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .avatar-option {
-            border: 2px solid #eee;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .avatar-option:hover {
-            border-color: #5e60ce;
-            transform: translateY(-2px);
-        }
-
-        .avatar-option.selected {
-            border-color: #5e60ce;
-            background-color: #f1f1fe;
-        }
-
-        .avatar-option img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .avatar-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .avatar-category {
-            font-size: 0.8rem;
-            color: #666;
-            background: #f0f0f0;
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .modal-footer {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-
-        .loading-avatars {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-            </style>
+    </style>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
@@ -696,922 +659,1024 @@
     <main class="main-content">
         <div class="header">
             <h1 class="page-title">Avatar Setup</h1>
-            <div class="header-actions">
-                <a href="#" id="preview-chat-link" target="_blank" class="btn btn-secondary">
-                    <i class="fas fa-external-link-alt"></i> Preview Chat
-                </a>
-                <a href="dashboard.html" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
+            <a id="preview-chat-link" href="#" class="preview-chat-link" target="_blank">
+                <i class="fas fa-external-link-alt"></i>
+                Preview Chat
+            </a>
+        </div>
+
+        <!-- Alert container -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Upload Section -->
+        <div id="upload-section" class="card">
+            <div class="card-header">
+                <h3 class="card-title">Create Your Avatar</h3>
+            </div>
+            <div class="card-body">
+                <!-- Upload Area -->
+                <div id="upload-area" class="upload-area">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        Drop your image here or click to browse
+                    </div>
+                    <div class="upload-subtext">
+                        Supported formats: JPG, PNG, WEBP (Max 10MB)
+                    </div>
+                    <button id="browse-btn" class="btn btn-primary">
+                        <i class="fas fa-folder-open"></i>
+                        Choose File
+                    </button>
+                    <input type="file" id="file-input" class="file-input" accept="image/*">
+                </div>
+
+                <!-- File Preview -->
+                <div id="preview-container" class="preview-container">
+                    <img id="preview-image" class="preview-image" alt="Preview">
+                    <div class="preview-info">
+                        <div id="preview-filename" class="preview-filename"></div>
+                        <div id="preview-filesize" class="preview-filesize"></div>
+                    </div>
+                    <div class="preview-actions">
+                        <button id="create-avatar-btn" class="btn btn-primary">
+                            <i class="fas fa-magic"></i>
+                            Create Avatar
+                        </button>
+                        <button id="change-file-btn" class="btn btn-secondary">
+                            <i class="fas fa-exchange-alt"></i>
+                            Change File
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="instructions">
+                    <div class="instructions-title">
+                        <i class="fas fa-info-circle"></i>
+                        Avatar Creation Tips
+                    </div>
+                    <ul class="instructions-list">
+                        <li>Use a high-quality photo with good lighting</li>
+                        <li>Make sure your face is clearly visible and centered</li>
+                        <li>Avoid sunglasses, hats, or anything covering your face</li>
+                        <li>Use a neutral background if possible</li>
+                        <li>Avatar training takes 1-2 minutes to complete</li>
+                    </ul>
+                </div>
             </div>
         </div>
-        
-        <!-- Avatar setup container -->
-        <div id="alert" class="alert"></div>
-        
-        <div class="setup-container">
-            <!-- Upload panel -->
-            <div class="setup-panel">
-                <div class="panel-header">
-                    <div class="panel-title">Upload Your Photo</div>
+
+        <!-- Avatar Status Section -->
+        <div id="avatar-status-section" class="card avatar-status-section">
+            <div class="card-header">
+                <h3 class="card-title">Your Avatar</h3>
+            </div>
+            <div class="card-body">
+                <!-- Status Display -->
+                <div class="status-display">
+                    <div id="avatar-status" class="status-text">Checking avatar status...</div>
+                    <div id="avatar-id-display" class="avatar-id-display" style="display: none;"></div>
                 </div>
-                <div class="panel-body">
-                    <div id="upload-area" class="upload-area">
-                        <div class="upload-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <div class="upload-text">
-                            <p>Drag & drop your photo here or click to browse</p>
-                            <p><small>Supported formats: JPG, PNG (Max size: 2MB)</small></p>
-                        </div>
-                        <button id="browse-btn" class="btn">
-                            <i class="fas fa-folder-open"></i> Browse Files
-                        </button>
-                        <input type="file" id="file-input" class="file-input" accept="image/jpeg, image/png">
-                        
-                        <!-- Loading overlay -->
-                        <div id="loading-overlay" class="loading-overlay">
-                            <div class="spinner"></div>
-                            <div id="loading-text" class="loading-text">Uploading...</div>
-                        </div>
+
+                <!-- Avatar Preview -->
+                <div id="avatar-preview" class="avatar-preview">
+                    <div id="avatar-preview-placeholder" class="preview-placeholder">
+                        <i class="fas fa-user-circle fa-5x"></i>
+                        <p>Avatar Preview</p>
                     </div>
-                    
-                    <!-- Preview container -->
-                    <div id="preview-container" class="preview-container">
-                        <div class="preview-area">
-                            <img id="preview-img" class="preview-img" src="#" alt="Preview">
-                        </div>
-                        <div class="preview-file-info">
-                            <div id="preview-filename" class="preview-filename">filename.jpg</div>
-                            <div id="preview-filesize" class="preview-filesize">0 KB</div>
-                        </div>
-                        <div class="preview-actions">
-                            <button id="change-file-btn" class="btn btn-secondary">
-                                <i class="fas fa-exchange-alt"></i> Change Photo
-                            </button>
-                            <button id="create-avatar-btn" class="btn">
-                                <i class="fas fa-robot"></i> Create Avatar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="instructions">
-                        <div class="instructions-title">For best results:</div>
-                        <ul class="instructions-list">
-                            <li>Use a high-quality, well-lit photo of your face</li>
-                            <li>Choose an image where your face is clearly visible</li>
-                            <li>Avoid using photos with multiple people</li>
-                            <li>Photos with neutral backgrounds work best</li>
-                            <li>Ensure the file is less than 2MB in size</li>
-                        </ul>
-                    </div>
+                    <img id="avatar-preview-image" class="preview-image-avatar" style="display: none;" alt="Avatar Preview">
+                    <video id="avatar-preview-video" class="preview-video" style="display: none;" controls></video>
+                </div>
+
+                <!-- Avatar Controls -->
+                <div id="avatar-controls" class="avatar-controls">
+                    <button id="test-avatar-btn" class="btn btn-success" style="display: none;" disabled>
+                        <i class="fas fa-play"></i>
+                        Test Avatar
+                    </button>
+                    <button id="create-new-avatar-btn" class="btn btn-secondary" onclick="resetForNewAvatar()">
+                        <i class="fas fa-plus"></i>
+                        Create New Avatar
+                    </button>
                 </div>
             </div>
-            
-            <!-- Preview panel -->
-            <div class="setup-panel">
-                <div class="panel-header">
-                    <div class="panel-title">Avatar Preview</div>
+        </div>
+
+        <!-- Video Generation Section -->
+        <div id="video-generation-section" class="card video-generation-section">
+            <div class="card-header">
+                <h3 class="card-title">Test Video Generation</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="test-message" class="form-label">Test Message:</label>
+                    <textarea id="test-message" class="form-control" rows="3" placeholder="Enter a message to test your avatar...">Hello! This is a test of your custom AI avatar. I'm excited to chat with your fans and help promote your content!</textarea>
                 </div>
-                <div class="panel-body">
-                    <div class="avatar-preview">
-                        <div id="avatar-preview-placeholder" class="avatar-preview-placeholder">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <img id="avatar-preview-image" class="avatar-preview-image" src="" alt="Avatar Preview">
-                        <video id="avatar-preview-video" class="avatar-preview-video" controls></video>
-                        
-                        <div id="avatar-status" class="avatar-status">No avatar created yet</div>
-                        <div id="avatar-id" class="avatar-id"></div>
-                        
-                        <div class="avatar-actions">
-                            <button id="test-avatar-btn" class="btn" disabled>
-                                <i class="fas fa-play"></i> Test Avatar
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <button id="generate-test-video-btn" class="btn btn-primary" onclick="generateTestVideo()">
+                    <i class="fas fa-video"></i>
+                    Generate Test Video
+                </button>
             </div>
         </div>
     </main>
 
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner"></i>
+            </div>
+            <div id="loading-text" class="loading-text">Creating your avatar...</div>
+        </div>
+    </div>
+
     <!-- Load shared scripts -->
     <script src="../js/config.js"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // API base URL
-    const API_BASE_URL = CONFIG.API.BASE_URL;
-    
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userStr = localStorage.getItem('user');
-    
-    if (!token || !userStr) {
-        window.location.href = '../login.html';
-        return;
-    }
-    
-    // Parse user data
-    const user = JSON.parse(userStr);
-    
-    // Check if user is an influencer
-    if (user.userType !== 'influencer') {
-        window.location.href = '../login.html';
-        return;
-    }
-    
-    // Update user display
-    document.getElementById('user-name').textContent = user.username;
-    if (user.username) {
-        const initials = user.username.split(' ')
-            .map(name => name[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
-        document.getElementById('user-avatar').textContent = initials;
-    }
-    
-    // Set up preview chat link
-    const previewChatLink = document.getElementById('preview-chat-link');
-    if (previewChatLink && user) {
-        const currentOrigin = window.location.origin;
-        const chatUrl = `${currentOrigin}/pages/chat.html?username=${encodeURIComponent(user.username)}`;
-        previewChatLink.href = chatUrl;
-    }
-    
-    // Logout button
-    document.getElementById('logout-btn').addEventListener('click', function() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '../login.html';
-    });
-    
-    // DOM elements
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('file-input');
-    const browseBtn = document.getElementById('browse-btn');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const loadingText = document.getElementById('loading-text');
-    const previewContainer = document.getElementById('preview-container');
-    const previewImg = document.getElementById('preview-img');
-    const previewFilename = document.getElementById('preview-filename');
-    const previewFilesize = document.getElementById('preview-filesize');
-    const changeFileBtn = document.getElementById('change-file-btn');
-    const createAvatarBtn = document.getElementById('create-avatar-btn');
-    const avatarPreviewPlaceholder = document.getElementById('avatar-preview-placeholder');
-    const avatarPreviewImage = document.getElementById('avatar-preview-image');
-    const avatarPreviewVideo = document.getElementById('avatar-preview-video');
-    const avatarStatus = document.getElementById('avatar-status');
-    const avatarId = document.getElementById('avatar-id');
-    const testAvatarBtn = document.getElementById('test-avatar-btn');
-    const alert = document.getElementById('alert');
-    
-    // File data
-    let selectedFile = null;
-    let currentAvatarId = null;
-    
-    // Check if user already has an avatar
-    checkExistingAvatar();
-    
-    // Event listeners
-    browseBtn.addEventListener('click', function() {
-        fileInput.click();
-    });
-    
-    fileInput.addEventListener('change', handleFileSelect);
-    
-    changeFileBtn.addEventListener('click', function() {
-        resetFileSelection();
-    });
-    
-    createAvatarBtn.addEventListener('click', createAvatar);
-    
-    testAvatarBtn.addEventListener('click', testAvatar);
-    
-    // Drag and drop handlers
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', function() {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // API base URL
+        const API_BASE_URL = CONFIG.API.BASE_URL;
         
-        if (e.dataTransfer.files.length > 0) {
-            handleFile(e.dataTransfer.files[0]);
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        
+        if (!token || !userStr) {
+            window.location.href = '../login.html';
+            return;
         }
-    });
-    
-    // Check for existing avatar
-    async function checkExistingAvatar() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to load profile data');
-            }
-            
-            const data = await response.json();
-            
-            if (data.status === 'success' && data.data.has_avatar) {
-                currentAvatarId = data.data.avatar_id;
-                updateAvatarStatus(true, currentAvatarId, data.data.profile_image_url);
-                
-                showAlert('You already have an avatar set up. You can create a new one if you want to replace it.', 'warning');
-                
-                // Check avatar status
-                checkAvatarTrainingStatus(currentAvatarId);
-            }
-        } catch (error) {
-            console.error('Error checking existing avatar:', error);
+        
+        // Parse user data
+        const user = JSON.parse(userStr);
+        
+        // Check if user is an influencer
+        if (user.userType !== 'influencer') {
+            window.location.href = '../login.html';
+            return;
         }
-    }
-    
-    // File selection handler
-    function handleFileSelect(e) {
-        if (e.target.files.length > 0) {
-            handleFile(e.target.files[0]);
+        
+        // Update user display
+        document.getElementById('user-name').textContent = user.username;
+        if (user.username) {
+            const initials = user.username.split(' ')
+                .map(name => name[0])
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            document.getElementById('user-avatar').textContent = initials;
         }
-    }
-    
-    // Handle the selected file
-    function handleFile(file) {
-        console.log('Handling file:', {
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified
+        
+        // Set up preview chat link
+        const previewChatLink = document.getElementById('preview-chat-link');
+        if (previewChatLink && user) {
+            const currentOrigin = window.location.origin;
+            const chatUrl = `${currentOrigin}/pages/chat.html?username=${encodeURIComponent(user.username)}`;
+            previewChatLink.href = chatUrl;
+        }
+        
+        // Logout button
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
         });
         
-        // Check file type
-        if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
-            showAlert('Please select a JPG or PNG image.', 'danger');
-            return;
-        }
+        // DOM elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const browseBtn = document.getElementById('browse-btn');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const previewContainer = document.getElementById('preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const previewFilename = document.getElementById('preview-filename');
+        const previewFilesize = document.getElementById('preview-filesize');
+        const changeFileBtn = document.getElementById('change-file-btn');
+        const createAvatarBtn = document.getElementById('create-avatar-btn');
+        const uploadSection = document.getElementById('upload-section');
+        const avatarStatusSection = document.getElementById('avatar-status-section');
+        const avatarStatus = document.getElementById('avatar-status');
+        const avatarIdDisplay = document.getElementById('avatar-id-display');
+        const avatarPreview = document.getElementById('avatar-preview');
+        const avatarPreviewPlaceholder = document.getElementById('avatar-preview-placeholder');
+        const avatarPreviewImage = document.getElementById('avatar-preview-image');
+        const avatarPreviewVideo = document.getElementById('avatar-preview-video');
+        const testAvatarBtn = document.getElementById('test-avatar-btn');
+        const videoGenerationSection = document.getElementById('video-generation-section');
+        const alert = document.getElementById('alert');
         
-        // Check file size (max 10MB for better compatibility)
-        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
-        if (file.size > maxSize) {
-            showAlert(`File is too large. Maximum size is 10MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB.`, 'danger');
-            return;
-        }
+        // File data
+        let selectedFile = null;
+        let currentAvatarId = null;
         
-        // Check minimum file size (too small might indicate corruption)
-        const minSize = 1024; // 1KB minimum
-        if (file.size < minSize) {
-            showAlert('File is too small. Please select a proper image file.', 'danger');
-            return;
-        }
+        // Check if user already has an avatar
+        checkExistingAvatar();
         
-        // Store the selected file
-        selectedFile = file;
-        
-        // Display the preview
-        previewFilename.textContent = file.name;
-        previewFilesize.textContent = formatFileSize(file.size);
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            
-            // Show preview container, hide upload area
-            previewContainer.style.display = 'block';
-            uploadArea.style.display = 'none';
-            
-            console.log('File loaded successfully for preview');
-        };
-        
-        reader.onerror = function(e) {
-            console.error('FileReader error:', e);
-            showAlert('Failed to read the selected file. Please try a different image.', 'danger');
-        };
-        
-        reader.readAsDataURL(file);
-    }
-    
-    // Reset file selection
-    function resetFileSelection() {
-        selectedFile = null;
-        fileInput.value = '';
-        
-        // Hide preview container, show upload area
-        previewContainer.style.display = 'none';
-        uploadArea.style.display = 'block';
-    }
-    
-    // Create avatar with improved error handling
-    async function createAvatar() {
-        if (!selectedFile) {
-            showAlert('Please select an image file first.', 'danger');
-            return;
-        }
-        
-        // Show loading state
-        loadingText.textContent = 'Setting up your avatar... This may take a moment.';
-        loadingOverlay.style.display = 'flex';
-        createAvatarBtn.disabled = true;
-        
-        try {
-            // Create form data
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            
-            console.log('Sending avatar setup request...');
-            
-            const response = await fetch(`${API_BASE_URL}/avatar/create`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
+        // Event listeners
+        if (browseBtn) {
+            browseBtn.addEventListener('click', function() {
+                fileInput.click();
             });
-            
-            const data = await response.json();
-            console.log('Avatar setup response:', data);
-            
-            if (data.status === 'success') {
-                // Avatar setup successful
-                currentAvatarId = data.data.avatar_id;
-                updateAvatarStatus(true, currentAvatarId, data.data.public_url);
-                
-                // Update user object in localStorage
-                user.has_avatar = true;
-                user.avatar_id = currentAvatarId;
-                localStorage.setItem('user', JSON.stringify(user));
-                
-                // Show success message with explanation
-                if (data.data.method === 'custom_avatar') {
-                    showAlert('🎉 Custom avatar created successfully! Your personalized avatar is being trained and will be ready shortly.', 'success');
-                } else {
-                    showAlert(`✅ ${data.message}`, 'success');
-                    
-                    // Show option to change avatar
-                    setTimeout(() => {
-                        showAvatarChangeOption(data.data.avatar_name);
-                    }, 2000);
-                }
-                
-                // Hide the preview container
-                previewContainer.style.display = 'none';
-                uploadArea.style.display = 'block';
+        }
+        
+        if (fileInput) {
+            fileInput.addEventListener('change', handleFileSelect);
+        }
+        
+        if (changeFileBtn) {
+            changeFileBtn.addEventListener('click', function() {
                 resetFileSelection();
-                
-            } else {
-                showAlert(data.message || 'Avatar setup failed. Please try again.', 'danger');
-            }
-        } catch (error) {
-            console.error('Error setting up avatar:', error);
-            showAlert('An error occurred while setting up your avatar. Please try again.', 'danger');
-        } finally {
-            loadingOverlay.style.display = 'none';
-            createAvatarBtn.disabled = false;
+            });
         }
-    }
-
-    // Add function to show avatar change option
-    function showAvatarChangeOption(currentAvatarName) {
-        // Create a notice with option to change avatar
-        const changeNotice = document.createElement('div');
-        changeNotice.className = 'alert alert-warning';
-        changeNotice.style.display = 'block';
-        changeNotice.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>Current Avatar:</strong> ${currentAvatarName}<br>
-                    <small>Your photo is saved for your profile. Want to try a different avatar for videos?</small>
-                </div>
-                <button id="change-avatar-btn" class="btn btn-secondary" style="margin-left: 15px;">
-                    <i class="fas fa-exchange-alt"></i> Browse Avatars
-                </button>
-            </div>
-        `;
         
-        // Insert after the existing alert
-        const existingAlert = document.getElementById('alert');
-        existingAlert.parentNode.insertBefore(changeNotice, existingAlert.nextSibling);
+        if (createAvatarBtn) {
+            createAvatarBtn.addEventListener('click', createAvatar);
+        }
         
-        // Add event listener
-        document.getElementById('change-avatar-btn').addEventListener('click', function() {
-            showAvatarBrowser();
-            changeNotice.remove();
-        });
+        if (testAvatarBtn) {
+            testAvatarBtn.addEventListener('click', testAvatar);
+        }
         
-        // Auto-remove after 10 seconds
-        setTimeout(() => {
-            if (changeNotice.parentNode) {
-                changeNotice.remove();
-            }
-        }, 10000);
-    }
-
-    // Add function to show avatar browser
-    async function showAvatarBrowser() {
-        try {
-            // Create modal for avatar selection
-            const modal = document.createElement('div');
-            modal.className = 'avatar-browser-modal';
-            modal.innerHTML = `
-                <div class="modal-overlay" onclick="closeAvatarBrowser()"></div>
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h3>Choose Your Avatar</h3>
-                        <button onclick="closeAvatarBrowser()" class="close-btn">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="avatar-grid" class="avatar-grid">
-                            <div class="loading-avatars">Loading avatars...</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button onclick="closeAvatarBrowser()" class="btn btn-secondary">Cancel</button>
-                        <button id="confirm-avatar-change" class="btn" disabled>Use Selected Avatar</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Load avatars
-            const response = await fetch(`${API_BASE_URL}/avatar/available`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+        // Drag and drop handlers
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
             });
             
-            const data = await response.json();
+            uploadArea.addEventListener('dragleave', function() {
+                uploadArea.classList.remove('dragover');
+            });
             
-            if (data.status === 'success') {
-                renderAvatarBrowser(data.data.avatars);
-            } else {
-                document.getElementById('avatar-grid').innerHTML = '<p>Failed to load avatars.</p>';
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+        }
+        
+        // Enhanced checkExistingAvatar function
+        async function checkExistingAvatar() {
+            try {
+                console.log('Checking for existing avatar...');
+                
+                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load profile data');
+                }
+                
+                const data = await response.json();
+                console.log('Profile data:', data);
+                
+                if (data.status === 'success' && data.data.has_avatar && data.data.avatar_id) {
+                    currentAvatarId = data.data.avatar_id;
+                    
+                    console.log('Found existing avatar:', currentAvatarId);
+                    
+                    // Update UI to show avatar exists
+                    updateAvatarStatus(true, currentAvatarId, data.data.profile_image_url);
+                    
+                    console.log('Existing avatar loaded, checking readiness...');
+                } else {
+                    console.log('No existing avatar found');
+                    updateAvatarStatus(false);
+                }
+            } catch (error) {
+                console.error('Error checking existing avatar:', error);
+                updateAvatarStatus(false);
+            }
+        }
+        
+        // File selection handlers
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+        
+        // Validate file function
+        function validateFile(file) {
+            console.log('Validating file:', {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                lastModified: file.lastModified
+            });
+            
+            // Get file extension
+            const fileName = file.name.toLowerCase();
+            const fileExtension = fileName.split('.').pop();
+            
+            // Define allowed extensions and MIME types
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+            const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            
+            // Check file extension first (more reliable)
+            if (!allowedExtensions.includes(fileExtension)) {
+                throw new Error(`Invalid file extension: .${fileExtension}. Please use: ${allowedExtensions.map(ext => '.' + ext).join(', ')}`);
             }
             
-        } catch (error) {
-            console.error('Error loading avatar browser:', error);
+            // Check MIME type if available (browsers sometimes don't set this correctly)
+            if (file.type && file.type !== '' && !allowedMimeTypes.includes(file.type)) {
+                console.warn(`MIME type mismatch: ${file.type}, but extension .${fileExtension} is allowed`);
+                // Don't throw error for MIME type mismatch if extension is valid
+            }
+            
+            // File size validation
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const minSize = 1024; // 1KB minimum
+            
+            if (file.size > maxSize) {
+                throw new Error(`File too large: ${formatFileSize(file.size)}. Maximum size is ${formatFileSize(maxSize)}.`);
+            }
+            
+            if (file.size < minSize) {
+                throw new Error('File too small. Please select a proper image file.');
+            }
+            
+            return true;
         }
+        
+        // Handle file function
+        function handleFile(file) {
+            console.log('Handling file:', {
+                name: file.name,
+                size: file.size,
+                type: file.type || 'unknown',
+                lastModified: file.lastModified
+            });
+            
+            try {
+                // Validate the file
+                validateFile(file);
+                
+                // Store the selected file
+                selectedFile = file;
+                
+                // Display the preview
+                if (previewFilename) previewFilename.textContent = file.name;
+                if (previewFilesize) previewFilesize.textContent = formatFileSize(file.size);
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (previewImage) previewImage.src = e.target.result;
+                    
+                    // Show preview container, hide upload area
+                    if (previewContainer) previewContainer.style.display = 'block';
+                    if (uploadArea) uploadArea.style.display = 'none';
+                    
+                    console.log('File loaded successfully for preview');
+                };
+                
+                reader.onerror = function(e) {
+                    console.error('FileReader error:', e);
+                    showAlert('Failed to read the selected file. Please try a different image.', 'danger');
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                console.error('File validation error:', error);
+                showAlert(error.message, 'danger');
+                resetFileSelection();
+            }
+        }
+        
+        // Reset file selection
+        function resetFileSelection() {
+            selectedFile = null;
+            if (fileInput) fileInput.value = '';
+            
+            // Hide preview container, show upload area
+            if (previewContainer) previewContainer.style.display = 'none';
+            if (uploadArea) uploadArea.style.display = 'block';
+        }
+        
+        // Create avatar function
+        async function createAvatar() {
+            if (!selectedFile) {
+                showAlert('Please select an image file first.', 'danger');
+                return;
+            }
+            
+            // Re-validate file before upload
+            try {
+                validateFile(selectedFile);
+            } catch (error) {
+                showAlert(error.message, 'danger');
+                return;
+            }
+            
+            // Show loading state
+            if (loadingText) loadingText.textContent = 'Creating your avatar... This may take 1-2 minutes.';
+            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+            if (createAvatarBtn) createAvatarBtn.disabled = true;
+            
+            try {
+                // Create form data with the correct field name
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                
+                console.log('Sending avatar creation request...');
+                console.log('File details:', {
+                    name: selectedFile.name,
+                    type: selectedFile.type || 'unknown',
+                    size: selectedFile.size
+                });
+                
+                const response = await fetch(`${API_BASE_URL}/avatar/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Don't set Content-Type - let browser set it with boundary for multipart
+                    },
+                    body: formData
+                });
+                
+                console.log('Response status:', response.status);
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    console.error('Failed to parse response as JSON:', parseError);
+                    throw new Error('Invalid response from server');
+                }
+                
+                console.log('Avatar creation response:', data);
+                
+                if (data.status === 'success') {
+                    // Avatar creation successful
+                    currentAvatarId = data.data.avatar_id;
+                    updateAvatarStatus(true, currentAvatarId, data.data.public_url);
+                    
+                    // Update user object in localStorage
+                    user.has_avatar = true;
+                    user.avatar_id = currentAvatarId;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    
+                    // Show success message
+                    showAlert('🎉 Avatar created successfully! Checking readiness for video generation...', 'success');
+                    
+                    // Hide the preview container
+                    if (previewContainer) previewContainer.style.display = 'none';
+                    resetFileSelection();
+                    
+                } else {
+                    // Handle different error types
+                    let errorMessage = data.message || 'Avatar creation failed. Please try again.';
+                    
+                    if (response.status === 400) {
+                        errorMessage = `Upload Error: ${errorMessage}`;
+                    } else if (response.status === 401) {
+                        errorMessage = 'Authentication failed. Please log in again.';
+                        // Redirect to login
+                        setTimeout(() => {
+                            localStorage.clear();
+                            window.location.href = '../login.html';
+                        }, 2000);
+                    } else if (response.status === 403) {
+                        errorMessage = 'Access forbidden. Please check your account permissions.';
+                    } else if (response.status === 413) {
+                        errorMessage = 'File too large. Please use a smaller image.';
+                    } else if (response.status >= 500) {
+                        errorMessage = `Server Error: ${errorMessage}`;
+                    }
+                    
+                    showAlert(errorMessage, 'danger');
+                    
+                    // If we have debug info, log it
+                    if (data.debug) {
+                        console.log('Debug info:', data.debug);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Avatar creation error:', error);
+                
+                let errorMessage = 'Network error. Please check your connection and try again.';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Cannot connect to server. Please check your internet connection.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showAlert(errorMessage, 'danger');
+                
+            } finally {
+                // Hide loading state
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                if (createAvatarBtn) createAvatarBtn.disabled = false;
+            }
+        }
+        
+        // Update avatar status display
+        function updateAvatarStatus(hasAvatar, avatarIdValue, imageUrl) {
+            console.log('Updating avatar status:', { hasAvatar, avatarIdValue, imageUrl });
+            
+            if (hasAvatar && avatarIdValue) {
+                // Store current avatar ID
+                currentAvatarId = avatarIdValue;
+                
+                // Hide upload section and show avatar status section
+                if (uploadSection) uploadSection.style.display = 'none';
+                if (avatarStatusSection) avatarStatusSection.style.display = 'block';
+                
+                // Update status text
+                if (avatarStatus) {
+                    avatarStatus.textContent = 'Avatar created successfully - checking readiness...';
+                    avatarStatus.className = 'status-text status-pending';
+                }
+                
+                // Show avatar ID
+                if (avatarIdDisplay) {
+                    avatarIdDisplay.textContent = `Avatar ID: ${avatarIdValue}`;
+                    avatarIdDisplay.style.display = 'block';
+                }
+                
+                // Show avatar preview image if available
+                if (imageUrl && avatarPreviewImage) {
+                    avatarPreviewImage.src = imageUrl;
+                    avatarPreviewImage.style.display = 'block';
+                    if (avatarPreviewPlaceholder) {
+                        avatarPreviewPlaceholder.style.display = 'none';
+                    }
+                }
+                
+                // Check if avatar is ready for video generation
+                checkAvatarReadiness(avatarIdValue);
+                
+            } else {
+                // No avatar - show upload interface
+                if (uploadSection) uploadSection.style.display = 'block';
+                if (avatarStatusSection) avatarStatusSection.style.display = 'none';
+                if (videoGenerationSection) videoGenerationSection.style.display = 'none';
+            }
+        }
+        
+        // Check if avatar is ready for video generation
+        async function checkAvatarReadiness(avatarIdValue) {
+            if (!avatarIdValue) return;
+            
+            console.log('Checking avatar readiness for:', avatarIdValue);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/avatar/status/${avatarIdValue}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Avatar status check response:', data);
+                    
+                    if (data.status === 'success') {
+                        const isReady = data.data.ready_for_video;
+                        const trainingStatus = data.data.training_status;
+                        
+                        console.log(`Avatar ready: ${isReady}, Status: ${trainingStatus}`);
+                        
+                        if (isReady) {
+                            // Avatar is ready!
+                            if (avatarStatus) {
+                                avatarStatus.textContent = 'Avatar ready for video generation!';
+                                avatarStatus.className = 'status-text status-ready';
+                            }
+                            
+                            if (testAvatarBtn) {
+                                testAvatarBtn.disabled = false;
+                                testAvatarBtn.style.display = 'block';
+                            }
+                            
+                            // Show video generation section
+                            if (videoGenerationSection) {
+                                videoGenerationSection.style.display = 'block';
+                            }
+                            
+                            showAlert('🎉 Your avatar is ready for video generation!', 'success');
+                        } else {
+                            // Avatar is still training
+                            if (avatarStatus) {
+                                avatarStatus.textContent = `Avatar training in progress (${trainingStatus || 'processing'})...`;
+                                avatarStatus.className = 'status-text status-training';
+                            }
+                            
+                            if (testAvatarBtn) {
+                                testAvatarBtn.disabled = true;
+                            }
+                            
+                            // Start polling for readiness
+                            checkAvatarTrainingStatus(avatarIdValue);
+                        }
+                    }
+                } else {
+                    console.warn('Failed to check avatar status:', response.status);
+                    if (avatarStatus) {
+                        avatarStatus.textContent = 'Unable to check avatar status';
+                        avatarStatus.className = 'status-text status-error';
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking avatar readiness:', error);
+                if (avatarStatus) {
+                    avatarStatus.textContent = 'Error checking avatar status';
+                    avatarStatus.className = 'status-text status-error';
+                }
+            }
+        }
+        
+        // Enhanced avatar training status checker
+        async function checkAvatarTrainingStatus(avatarId, maxAttempts = 15) {
+            let attempts = 0;
+            
+            console.log(`Starting avatar training status check for: ${avatarId}`);
+            
+            const checkStatus = async () => {
+                attempts++;
+                console.log(`Avatar status check attempt ${attempts}/${maxAttempts}`);
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/avatar/status/${avatarId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Training status response:', data);
+                        
+                        if (data.status === 'success') {
+                            const trainingStatus = data.data.training_status;
+                            const isReady = data.data.ready_for_video;
+                            
+                            console.log(`Training status: ${trainingStatus}, Ready: ${isReady}`);
+                            
+                            // Update UI based on status
+                            if (avatarStatus) {
+                                switch (trainingStatus) {
+                                    case 'pending':
+                                    case 'processing':
+                                    case 'training':
+                                        avatarStatus.textContent = `Avatar training in progress... (${trainingStatus})`;
+                                        avatarStatus.className = 'status-text status-training';
+                                        break;
+                                    case 'completed':
+                                    case 'ready':
+                                        if (isReady) {
+                                            avatarStatus.textContent = 'Avatar ready for video generation!';
+                                            avatarStatus.className = 'status-text status-ready';
+                                            
+                                            if (testAvatarBtn) {
+                                                testAvatarBtn.disabled = false;
+                                                testAvatarBtn.style.display = 'block';
+                                            }
+                                            
+                                            // Show video generation controls
+                                            if (videoGenerationSection) {
+                                                videoGenerationSection.style.display = 'block';
+                                            }
+                                            
+                                            showAlert('🎉 Your avatar is now ready for video generation!', 'success');
+                                            return; // Stop checking
+                                        }
+                                        break;
+                                    case 'failed':
+                                    case 'error':
+                                        avatarStatus.textContent = 'Avatar training failed';
+                                        avatarStatus.className = 'status-text status-error';
+                                        showAlert('Avatar training failed. Please try creating a new avatar.', 'danger');
+                                        return; // Stop checking
+                                    default:
+                                        avatarStatus.textContent = `Avatar status: ${trainingStatus}`;
+                                        avatarStatus.className = 'status-text status-pending';
+                                }
+                            }
+                            
+                            // Continue checking if not completed or failed
+                            if (!isReady && trainingStatus !== 'failed' && trainingStatus !== 'error' && attempts < maxAttempts) {
+                                console.log(`Will check again in 20 seconds... (attempt ${attempts}/${maxAttempts})`);
+                                setTimeout(checkStatus, 20000); // Check again in 20 seconds
+                            } else if (attempts >= maxAttempts) {
+                                console.log('Max attempts reached, stopping status checks');
+                                if (!isReady && avatarStatus) {
+                                    avatarStatus.textContent = 'Avatar training is taking longer than expected. Please refresh the page.';
+                                    avatarStatus.className = 'status-text status-training';
+                                }
+                            }
+                        }
+                    } else {
+                        console.warn('Failed to check avatar status:', response.status);
+                        if (attempts < maxAttempts) {
+                            setTimeout(checkStatus, 30000); // Try again in 30 seconds
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking avatar status:', error);
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkStatus, 30000); // Try again in 30 seconds
+                    }
+                }
+            };
+            
+            // Start checking after 5 seconds
+            setTimeout(checkStatus, 5000);
+        }
+        
+        // Test avatar function
+        async function testAvatar() {
+            if (!currentAvatarId) {
+                showAlert('No avatar found. Please create an avatar first.', 'danger');
+                return;
+            }
+            
+            // Show loading state
+            if (avatarStatus) avatarStatus.textContent = 'Testing your avatar...';
+            if (testAvatarBtn) {
+                testAvatarBtn.disabled = true;
+                testAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
+            }
+            
+            try {
+                const testData = {
+                    text: "Hello! This is a test of your custom AI avatar. I'm excited to chat with your fans and help promote your content!",
+                    avatar_id: currentAvatarId
+                };
+                
+                console.log('Testing avatar:', testData);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+                
+                const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(testData),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                console.log('Test response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Test response data:', data);
+                
+                if (response.ok && data.status === 'success') {
+                    if (avatarStatus) avatarStatus.textContent = 'Test successful!';
+                    
+                    if (data.data.video_url && data.data.video_url.trim() !== '') {
+                        console.log('Avatar video URL received:', data.data.video_url);
+                        
+                        // Show video preview
+                        if (avatarPreviewVideo) {
+                            avatarPreviewVideo.style.display = 'block';
+                            avatarPreviewVideo.src = data.data.video_url;
+                            
+                            // Hide placeholder if showing
+                            if (avatarPreviewPlaceholder) {
+                                avatarPreviewPlaceholder.style.display = 'none';
+                            }
+                            
+                            avatarPreviewVideo.onloadstart = function() {
+                                if (avatarStatus) avatarStatus.textContent = 'Loading your avatar video...';
+                            };
+                            
+                            avatarPreviewVideo.oncanplay = function() {
+                                if (avatarStatus) avatarStatus.textContent = 'Your avatar is ready! Click play to watch.';
+                            };
+                            
+                            avatarPreviewVideo.onerror = function(e) {
+                                console.error('Video load error:', e);
+                                if (avatarStatus) avatarStatus.textContent = 'Video generated but failed to load.';
+                                showAlert('Avatar video was generated but failed to load. This might be temporary.', 'warning');
+                            };
+                        }
+                        
+                        showAlert('Avatar test completed successfully! Your avatar is working perfectly.', 'success');
+                    } else {
+                        console.log('No video URL in response');
+                        if (avatarStatus) avatarStatus.textContent = 'Avatar responded but video generation may still be processing.';
+                        showAlert('Your avatar responded! Video generation may take a bit longer.', 'warning');
+                    }
+                } else {
+                    let errorMessage = data.message || 'Avatar test failed. Please try again.';
+                    if (avatarStatus) avatarStatus.textContent = 'Test failed.';
+                    showAlert(errorMessage, 'danger');
+                }
+                
+            } catch (error) {
+                console.error('Avatar test error:', error);
+                
+                let errorMessage = 'Test failed due to network error.';
+                
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Test timed out. Avatar video generation takes longer than expected.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Cannot connect to server. Please check your internet connection.';
+                }
+                
+                if (avatarStatus) avatarStatus.textContent = 'Test failed.';
+                showAlert(errorMessage, 'danger');
+            } finally {
+                // Reset button state
+                if (testAvatarBtn) {
+                    testAvatarBtn.disabled = false;
+                    testAvatarBtn.innerHTML = '<i class="fas fa-play"></i> Test Avatar';
+                }
+            }
+        }
+        
+        // Format file size helper
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Show alert function
+        function showAlert(message, type = 'info') {
+            try {
+                const alertElement = document.getElementById('alert');
+                if (!alertElement) {
+                    console.log(`${type.toUpperCase()}: ${message}`);
+                    return;
+                }
+                
+                // Clear existing classes
+                alertElement.className = 'alert';
+                
+                // Add type-specific class
+                switch (type) {
+                    case 'success':
+                        alertElement.classList.add('alert-success');
+                        break;
+                    case 'danger':
+                    case 'error':
+                        alertElement.classList.add('alert-danger');
+                        break;
+                    case 'warning':
+                        alertElement.classList.add('alert-warning');
+                        break;
+                    case 'info':
+                    default:
+                        alertElement.classList.add('alert-info');
+                        break;
+                }
+                
+                alertElement.textContent = message;
+                alertElement.style.display = 'block';
+                
+                // Auto-hide after 8 seconds for success/info, longer for errors
+                const hideDelay = (type === 'danger' || type === 'error') ? 12000 : 8000;
+                setTimeout(() => {
+                    if (alertElement.style.display !== 'none') {
+                        alertElement.style.display = 'none';
+                    }
+                }, hideDelay);
+                
+                // Scroll to top to see alert
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error in showAlert function:', error);
+                console.log(`${type.toUpperCase()}: ${message}`);
+                
+                // Fallback to browser alert for critical messages
+                if (type === 'danger' || type === 'error') {
+                    alert(message);
+                }
+            }
+        }
+        
+        console.log('Avatar setup page initialized successfully');
+        console.log('Current avatar ID:', currentAvatarId);
+    });
+    
+    // Global functions for inline event handlers
+    function resetForNewAvatar() {
+        // Hide avatar sections
+        const uploadSection = document.getElementById('upload-section');
+        const avatarStatusSection = document.getElementById('avatar-status-section');
+        const videoGenerationSection = document.getElementById('video-generation-section');
+        
+        if (avatarStatusSection) avatarStatusSection.style.display = 'none';
+        if (videoGenerationSection) videoGenerationSection.style.display = 'none';
+        if (uploadSection) uploadSection.style.display = 'block';
+        
+        // Reset variables
+        currentAvatarId = null;
+        selectedFile = null;
+        
+        // Reset file input
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) fileInput.value = '';
+        
+        // Reset preview
+        const previewContainer = document.getElementById('preview-container');
+        const uploadArea = document.getElementById('upload-area');
+        if (previewContainer) previewContainer.style.display = 'none';
+        if (uploadArea) uploadArea.style.display = 'block';
+        
+        showAlert('Ready to create a new avatar. Please select an image file.', 'info');
     }
-
-    // Add function to render avatar browser
-    function renderAvatarBrowser(avatars) {
-        const grid = document.getElementById('avatar-grid');
+    
+    // Generate test video
+    async function generateTestVideo() {
+        const message = document.getElementById('test-message').value.trim();
+        const token = localStorage.getItem('token');
         
-        // Filter for professional avatars first
-        const professional = avatars.filter(a => 
-            a.name.toLowerCase().includes('professional') || 
-            a.name.toLowerCase().includes('business') ||
-            a.name.toLowerCase().includes('presenter')
-        );
+        if (!message) {
+            showAlert('Please enter a test message.', 'danger');
+            return;
+        }
         
-        const displayAvatars = professional.length > 0 ? professional.slice(0, 20) : avatars.slice(0, 20);
+        if (!window.currentAvatarId) {
+            showAlert('No avatar available for testing.', 'danger');
+            return;
+        }
         
-        grid.innerHTML = displayAvatars.map(avatar => `
-            <div class="avatar-option" data-avatar-id="${avatar.avatar_id}" onclick="selectBrowserAvatar('${avatar.avatar_id}', '${avatar.name}')">
-                <img src="${avatar.preview_image || '/assets/images/avatar-placeholder.png'}" 
-                    alt="${avatar.name}" 
-                    onerror="this.src='/assets/images/avatar-placeholder.png'">
-                <div class="avatar-name">${avatar.name}</div>
-                <div class="avatar-category">${avatar.category || 'Professional'}</div>
-            </div>
-        `).join('');
-    }
-
-    let selectedBrowserAvatarId = null;
-    let selectedBrowserAvatarName = null;
-
-    // Add function to select avatar in browser
-    function selectBrowserAvatar(avatarId, avatarName) {
-        // Remove previous selection
-        document.querySelectorAll('.avatar-option').forEach(el => el.classList.remove('selected'));
+        const generateBtn = document.getElementById('generate-test-video-btn');
+        const originalText = generateBtn.innerHTML;
         
-        // Add selection
-        event.currentTarget.classList.add('selected');
-        
-        selectedBrowserAvatarId = avatarId;
-        selectedBrowserAvatarName = avatarName;
-        
-        document.getElementById('confirm-avatar-change').disabled = false;
-        document.getElementById('confirm-avatar-change').onclick = () => confirmAvatarChange(avatarId, avatarName);
-    }
-
-    // Add function to confirm avatar change
-    async function confirmAvatarChange(avatarId, avatarName) {
         try {
-            const response = await fetch(`${API_BASE_URL}/avatar/change`, {
+            // Show loading state
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            const response = await fetch(`${CONFIG.API.BASE_URL}/avatar/test-video`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ avatar_id: avatarId })
+                body: JSON.stringify({
+                    text: message,
+                    avatar_id: window.currentAvatarId
+                })
             });
             
             const data = await response.json();
             
-            if (data.status === 'success') {
-                currentAvatarId = avatarId;
-                updateAvatarStatus(true, avatarId, null);
-                showAlert(`Avatar changed to ${avatarName}! Ready for video generation.`, 'success');
-                closeAvatarBrowser();
-            } else {
-                showAlert(data.message || 'Failed to change avatar.', 'danger');
-            }
-        } catch (error) {
-            console.error('Error changing avatar:', error);
-            showAlert('Error changing avatar. Please try again.', 'danger');
-        }
-    }
-
-    // Add function to close avatar browser
-    function closeAvatarBrowser() {
-        const modal = document.querySelector('.avatar-browser-modal');
-        if (modal) {
-            modal.remove();
-        }
-    }
-
-    // Function to check avatar training status with improved polling
-    async function checkAvatarTrainingStatus(avatarId, maxAttempts = 15) {
-        let attempts = 0;
-        
-        const checkStatus = async () => {
-            try {
-                const response = await fetch(`${API_BASE_URL}/avatar/status/${avatarId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        const trainingStatus = data.data.training_status;
-                        const isReady = data.data.ready_for_video;
-                        
-                        console.log(`Avatar training status: ${trainingStatus}, Ready: ${isReady}`);
-                        
-                        // Update UI based on status
-                        const statusElement = document.getElementById('avatar-status');
-                        if (statusElement) {
-                            switch (trainingStatus) {
-                                case 'pending':
-                                case 'processing':
-                                case 'training':
-                                    statusElement.textContent = 'Avatar training in progress...';
-                                    statusElement.style.color = '#f59e0b';
-                                    break;
-                                case 'completed':
-                                case 'ready':
-                                    statusElement.textContent = 'Avatar ready for video generation!';
-                                    statusElement.style.color = '#10b981';
-                                    testAvatarBtn.disabled = false;
-                                    showAlert('Your custom avatar is now ready for video generation!', 'success');
-                                    return; // Stop checking
-                                case 'failed':
-                                case 'error':
-                                    statusElement.textContent = 'Avatar training failed';
-                                    statusElement.style.color = '#ef4444';
-                                    showAlert('Avatar training failed. Please try creating a new avatar.', 'danger');
-                                    return; // Stop checking
-                                default:
-                                    statusElement.textContent = `Avatar status: ${trainingStatus}`;
-                                    statusElement.style.color = '#6b7280';
-                            }
-                        }
-                        
-                        // Continue checking if not completed or failed
-                        if (!isReady && trainingStatus !== 'failed' && trainingStatus !== 'error' && attempts < maxAttempts) {
-                            setTimeout(checkStatus, 20000); // Check again in 20 seconds
-                        } else if (isReady) {
-                            testAvatarBtn.disabled = false;
-                        }
-                    }
-                } else {
-                    console.warn('Failed to check avatar status:', response.status);
-                }
-            } catch (error) {
-                console.error('Error checking avatar status:', error);
-            }
-            
-            attempts++;
-        };
-        
-        // Start checking after 15 seconds
-        setTimeout(checkStatus, 15000);
-    }
-
-    // Improved test avatar function
-    async function testAvatar() {
-        if (!currentAvatarId) {
-            showAlert('No avatar found. Please create an avatar first.', 'danger');
-            return;
-        }
-        
-        const statusElement = document.getElementById('avatar-status');
-        const avatarPreviewVideo = document.getElementById('avatar-preview-video');
-        
-        // Show loading state
-        statusElement.textContent = 'Testing your custom avatar...';
-        testAvatarBtn.disabled = true;
-        testAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
-        
-        try {
-            const testData = {
-                text: "Hello! This is a test of your custom AI avatar. I'm excited to chat with your fans and help promote your content!",
-                avatar_id: currentAvatarId
-            };
-            
-            console.log('Testing custom avatar:', testData);
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
-            
-            const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(testData),
-                signal: controller.signal
-            });
-            
-            clearTimeout(timeoutId);
-            
-            console.log('Test response status:', response.status);
-            
-            const data = await response.json();
-            console.log('Test response data:', data);
-            
-            if (response.ok && data.status === 'success') {
-                statusElement.textContent = 'Test successful!';
-                
-                if (data.data.video_url && data.data.video_url.trim() !== '') {
-                    console.log('Custom avatar video URL received:', data.data.video_url);
-                    
-                    // Show video preview
-                    avatarPreviewVideo.style.display = 'block';
+            if (data.status === 'success' && data.data.video_url) {
+                // Show video
+                const avatarPreviewVideo = document.getElementById('avatar-preview-video');
+                if (avatarPreviewVideo) {
                     avatarPreviewVideo.src = data.data.video_url;
+                    avatarPreviewVideo.style.display = 'block';
                     
-                    avatarPreviewVideo.onloadstart = function() {
-                        statusElement.textContent = 'Loading your custom avatar video...';
-                    };
-                    
-                    avatarPreviewVideo.oncanplay = function() {
-                        statusElement.textContent = 'Your custom avatar is ready! Click play to watch.';
-                    };
-                    
-                    avatarPreviewVideo.onerror = function(e) {
-                        console.error('Video load error:', e);
-                        statusElement.textContent = 'Video generated but failed to load.';
-                        showAlert('Custom avatar video was generated but failed to load. This might be temporary.', 'warning');
-                    };
-                    
-                    showAlert('Custom avatar test completed successfully! Your personalized avatar is working perfectly.', 'success');
-                } else {
-                    console.log('No video URL in response for custom avatar');
-                    statusElement.textContent = 'Avatar responded but video generation may still be processing.';
-                    showAlert('Your custom avatar responded! Video generation may take a bit longer for custom avatars.', 'warning');
-                }
-            } else {
-                const errorMessage = data?.message || 'Unknown error occurred';
-                console.error('Custom avatar test error:', errorMessage);
-                
-                statusElement.textContent = 'Test failed.';
-                
-                if (response.status === 400) {
-                    if (errorMessage.includes('not ready')) {
-                        showAlert('Avatar is still training. Please wait a few more minutes and try again.', 'warning');
-                    } else {
-                        showAlert('Avatar test failed. Your custom avatar may still be training.', 'warning');
+                    // Hide placeholder if showing
+                    const placeholder = document.getElementById('avatar-preview-placeholder');
+                    if (placeholder) {
+                        placeholder.style.display = 'none';
                     }
-                } else if (response.status === 401) {
-                    showAlert('Authentication failed. Please log in again.', 'danger');
-                } else if (response.status === 404) {
-                    showAlert('Custom avatar not found. Please make sure your avatar creation completed successfully.', 'danger');
-                } else {
-                    showAlert(`Test failed: ${errorMessage}. Your custom avatar may still be training.`, 'warning');
                 }
+                
+                showAlert('Test video generated successfully!', 'success');
+            } else {
+                showAlert(data.message || 'Failed to generate test video.', 'danger');
             }
+            
         } catch (error) {
-            console.error('Test custom avatar error:', error);
-            
-            let errorMessage = 'An error occurred while testing your custom avatar.';
-            
-            if (error.name === 'AbortError') {
-                errorMessage = 'Test timed out. Custom avatar video generation takes longer than stock avatars.';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage = 'Cannot connect to server. Please check your internet connection.';
-            }
-            
-            statusElement.textContent = 'Test failed.';
-            showAlert(errorMessage, 'danger');
+            console.error('Test video generation error:', error);
+            showAlert('Error generating test video. Please try again.', 'danger');
         } finally {
-            // Reset button state
-            testAvatarBtn.disabled = false;
-            testAvatarBtn.innerHTML = '<i class="fas fa-play"></i> Test Avatar';
-        }
-    }
-
-    // Add test upload function
-    async function testFileUpload() {
-        if (!selectedFile) {
-            return;
-        }
-        
-        try {
-            console.log('Testing file upload format...');
-            
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-            
-            const response = await fetch(`${API_BASE_URL}/avatar/test-upload`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData
-            });
-            
-            const data = await response.json();
-            console.log('Upload test result:', data);
-            
-            if (data.status === 'success') {
-                console.log('✅ File upload test passed');
-                console.log('HeyGen response:', data.data.heygen_response);
-            } else {
-                console.warn('⚠️ File upload test failed:', data.message);
-            }
-            
-        } catch (error) {
-            console.warn('Upload test failed:', error);
+            // Reset button
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = originalText;
         }
     }
     
-    // Update avatar status display
-    function updateAvatarStatus(hasAvatar, avatarIdValue, imageUrl) {
-        if (hasAvatar) {
-            // Update status text
-            avatarStatus.textContent = 'Avatar created successfully';
-            avatarStatus.style.color = '#10b981';
-            
-            // Show avatar ID
-            if (avatarIdValue) {
-                avatarId.textContent = `Avatar ID: ${avatarIdValue}`;
-                avatarId.style.display = 'block';
-            }
-            
-            // Show avatar preview image
-            if (imageUrl) {
-                avatarPreviewImage.src = imageUrl;
-                avatarPreviewImage.style.display = 'block';
-                avatarPreviewPlaceholder.style.display = 'none';
-            }
-            
-            // Enable test button (will be disabled again if avatar is still training)
-            testAvatarBtn.disabled = false;
-        } else {
-            // Reset to default state
-            avatarStatus.textContent = 'No avatar created yet';
-            avatarStatus.style.color = '#666';
-            avatarId.style.display = 'none';
-            avatarPreviewImage.style.display = 'none';
-            avatarPreviewPlaceholder.style.display = 'flex';
-            testAvatarBtn.disabled = true;
-        }
-    }
-    
-    // Show alert message with improved styling
     function showAlert(message, type) {
-        try {
-            const alert = document.getElementById('alert');
-            if (!alert) {
-                console.warn('Alert element not found, using console log instead');
-                console.log(`${type.toUpperCase()}: ${message}`);
-                
-                // Try to show browser alert as fallback
-                if (type === 'danger' || type === 'error') {
-                    alert(message);
-                }
-                return;
-            }
-            
-            alert.textContent = message;
-            alert.className = 'alert';
-            alert.classList.add(`alert-${type}`);
-            alert.style.display = 'block';
-            
-            // Auto-hide success and warning messages after 8 seconds
-            if (type === 'success' || type === 'warning') {
-                setTimeout(() => {
-                    if (alert && alert.style) {
-                        alert.style.display = 'none';
-                    }
-                }, 8000);
-            }
-            
-            // Scroll to top to see alert
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } catch (error) {
-            console.error('Error in showAlert function:', error);
-            console.log(`${type.toUpperCase()}: ${message}`);
-            
-            // Fallback to browser alert for critical messages
-            if (type === 'danger' || type === 'error') {
-                alert(message);
-            }
-        }
-    }
-    
-    // Format file size
-    function formatFileSize(bytes) {
-        if (bytes < 1024) {
-            return bytes + ' bytes';
-        } else if (bytes < 1024 * 1024) {
-            return (bytes / 1024).toFixed(2) + ' KB';
-        } else {
-            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-        }
-    }
-    
-    // Add periodic status check for existing avatars
-    if (currentAvatarId) {
-        // Check status every 30 seconds for the first 10 minutes after page load
-        let statusCheckCount = 0;
-        const maxStatusChecks = 20; // 20 * 30 seconds = 10 minutes
+        const alertElement = document.getElementById('alert');
+        if (!alertElement) return;
         
-        const periodicStatusCheck = setInterval(async () => {
-            statusCheckCount++;
-            
-            if (statusCheckCount > maxStatusChecks) {
-                clearInterval(periodicStatusCheck);
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${API_BASE_URL}/avatar/status/${currentAvatarId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.status === 'success' && data.data.ready_for_video) {
-                        // Avatar is ready!
-                        avatarStatus.textContent = 'Avatar ready for video generation!';
-                        avatarStatus.style.color = '#10b981';
-                        testAvatarBtn.disabled = false;
-                        
-                        // Stop checking
-                        clearInterval(periodicStatusCheck);
-                        
-                        showAlert('Your avatar is now ready for video generation!', 'success');
-                    }
-                }
-            } catch (error) {
-                console.warn('Periodic status check failed:', error);
-            }
-        }, 30000); // Check every 30 seconds
-    }
-    
-    // Add error recovery mechanism
-    window.addEventListener('error', function(event) {
-        console.error('Global error caught:', event.error);
+        alertElement.className = 'alert alert-' + type;
+        alertElement.textContent = message;
+        alertElement.style.display = 'block';
         
-        // If there's a critical error during avatar creation, try to recover
-        if (loadingOverlay.style.display === 'flex') {
-            loadingOverlay.style.display = 'none';
-            createAvatarBtn.disabled = false;
-            showAlert('An unexpected error occurred. Please try again.', 'danger');
-        }
-    });
-    
-    // Add visibility change handler to pause/resume operations when tab is not visible
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            console.log('Tab hidden - pausing operations');
-        } else {
-            console.log('Tab visible - resuming operations');
-            // Optionally refresh avatar status when user returns to tab
-            if (currentAvatarId && testAvatarBtn.disabled) {
-                checkAvatarTrainingStatus(currentAvatarId, 5); // Quick check with fewer attempts
-            }
-        }
-    });
-    
-    console.log('Avatar setup page initialized successfully');
-});
-</script>
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+        }, 8000);
+    }
+    </script>
 </body>
 </html>
