@@ -3,813 +3,634 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat with Influencer - AvatarCommerce</title>
+    <title>Chat with AI Avatar</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            background-color: #f9f9fb;
-            color: #333;
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Header styles */
-        header {
-            background-color: #fff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 15px 0;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #5e60ce;
-        }
-        
-        .logo span {
-            color: #64dfdf;
-        }
-        
-        .logo a {
-            text-decoration: none;
-            color: inherit;
-        }
-        
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-        }
-        
-        .nav-link {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        .nav-link:hover {
-            color: #5e60ce;
-        }
-        
-        .nav-link.active {
-            color: #5e60ce;
-            font-weight: 600;
-        }
-        
-        .auth-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 16px;
-            background-color: #5e60ce;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background-color 0.3s;
-            text-decoration: none;
-        }
-        
-        .btn:hover {
-            background-color: #4d4eb9;
-        }
-        
-        .btn:disabled {
-            background-color: #a5a6e0;
-            cursor: not-allowed;
-        }
-        
-        .btn i {
-            margin-right: 6px;
-        }
-        
-        .btn-secondary {
-            background-color: #f1f1fe;
-            color: #5e60ce;
-            border: 1px solid #ddd;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #e5e5fb;
-        }
-        
-        /* Chat page styles */
-        .chat-container {
-            display: flex;
-            padding: 30px 0;
-            flex: 1;
-        }
-        
-        .user-info-sidebar {
-            width: 300px;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-right: 30px;
-        }
-        
-        .influencer-profile {
-            text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .profile-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-        }
-        
-        .profile-placeholder {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background-color: #5e60ce;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: bold;
-            margin: 0 auto 15px;
-        }
-        
-        .profile-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .profile-bio {
-            color: #666;
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-        }
-        
-        .chat-settings {
-            margin-top: 30px;
-        }
-        
-        .settings-title {
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .setting-option {
-            margin-bottom: 20px;
-        }
-        
-        .setting-label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-            margin-left: 10px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 24px;
-        }
-        
-        .toggle-slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .toggle-slider {
-            background-color: #5e60ce;
-        }
-        
-        input:checked + .toggle-slider:before {
-            transform: translateX(26px);
-        }
-        
-        .setting-description {
-            font-size: 0.85rem;
-            color: #666;
-        }
-        
-        /* Chat interface */
-        .chat-interface {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 70vh;
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
             overflow: hidden;
         }
-        
-        .chat-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+
+        .chat-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            height: 100vh;
+            background: white;
+            max-width: 1400px;
+            margin: 0 auto;
+            box-shadow: 0 0 50px rgba(0,0,0,0.2);
+        }
+
+        /* Avatar Section */
+        .avatar-section {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .avatar-header {
+            padding: 25px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .influencer-info {
+            margin-bottom: 20px;
+        }
+
+        .influencer-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .influencer-bio {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .avatar-status {
             display: flex;
             align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
         }
-        
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .avatar-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .avatar-video {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .avatar-video.speaking {
+            transform: scale(1.05);
+            box-shadow: 0 20px 60px rgba(94, 96, 206, 0.4);
+        }
+
+        .avatar-placeholder {
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .voice-controls {
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .voice-selector {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .voice-selector option {
+            background: #1e293b;
+            color: white;
+        }
+
+        .voice-preview-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #5e60ce, #7c3aed);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .voice-preview-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(94, 96, 206, 0.4);
+        }
+
+        /* Chat Section */
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+        }
+
+        .chat-header {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         .chat-title {
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             font-weight: 600;
-            color: #333;
+            color: #1e293b;
         }
-        
-        .chat-status {
-            margin-left: auto;
-            font-size: 0.85rem;
-            color: #666;
+
+        .chat-settings {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
-        
-        .chat-status.online {
-            color: #10b981;
+
+        .setting-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #64748b;
         }
-        
-        .chat-status.online:before {
-            content: "•";
-            margin-right: 5px;
-            font-size: 1.2rem;
+
+        .toggle-switch {
+            position: relative;
+            width: 40px;
+            height: 20px;
+            background: #cbd5e1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        
+
+        .toggle-switch.active {
+            background: #5e60ce;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
         .chat-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 30px;
+            scroll-behavior: smooth;
         }
-        
+
         .message {
             display: flex;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            animation: slideIn 0.3s ease;
         }
-        
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message-bubble {
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, #5e60ce, #7c3aed);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.avatar .message-bubble {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
         .message-avatar {
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            object-fit: cover;
-            margin-right: 10px;
-        }
-        
-        .message-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #ddd;
-            color: #666;
+            margin-right: 12px;
+            background: linear-gradient(135deg, #5e60ce, #7c3aed);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
-            margin-right: 10px;
-        }
-        
-        .message-content {
-            max-width: 70%;
-        }
-        
-        .message-bubble {
-            background-color: #f1f1fe;
-            padding: 10px 15px;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .message-info {
-            font-size: 0.75rem;
-            color: #666;
-            margin-left: 5px;
-        }
-        
-        .message.outgoing {
-            flex-direction: row-reverse;
-        }
-        
-        .message.outgoing .message-content {
-            align-items: flex-end;
-        }
-        
-        .message.outgoing .message-bubble {
-            background-color: #5e60ce;
             color: white;
-        }
-        
-        .message.outgoing .message-info {
-            text-align: right;
-            margin-right: 5px;
-            margin-left: 0;
-        }
-        
-        .avatar-response {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        
-        .avatar-video {
-            width: 320px;
-            height: 180px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .product-recommendations {
-            margin-top: 15px;
-            background-color: #f8fafc;
-            border-radius: 8px;
-            padding: 15px;
-        }
-        
-        .product-title {
             font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-            font-size: 0.95rem;
+            flex-shrink: 0;
         }
-        
-        .product-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+
+        .message.user .message-avatar {
+            margin-right: 0;
+            margin-left: 12px;
+            background: linear-gradient(135deg, #64748b, #475569);
+            order: 2;
         }
-        
-        .product-item {
-            background-color: #fff;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            padding: 10px;
-            width: calc(50% - 5px);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .product-image {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-        
-        .product-name {
-            font-weight: 500;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-        }
-        
-        .product-price {
-            font-size: 0.85rem;
-            color: #16a34a;
-            margin-bottom: 8px;
-        }
-        
-        .product-link {
-            background-color: #f1f1fe;
-            color: #5e60ce;
-            border: none;
-            border-radius: 4px;
-            padding: 6px 10px;
+
+        .message-time {
             font-size: 0.8rem;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            margin-top: auto;
+            color: #94a3b8;
+            margin-top: 5px;
+            text-align: right;
         }
-        
-        .product-link:hover {
-            background-color: #e5e5fb;
+
+        .message.avatar .message-time {
+            text-align: left;
         }
-        
-        .chat-input-container {
-            padding: 15px 20px;
-            border-top: 1px solid #eee;
-            display: flex;
-            align-items: center;
+
+        .avatar-response-video {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 15px;
+            margin-top: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
-        
-        .chat-input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            resize: none;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-        
-        .chat-input:focus {
-            outline: none;
-            border-color: #5e60ce;
-        }
-        
-        .input-actions {
-            display: flex;
-            margin-left: 10px;
-        }
-        
-        .voice-input-btn {
-            background-color: #f1f1fe;
-            color: #5e60ce;
-            border: none;
-            border-radius: 4px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            transition: background-color 0.3s;
-        }
-        
-        .voice-input-btn:hover {
-            background-color: #e5e5fb;
-        }
-        
-        .voice-input-btn.recording {
-            background-color: #fee2e2;
-            color: #b91c1c;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.1);
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
-        
-        .send-btn {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Loading states */
+
         .typing-indicator {
-            display: none;
-            padding: 10px 15px;
-            background-color: #f1f1fe;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            color: #333;
-            width: fit-content;
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 20px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+            animation: slideIn 0.3s ease;
         }
-        
+
         .typing-dots {
-            display: inline-flex;
+            display: flex;
+            gap: 4px;
         }
-        
+
         .typing-dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
             border-radius: 50%;
-            background-color: #666;
-            margin: 0 2px;
-            animation: typingAnimation 1.5s infinite ease-in-out;
+            animation: typing 1.4s infinite;
         }
-        
+
         .typing-dot:nth-child(2) {
             animation-delay: 0.2s;
         }
-        
+
         .typing-dot:nth-child(3) {
             animation-delay: 0.4s;
         }
-        
-        @keyframes typingAnimation {
-            0%, 100% {
+
+        @keyframes typing {
+            0%, 60%, 100% {
                 transform: translateY(0);
+                opacity: 0.4;
             }
-            50% {
-                transform: translateY(-4px);
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
             }
         }
-        
-        /* Login prompt */
-        .login-prompt {
-            background-color: #f8fafc;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            text-align: center;
+
+        .chat-input-container {
+            background: white;
+            padding: 25px 30px;
+            border-top: 1px solid #e2e8f0;
         }
-        
-        .prompt-title {
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .prompt-text {
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-            color: #555;
-        }
-        
-        /* Error display */
-        .error-container {
+
+        .input-group {
             display: flex;
-            flex-direction: column;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 15px 20px;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: all 0.3s ease;
+            min-height: 60px;
+            max-height: 120px;
+        }
+
+        .chat-input:focus {
+            border-color: #5e60ce;
+            box-shadow: 0 0 0 3px rgba(94, 96, 206, 0.1);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
-            text-align: center;
-        }
-        
-        .error-icon {
-            font-size: 3rem;
-            color: #b91c1c;
-            margin-bottom: 20px;
-        }
-        
-        .error-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .error-message {
-            color: #666;
-            font-size: 1rem;
-            margin-bottom: 20px;
-        }
-        
-        /* Footer */
-        footer {
-            background-color: #333;
-            color: #fff;
-            padding: 30px 0;
-            margin-top: auto;
-        }
-        
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .footer-logo {
             font-size: 1.2rem;
-            font-weight: bold;
-            color: #fff;
+            transition: all 0.3s ease;
         }
-        
-        .footer-logo span {
-            color: #64dfdf;
+
+        .voice-btn {
+            background: #f1f5f9;
+            color: #64748b;
         }
-        
-        .footer-links {
+
+        .voice-btn:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .voice-btn.recording {
+            background: #fecaca;
+            color: #dc2626;
+            animation: pulse 1s infinite;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #5e60ce, #7c3aed);
+            color: white;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(94, 96, 206, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Product recommendations */
+        .product-recommendations {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .product-recommendations h4 {
+            color: #1e293b;
+            margin-bottom: 15px;
             display: flex;
-            list-style: none;
-            gap: 20px;
+            align-items: center;
+            gap: 8px;
         }
-        
-        .footer-link {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .product-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-color: #5e60ce;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+            border-radius: 8px;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #64748b;
+        }
+
+        .product-name {
             font-size: 0.9rem;
-            transition: color 0.3s;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 5px;
         }
-        
-        .footer-link:hover {
-            color: #fff;
+
+        .product-price {
+            font-size: 0.8rem;
+            color: #5e60ce;
+            font-weight: 600;
         }
-        
-        .copyright {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
+
         /* Responsive design */
-        @media (max-width: 992px) {
-            .chat-container {
-                flex-direction: column;
-            }
-            
-            .user-info-sidebar {
-                width: 100%;
-                margin-right: 0;
-                margin-bottom: 20px;
-            }
-            
-            .influencer-profile {
-                display: flex;
-                align-items: center;
-                text-align: left;
-                padding-bottom: 15px;
-            }
-            
-            .profile-image,
-            .profile-placeholder {
-                width: 80px;
-                height: 80px;
-                margin-bottom: 0;
-                margin-right: 15px;
-            }
-            
-            .chat-settings {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 20px;
-            }
-            
-            .setting-option {
-                width: calc(50% - 10px);
-            }
-        }
-        
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                align-items: flex-start;
+            .chat-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 300px 1fr;
             }
-            
-            .nav-links {
-                margin: 10px 0;
+
+            .avatar-section {
+                flex-direction: row;
+                align-items: center;
+                padding: 20px;
             }
-            
-            .auth-buttons {
-                width: 100%;
-                justify-content: center;
-                margin-top: 10px;
+
+            .avatar-header {
+                flex: 1;
+                padding: 0;
+                background: none;
+                text-align: left;
             }
-            
-            .setting-option {
-                width: 100%;
+
+            .avatar-display {
+                flex: none;
+                padding: 0 0 0 20px;
             }
-            
-            .product-item {
-                width: 100%;
-            }
-            
+
             .avatar-video {
-                width: 100%;
-                height: auto;
+                max-width: 150px;
+            }
+
+            .voice-controls {
+                display: none;
             }
         }
     </style>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <a href="../../index.html">Avatar<span>Commerce</span></a>
+    <div class="chat-container">
+        <!-- Avatar Section -->
+        <div class="avatar-section">
+            <div class="avatar-header">
+                <div class="influencer-info">
+                    <div class="influencer-name" id="influencerName">Alex Creator</div>
+                    <div class="influencer-bio" id="influencerBio">
+                        Fashion & Lifestyle Influencer. Helping you discover amazing products and style tips!
+                    </div>
                 </div>
                 
-                <ul class="nav-links">
-                    <li><a href="../../index.html#features" class="nav-link">Features</a></li>
-                    <li><a href="../../index.html#how-it-works" class="nav-link">How It Works</a></li>
-                    <li><a href="#" class="nav-link active">Chat</a></li>
-                </ul>
-                
-                <div class="auth-buttons" id="auth-buttons">
-                    <a href="../login.html" class="btn btn-secondary">Login</a>
-                    <a href="../register.html" class="btn">Sign Up</a>
+                <div class="avatar-status">
+                    <div class="status-dot"></div>
+                    <span>AI Avatar Online</span>
                 </div>
+            </div>
+
+            <div class="avatar-display">
+                <div class="avatar-placeholder" id="avatarPlaceholder">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <video id="avatarVideo" class="avatar-video" style="display: none;" muted>
+                    <source src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="voice-controls">
+                <select class="voice-selector" id="voiceSelector">
+                    <option value="default">Sarah (Default)</option>
+                    <option value="male">David (Professional)</option>
+                    <option value="custom">Custom Voice</option>
+                </select>
+                <button class="voice-preview-btn" onclick="previewVoice()">
+                    <i class="fas fa-play"></i> Preview Voice
+                </button>
             </div>
         </div>
-    </header>
 
-    <!-- Chat Container -->
-    <div class="container">
-        <div class="chat-container">
-            <!-- User Info Sidebar -->
-            <div class="user-info-sidebar">
-                <div class="influencer-profile">
-                    <div id="profile-placeholder" class="profile-placeholder">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <img id="profile-image" class="profile-image" src="" alt="Influencer Avatar" style="display: none;">
-                    
-                    <div>
-                        <h2 id="profile-name" class="profile-name">Loading...</h2>
-                        <p id="profile-bio" class="profile-bio">Loading bio...</p>
-                    </div>
-                </div>
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <div class="chat-header">
+                <div class="chat-title">Chat with AI Avatar</div>
                 
                 <div class="chat-settings">
-                    <h3 class="settings-title">Chat Settings</h3>
-                    
-                    <div class="setting-option">
-                        <div class="setting-label">
-                            Voice Mode
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="voice-mode-toggle">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <p class="setting-description" id="voice-mode-description">Enable voice responses from the avatar</p>
+                    <div class="setting-toggle">
+                        <span>Voice Responses</span>
+                        <div class="toggle-switch active" onclick="toggleVoiceResponses(this)"></div>
                     </div>
-                    
-                    <div class="setting-option">
-                        <div class="setting-label">
-                            Voice Input
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="voice-input-toggle">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <p class="setting-description">Enable microphone for voice messages</p>
+                    <div class="setting-toggle">
+                        <span>Auto-play Videos</span>
+                        <div class="toggle-switch active" onclick="toggleAutoplay(this)"></div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Chat Interface -->
-            <div class="chat-interface">
-                <div class="chat-header">
-                    <div id="chat-title" class="chat-title">Chat with Influencer</div>
-                    <div class="chat-status online">AI Avatar Online</div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Welcome message -->
+                <div class="message avatar">
+                    <div class="message-avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            Hi there! 👋 I'm Alex's AI avatar. I'm here to help you discover amazing products and answer any questions you might have. What are you looking for today?
+                        </div>
+                        <div class="message-time">Just now</div>
+                    </div>
                 </div>
-                
-                <div id="chat-messages" class="chat-messages">
-                    <!-- Messages will be loaded here -->
-                </div>
-                
-                <div class="chat-input-container">
-                    <textarea id="chat-input" class="chat-input" placeholder="Type your message..." rows="1"></textarea>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="chatInput" 
+                            class="chat-input" 
+                            placeholder="Type your message here..." 
+                            rows="1"
+                            onkeydown="handleKeyPress(event)"
+                        ></textarea>
+                    </div>
+                    
                     <div class="input-actions">
-                        <button id="voice-input-btn" class="voice-input-btn" disabled>
+                        <button class="action-btn voice-btn" id="voiceBtn" onclick="toggleVoiceInput()">
                             <i class="fas fa-microphone"></i>
                         </button>
-                        <button id="send-btn" class="btn send-btn">
+                        <button class="action-btn send-btn" id="sendBtn" onclick="sendMessage()">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>
@@ -818,697 +639,333 @@
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-logo">Avatar<span>Commerce</span></div>
-                
-                <ul class="footer-links">
-                    <li><a href="../../index.html" class="footer-link">Home</a></li>
-                    <li><a href="../../index.html#features" class="footer-link">Features</a></li>
-                    <li><a href="#" class="footer-link">Terms</a></li>
-                    <li><a href="#" class="footer-link">Privacy</a></li>
-                </ul>
-                
-                <div class="copyright">&copy; 2025 AvatarCommerce. All rights reserved.</div>
-            </div>
-        </div>
-    </footer>
-    
-    <!-- Load shared scripts -->
-    <script src="../js/config.js"></script>
-
     <script>
+        let chatState = {
+            messages: [],
+            isTyping: false,
+            voiceEnabled: true,
+            autoplayEnabled: true,
+            currentVoice: 'default',
+            avatarReady: false
+        };
+
+        // Sample avatar videos for demo
+        const avatarVideos = {
+            welcome: 'https://sample-videos.com/zip/10/mp4/SampleVideo_360x240_1mb.mp4',
+            response1: 'https://sample-videos.com/zip/10/mp4/SampleVideo_720x480_1mb.mp4',
+            response2: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4'
+        };
+
+        // Initialize chat
         document.addEventListener('DOMContentLoaded', function() {
-            // API base URL
-            const API_BASE_URL = CONFIG.API.BASE_URL;
-            
-            // DOM elements
-            const profilePlaceholder = document.getElementById('profile-placeholder');
-            const profileImage = document.getElementById('profile-image');
-            const profileName = document.getElementById('profile-name');
-            const profileBio = document.getElementById('profile-bio');
-            const chatTitle = document.getElementById('chat-title');
-            const chatMessages = document.getElementById('chat-messages');
-            const chatInput = document.getElementById('chat-input');
-            const sendBtn = document.getElementById('send-btn');
-            const voiceInputBtn = document.getElementById('voice-input-btn');
-            const voiceModeToggle = document.getElementById('voice-mode-toggle');
-            const voiceInputToggle = document.getElementById('voice-input-toggle');
-            const voiceModeDescription = document.getElementById('voice-mode-description');
-            const loginPrompt = document.getElementById('login-prompt');
-            const authButtons = document.getElementById('auth-buttons');
-            
-            // User and chat data
-            let influencerId = null;
-            let influencerUsername = null;
-            let sessionId = null;
-            let voiceId = null;
-            let hasVoice = false;
-            let isLoading = false;
-            
-            // Generate session ID for anonymous users
-            sessionId = generateSessionId();
-            
-            // Get URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const usernameParam = urlParams.get('username');
-            
-            console.log('URL parameters:', {
-                username: usernameParam,
-                fullURL: window.location.href,
-                search: window.location.search
-            });
-            
-            if (!usernameParam) {
-                showError('No influencer username provided in URL. Please access this chat through a valid link.');
-                return;
-            }
-            
-            // Initialize chat with the username
-            initializeChat(usernameParam);
-            
-            // Generate a session ID for anonymous users
-            function generateSessionId() {
-                return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-            }
-            
-            // Chat input auto-resize
+            initializeChat();
+            loadAvatarConfig();
+        });
+
+        function initializeChat() {
+            // Auto-resize textarea
+            const chatInput = document.getElementById('chatInput');
             chatInput.addEventListener('input', function() {
                 this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
+
+            // Load influencer data from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username') || 'Alex Creator';
             
-            // Send message on button click
-            sendBtn.addEventListener('click', sendMessage);
-            
-            // Send message on Enter key (but allow Shift+Enter for new line)
-            chatInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-            
-            // Voice input button click
-            voiceInputBtn.addEventListener('click', toggleVoiceInput);
-            
-            // Voice mode toggle
-            voiceModeToggle.addEventListener('change', function() {
-                if (this.checked && !hasVoice) {
-                    addSystemMessage('Voice mode is not available for this influencer.');
-                    this.checked = false;
-                }
-            });
-            
-            // Voice input toggle
-            voiceInputToggle.addEventListener('change', function() {
-                if (this.checked) {
-                    // Request microphone permission
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(function(stream) {
-                            // Permission granted
-                            stream.getTracks().forEach(track => track.stop());
-                            voiceInputBtn.disabled = false;
-                        })
-                        .catch(function(err) {
-                            // Permission denied
-                            console.error('Microphone permission denied:', err);
-                            addSystemMessage('Microphone access was denied. Please enable it in your browser settings.');
-                            voiceInputToggle.checked = false;
-                            voiceInputBtn.disabled = true;
-                        });
-                } else {
-                    voiceInputBtn.disabled = true;
-                    voiceInputBtn.classList.remove('recording');
-                    
-                    // Stop recording if active
-                    if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
-                        window.mediaRecorder.stop();
-                    }
-                }
-            });
-            
-            // Initialize chat with influencer
-            async function initializeChat(username) {
-                try {
-                    console.log('Initializing chat for username:', username);
-                    
-                    // Show loading message
-                    showLoadingMessage();
-                    
-                    // Add timeout to the fetch request
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-                    
-                    // Get influencer info - FIXED ENDPOINT WITH TIMEOUT
-                    const response = await fetch(`${API_BASE_URL}/chat/${encodeURIComponent(username)}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        signal: controller.signal
-                    });
-                    
-                    clearTimeout(timeoutId);
-                    
-                    console.log('API Response status:', response.status);
-                    console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('API Error Response:', errorText);
-                        
-                        if (response.status === 404) {
-                            showError(`Influencer '${username}' not found or hasn't set up their avatar yet.`);
-                        } else if (response.status === 500) {
-                            showError(`Server error (${response.status}). Please try again later.`);
-                        } else {
-                            showError(`Failed to load influencer data (${response.status}). Please try again later.`);
-                        }
-                        return;
-                    }
-                    
-                    const data = await response.json();
-                    console.log('API Response data:', data);
-                    
-                    if (data.status === 'success') {
-                        // Store influencer data
-                        influencerId = data.data.influencer_id;
-                        influencerUsername = data.data.username;
-                        hasVoice = data.data.has_voice;
-                        voiceId = data.data.voice_id;
-                        
-                        // Update profile display
-                        updateProfileDisplay(data.data);
-                        
-                        // Show welcome message
-                        clearMessages();
-                        addWelcomeMessage(data.data.bio_snippet);
-                        
-                        // Enable/disable voice features based on availability
-                        updateVoiceFeatures();
-                        
-                    } else {
-                        showError(data.message || 'Failed to load influencer data.');
-                    }
-                } catch (error) {
-                    console.error('Error initializing chat:', error);
-                    
-                    // More specific error messages
-                    if (error.name === 'AbortError') {
-                        showError('Request timed out. Please check your server connection and try again.');
-                    } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-                        showError('Cannot connect to server. Please check that your backend is running on http://localhost:2000');
-                    } else if (error.name === 'SyntaxError') {
-                        showError('Server returned invalid response. Please try again later.');
-                    } else {
-                        showError(`Connection error: ${error.message}. Please check your backend server.`);
-                    }
-                }
-            }
-            
-            // Show loading message
-            function showLoadingMessage() {
-                chatMessages.innerHTML = `
-                    <div class="message">
-                        <div class="message-placeholder">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="message-content">
-                            <div class="message-bubble">
-                                Loading influencer data...
-                            </div>
-                            <div class="message-info">Just now</div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Update voice features based on availability
-            function updateVoiceFeatures() {
-                if (!hasVoice) {
-                    voiceModeToggle.disabled = true;
-                    voiceModeToggle.checked = false;
-                    voiceModeDescription.textContent = 'This influencer has not set up voice responses';
-                } else {
-                    voiceModeToggle.disabled = false;
-                    voiceModeDescription.textContent = 'Enable voice responses from the avatar';
-                }
-            }
-            
-            // Update profile display
-            function updateProfileDisplay(data) {
-                // Set profile image
-                if (data.avatar_preview_url) {
-                    profileImage.src = data.avatar_preview_url;
-                    profileImage.style.display = 'block';
-                    profilePlaceholder.style.display = 'none';
-                } else {
-                    profilePlaceholder.style.display = 'flex';
-                    profileImage.style.display = 'none';
-                    
-                    // Set initial for placeholder
-                    const initial = data.username ? data.username.charAt(0).toUpperCase() : 'U';
-                    profilePlaceholder.innerHTML = initial;
-                }
+            document.getElementById('influencerName').textContent = username;
+            document.title = `Chat with ${username}'s AI Avatar`;
+        }
+
+        function loadAvatarConfig() {
+            // Load saved avatar configuration
+            const saved = localStorage.getItem('avatarConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                chatState.avatarReady = true;
                 
-                // Set name and bio
-                profileName.textContent = data.username || 'Unknown Influencer';
-                profileBio.textContent = data.bio_snippet || 'No bio available';
+                // Show avatar video
+                showAvatarVideo(config.avatarUrl);
                 
-                // Update chat title
-                chatTitle.textContent = `Chat with ${data.username || 'Influencer'}`;
+                // Set voice
+                chatState.currentVoice = config.voice;
+                document.getElementById('voiceSelector').value = config.voice;
             }
+        }
+
+        function showAvatarVideo(videoUrl) {
+            const placeholder = document.getElementById('avatarPlaceholder');
+            const video = document.getElementById('avatarVideo');
             
-            // Clear messages
-            function clearMessages() {
-                chatMessages.innerHTML = '';
-            }
+            placeholder.style.display = 'none';
+            video.style.display = 'block';
+            video.src = videoUrl;
             
-            // Add welcome message
-            function addWelcomeMessage(bioSnippet) {
-                const welcomeDiv = document.createElement('div');
-                welcomeDiv.className = 'message';
-                
-                welcomeDiv.innerHTML = `
-                    <div class="message-placeholder">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="message-content">
-                        <div class="message-bubble">
-                            👋 Hi there! I'm ${influencerUsername}'s AI avatar. ${bioSnippet ? 'A bit about me: ' + bioSnippet + ' ' : ''}What would you like to chat about today?
-                        </div>
-                        <div class="message-info">Just now</div>
-                    </div>
-                `;
-                
-                chatMessages.appendChild(welcomeDiv);
-                scrollToBottom();
+            if (chatState.autoplayEnabled) {
+                video.play().catch(e => console.log('Autoplay prevented'));
             }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || chatState.isTyping) return;
             
             // Add user message
-            function addUserMessage(message) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message outgoing';
-                
-                messageDiv.innerHTML = `
-                    <div class="message-content">
-                        <div class="message-bubble">
-                            ${escapeHtml(message)}
-                        </div>
-                        <div class="message-info">Just now</div>
-                    </div>
-                    <div class="message-placeholder">
-                        <i class="fas fa-user"></i>
-                    </div>
-                `;
-                
-                chatMessages.appendChild(messageDiv);
-                scrollToBottom();
-            }
+            addMessage(message, 'user');
+            input.value = '';
+            input.style.height = 'auto';
             
-            // Add avatar response
-            function addAvatarResponse(response) {
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'message';
-                
-                // Check if response has video
-                const hasVideo = response.video_url && response.video_url.trim() !== '';
-                
-                // Check if response has audio
-                const hasAudio = response.audio_url && response.audio_url.trim() !== '';
-                
-                // Check if response has product recommendations
-                const hasProductRecs = response.has_product_recommendations;
-                
-                // Split response text if it has product recommendations
-                let chatResponse = response.text || '';
-                let productRecommendations = '';
-                
-                if (hasProductRecs) {
-                    // Find the product recommendations section
-                    const recIndex = response.text.indexOf('### Recommended Products');
-                    if (recIndex !== -1) {
-                        chatResponse = response.text.substring(0, recIndex).trim();
-                        productRecommendations = response.text.substring(recIndex);
-                    }
-                }
-                
-                // Create message HTML
-                let messageHTML = `
-                    <div class="message-placeholder">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="message-content">
-                `;
-                
-                // Add video if available
-                if (hasVideo) {
-                    messageHTML += `
-                        <div class="avatar-response">
-                            <video class="avatar-video" controls${hasAudio ? ' muted' : ''} autoplay>
-                                <source src="${response.video_url}" type="video/mp4">
-                                Your browser does not support the video tag.
-                            </video>
-                        </div>
-                    `;
-                }
-                
-                // Add audio if available and voice mode is enabled
-                if (hasAudio && voiceModeToggle.checked) {
-                    messageHTML += `
-                        <audio autoplay>
-                            <source src="${response.audio_url}" type="audio/mpeg">
-                            Your browser does not support the audio element.
-                        </audio>
-                    `;
-                }
-                
-                // Add message bubble
-                messageHTML += `
+            // Generate avatar response
+            generateAvatarResponse(message);
+        }
+
+        function addMessage(text, sender, videoUrl = null, products = null) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const avatarInitial = sender === 'user' ? 'U' : 'AI';
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            let messageHTML = `
+                <div class="message-avatar">${avatarInitial}</div>
+                <div class="message-content">
                     <div class="message-bubble">
-                        ${formatMessageText(chatResponse)}
+                        ${escapeHtml(text)}
+                        ${videoUrl ? `<video class="avatar-response-video" controls ${chatState.autoplayEnabled ? 'autoplay' : ''} muted><source src="${videoUrl}" type="video/mp4"></video>` : ''}
+                        ${products ? generateProductRecommendations(products) : ''}
                     </div>
-                    <div class="message-info">Just now</div>
-                `;
+                    <div class="message-time">${timestamp}</div>
+                </div>
+            `;
+            
+            messageDiv.innerHTML = messageHTML;
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+            
+            // Play avatar video if it's an avatar response with video
+            if (sender === 'avatar' && videoUrl && chatState.avatarReady) {
+                playAvatarVideo(videoUrl);
+            }
+        }
+
+        function generateAvatarResponse(userMessage) {
+            showTypingIndicator();
+            chatState.isTyping = true;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                hideTypingIndicator();
+                chatState.isTyping = false;
                 
-                // Add product recommendations if available
-                if (hasProductRecs && productRecommendations) {
-                    messageHTML += `
-                        <div class="product-recommendations">
-                            ${formatProductRecommendations(productRecommendations)}
-                        </div>
-                    `;
-                }
+                // Generate contextual response
+                const response = generateContextualResponse(userMessage);
                 
-                messageHTML += `</div>`;
+                // Add avatar response with video
+                const videoUrl = getRandomAvatarVideo();
+                addMessage(response.text, 'avatar', videoUrl, response.products);
                 
-                responseDiv.innerHTML = messageHTML;
-                chatMessages.appendChild(responseDiv);
-                scrollToBottom();
+            }, 1500 + Math.random() * 1000); // Random delay 1.5-2.5s
+        }
+
+        function generateContextualResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Product recommendation responses
+            if (lowerMessage.includes('recommend') || lowerMessage.includes('product') || lowerMessage.includes('buy')) {
+                return {
+                    text: "I'd love to help you find the perfect products! Based on what you're looking for, here are some amazing options I personally recommend:",
+                    products: generateSampleProducts()
+                };
             }
             
-            // Add system message
-            function addSystemMessage(message) {
-                const messageDiv = document.createElement('div');
-                messageDiv.style.margin = '0 auto 15px';
-                messageDiv.style.fontStyle = 'italic';
-                messageDiv.style.color = '#666';
-                messageDiv.style.fontSize = '0.9rem';
-                messageDiv.style.textAlign = 'center';
-                messageDiv.textContent = message;
-                
-                chatMessages.appendChild(messageDiv);
-                scrollToBottom();
+            // Fashion-related responses
+            if (lowerMessage.includes('fashion') || lowerMessage.includes('style') || lowerMessage.includes('outfit')) {
+                return {
+                    text: "Fashion is my passion! I'm always excited to talk about the latest trends and help you create stunning looks. What's your style preference?",
+                    products: null
+                };
             }
             
-            // Show typing indicator
-            function showTypingIndicator() {
-                const typingDiv = document.createElement('div');
-                typingDiv.id = 'typing-indicator';
-                typingDiv.className = 'typing-indicator';
-                typingDiv.style.display = 'block';
-                
-                typingDiv.innerHTML = `
+            // General responses
+            const responses = [
+                "That's a great question! I'm here to help you with anything you need.",
+                "I love chatting with you! Tell me more about what you're interested in.",
+                "Thanks for sharing that with me! I'm always here to provide personalized recommendations.",
+                "That's so interesting! I'd love to help you explore that further."
+            ];
+            
+            return {
+                text: responses[Math.floor(Math.random() * responses.length)],
+                products: null
+            };
+        }
+
+        function generateSampleProducts() {
+            const products = [
+                { name: "Stylish Handbag", price: "$89", icon: "fas fa-shopping-bag" },
+                { name: "Designer Sunglasses", price: "$129", icon: "fas fa-glasses" },
+                { name: "Cozy Sweater", price: "$65", icon: "fas fa-tshirt" },
+                { name: "Trendy Sneakers", price: "$149", icon: "fas fa-shoe-prints" }
+            ];
+            
+            return products.slice(0, 3); // Return 3 random products
+        }
+
+        function generateProductRecommendations(products) {
+            return `
+                <div class="product-recommendations">
+                    <h4><i class="fas fa-star"></i> Recommended Products</h4>
+                    <div class="product-grid">
+                        ${products.map(product => `
+                            <div class="product-item" onclick="openProductLink('${product.name}')">
+                                <div class="product-image">
+                                    <i class="${product.icon}"></i>
+                                </div>
+                                <div class="product-name">${product.name}</div>
+                                <div class="product-price">${product.price}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getRandomAvatarVideo() {
+            const videos = Object.values(avatarVideos);
+            return videos[Math.floor(Math.random() * videos.length)];
+        }
+
+        function playAvatarVideo(videoUrl) {
+            const avatarVideo = document.getElementById('avatarVideo');
+            avatarVideo.src = videoUrl;
+            avatarVideo.classList.add('speaking');
+            
+            if (chatState.autoplayEnabled) {
+                avatarVideo.play().catch(e => console.log('Autoplay prevented'));
+            }
+            
+            // Remove speaking effect after video ends
+            avatarVideo.addEventListener('ended', function() {
+                avatarVideo.classList.remove('speaking');
+            }, { once: true });
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            
+            typingDiv.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div style="flex: 1;">
                     <div class="typing-dots">
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
                     </div>
-                `;
-                
-                chatMessages.appendChild(typingDiv);
-                scrollToBottom();
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            scrollToBottom();
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function toggleVoiceResponses(toggle) {
+            toggle.classList.toggle('active');
+            chatState.voiceEnabled = toggle.classList.contains('active');
+        }
+
+        function toggleAutoplay(toggle) {
+            toggle.classList.toggle('active');
+            chatState.autoplayEnabled = toggle.classList.contains('active');
+        }
+
+        function toggleVoiceInput() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            const isRecording = voiceBtn.classList.contains('recording');
+            
+            if (isRecording) {
+                stopVoiceRecording();
+            } else {
+                startVoiceRecording();
+            }
+        }
+
+        function startVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            voiceBtn.classList.add('recording');
+            voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
+            
+            // Simulate voice recording
+            console.log('Voice recording started');
+        }
+
+        function stopVoiceRecording() {
+            const voiceBtn = document.getElementById('voiceBtn');
+            voiceBtn.classList.remove('recording');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            
+            // Simulate voice to text
+            const input = document.getElementById('chatInput');
+            input.value = "Hello, I spoke this message using voice input!";
+            
+            console.log('Voice recording stopped');
+        }
+
+        function previewVoice() {
+            const selectedVoice = document.getElementById('voiceSelector').value;
+            const previewText = "Hi! This is how I sound with the selected voice option.";
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(previewText);
+                utterance.rate = 0.9;
+                utterance.pitch = selectedVoice === 'male' ? 0.8 : 1.1;
+                speechSynthesis.speak(utterance);
             }
             
-            // Hide typing indicator
-            function hideTypingIndicator() {
-                const typingIndicator = document.getElementById('typing-indicator');
-                if (typingIndicator) {
-                    typingIndicator.remove();
-                }
+            chatState.currentVoice = selectedVoice;
+        }
+
+        function openProductLink(productName) {
+            alert(`Opening product link for: ${productName}\n\nThis would redirect to the affiliate link for this product.`);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize with sample conversation
+        setTimeout(() => {
+            if (chatState.avatarReady) {
+                showAvatarVideo(avatarVideos.welcome);
             }
-            
-            // Show error message
-            function showError(message) {
-                chatMessages.innerHTML = `
-                    <div class="error-container">
-                        <div class="error-icon">
-                            <i class="fas fa-exclamation-circle"></i>
-                        </div>
-                        <h3 class="error-title">Error</h3>
-                        <p class="error-message">${message}</p>
-                    </div>
-                `;
-            }
-            
-            // Send message
-            async function sendMessage() {
-                const message = chatInput.value.trim();
-                
-                if (!message || isLoading) return;
-                
-                // Check if influencer is loaded
-                if (!influencerId) {
-                    addSystemMessage('Please wait until the chat is fully loaded.');
-                    return;
-                }
-                
-                // Set loading state
-                isLoading = true;
-                sendBtn.disabled = true;
-                
-                // Add user message to chat
-                addUserMessage(message);
-                
-                // Clear input
-                chatInput.value = '';
-                chatInput.style.height = 'auto';
-                
-                // Show typing indicator
-                showTypingIndicator();
-                
-                try {
-                    // Prepare request data
-                    const requestData = {
-                        message: message,
-                        influencer_id: influencerId,
-                        session_id: sessionId,
-                        voice_mode: voiceModeToggle.checked && hasVoice
-                    };
-                    
-                    console.log('Sending request:', requestData);
-                    
-                    // Send request
-                    const response = await fetch(`${API_BASE_URL}/chat`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-                    
-                    console.log('Chat response status:', response.status);
-                    
-                    // Hide typing indicator
-                    hideTypingIndicator();
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: Failed to send message`);
-                    }
-                    
-                    const data = await response.json();
-                    console.log('Chat response data:', data);
-                    
-                    if (data.status === 'success') {
-                        // Add response to chat
-                        addAvatarResponse(data.data);
-                    } else {
-                        addSystemMessage('Failed to get response: ' + (data.message || 'Unknown error'));
-                    }
-                } catch (error) {
-                    console.error('Error sending message:', error);
-                    hideTypingIndicator();
-                    addSystemMessage('Connection error. Please check your internet connection and try again.');
-                } finally {
-                    // Reset loading state
-                    isLoading = false;
-                    sendBtn.disabled = false;
-                }
-            }
-            
-            // Toggle voice input
-            function toggleVoiceInput() {
-                // Check if voice input is enabled
-                if (!voiceInputToggle.checked) {
-                    voiceInputToggle.checked = true;
-                    
-                    // Request microphone permission
-                    navigator.mediaDevices.getUserMedia({ audio: true })
-                        .then(function(stream) {
-                            // Permission granted
-                            stream.getTracks().forEach(track => track.stop());
-                            startVoiceRecording();
-                        })
-                        .catch(function(err) {
-                            // Permission denied
-                            console.error('Microphone permission denied:', err);
-                            addSystemMessage('Microphone access was denied. Please enable it in your browser settings.');
-                            voiceInputToggle.checked = false;
-                        });
-                } else {
-                    // Toggle recording state
-                    if (voiceInputBtn.classList.contains('recording')) {
-                        stopVoiceRecording();
-                    } else {
-                        startVoiceRecording();
-                    }
-                }
-            }
-            
-            // Start voice recording
-            function startVoiceRecording() {
-                // Add recording class
-                voiceInputBtn.classList.add('recording');
-                
-                // Show recording message
-                addSystemMessage('Recording... Click the microphone again to stop.');
-                
-                // Request microphone access
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(function(stream) {
-                        // Create media recorder
-                        const mediaRecorder = new MediaRecorder(stream);
-                        window.mediaRecorder = mediaRecorder;
-                        
-                        // Audio chunks
-                        const audioChunks = [];
-                        
-                        // Record data
-                        mediaRecorder.addEventListener('dataavailable', function(e) {
-                            audioChunks.push(e.data);
-                        });
-                        
-                        // Recording stopped
-                        mediaRecorder.addEventListener('stop', function() {
-                            // Stop all tracks
-                            stream.getTracks().forEach(track => track.stop());
-                            
-                            // Create audio blob
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-                            
-                            // Convert speech to text
-                            convertSpeechToText(audioBlob);
-                        });
-                        
-                        // Start recording
-                        mediaRecorder.start();
-                        
-                        // Automatically stop after 30 seconds
-                        setTimeout(function() {
-                            if (mediaRecorder.state === 'recording') {
-                                stopVoiceRecording();
-                            }
-                        }, 30000);
-                    })
-                    .catch(function(err) {
-                        console.error('Error accessing microphone:', err);
-                        addSystemMessage('Could not access microphone. Please try again.');
-                        voiceInputBtn.classList.remove('recording');
-                    });
-            }
-            
-            // Stop voice recording
-            function stopVoiceRecording() {
-                // Remove recording class
-                voiceInputBtn.classList.remove('recording');
-                
-                // Stop recording
-                if (window.mediaRecorder && window.mediaRecorder.state === 'recording') {
-                    window.mediaRecorder.stop();
-                    addSystemMessage('Processing voice message...');
-                }
-            }
-            
-            // Convert speech to text
-            async function convertSpeechToText(audioBlob) {
-                try {
-                    // Create form data
-                    const formData = new FormData();
-                    formData.append('audio', audioBlob);
-                    
-                    // Send request
-                    const response = await fetch(`${API_BASE_URL}/voice/speech-to-text`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to convert speech to text.');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success' && data.data.text) {
-                        // Set input text
-                        chatInput.value = data.data.text;
-                        
-                        // Send message
-                        sendMessage();
-                    } else {
-                        addSystemMessage('Could not understand audio. Please try again or type your message.');
-                    }
-                } catch (error) {
-                    console.error('Error converting speech to text:', error);
-                    addSystemMessage('Could not process voice message. Please try again or type your message.');
-                }
-            }
-            
-            // Format message text (handle line breaks, links, etc.)
-            function formatMessageText(text) {
-                if (!text) return '';
-                
-                // Replace newlines with <br>
-                let formatted = text.replace(/\n/g, '<br>');
-                
-                // Replace URLs with clickable links
-                formatted = formatted.replace(
-                    /(https?:\/\/[^\s]+)/g, 
-                    '<a href="$1" target="_blank" style="color: #5e60ce; text-decoration: underline;">$1</a>'
-                );
-                
-                return formatted;
-            }
-            
-            // Format product recommendations
-            function formatProductRecommendations(text) {
-                if (!text) return '';
-                
-                // Simple formatting for product recommendations
-                let formatted = text.replace(/\n/g, '<br>');
-                formatted = formatted.replace(/### /g, '<h3>');
-                formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                
-                return formatted;
-            }
-            
-            // Escape HTML
-            function escapeHtml(unsafe) {
-                return unsafe
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-            }
-            
-            // Scroll to bottom of chat messages
-            function scrollToBottom() {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        });
+        }, 1000);
     </script>
 </body>
 </html>
