@@ -702,7 +702,7 @@
         <div class="header">
             <h1 class="page-title">Voice Setup</h1>
             <div class="header-actions">
-                <a href="#" id="preview-chat-link" target="_blank" class="btn btn-secondary">
+                <a href="chat.html?username=${user.username}" id="preview-chat-link" target="_blank" class="btn btn-secondary">
                     <i class="fas fa-external-link-alt"></i> Preview Chat
                 </a>
                 <a href="dashboard.html" class="btn btn-secondary">
@@ -895,11 +895,12 @@
                 userAvatar.textContent = UTILS.ui.getInitials(user.username);
             }
 
-            // Set preview chat link
+            // FIXED: Set preview chat link with correct username parameter
             const previewChatLink = document.getElementById('preview-chat-link');
-            if (previewChatLink && user) {
-                const chatLink = `${window.location.origin}/pages/chat.html?username=${user.username}`;
+            if (previewChatLink && user && user.username) {
+                const chatLink = `${window.location.origin}/chat.html?username=${user.username}`;
                 previewChatLink.href = chatLink;
+                console.log('Voice setup - Preview chat link set to:', chatLink);
             }
             
             // Logout button

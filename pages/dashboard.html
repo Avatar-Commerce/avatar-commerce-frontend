@@ -839,7 +839,7 @@
         <div class="header">
             <h1 class="page-title">Dashboard</h1>
             <div class="header-actions">
-                <a href="#" id="preview-chat-link" target="_blank" class="btn btn-secondary">
+                <a href="chat.html?username=${user.username}" id="preview-chat-link" target="_blank" class="btn btn-secondary">
                     <i class="fas fa-external-link-alt"></i> Preview Chat
                 </a>
                 <a href="avatar-setup.html" class="btn">
@@ -1134,95 +1134,91 @@
     </main>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Get user data
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
-        //const chatLinkInput = document.getElementById('chat-link');
-        const previewChatLink = document.getElementById('preview-chat-link');
-        
-        if (chatLinkInput && user) {
-            // Use the correct path structure with username parameter
-            const chatLink = `${window.location.origin}/pages/chat.html?username=${user.username}`;
-            chatLinkInput.value = chatLink;
-            
-            // Also update the preview chat link in header
-            if (previewChatLink) {
-                previewChatLink.href = chatLink;
-            }
-            
-            console.log('Chat link set to:', chatLink);
-        }
-        
-        if (!token || !userStr) {
-            window.location.href = '../login.html';
-            return;
-        }
-        
-        const user = JSON.parse(userStr);
-        
-        if (user.userType !== 'influencer') {
-            window.location.href = '../login.html';
-            return;
-        }
-        
-        // Update user display
-        document.getElementById('user-name').textContent = user.username;
-        if (user.username) {
-            const initials = user.username.split(' ')
-                .map(name => name[0])
-                .join('')
-                .toUpperCase()
-                .substring(0, 2);
-            document.getElementById('user-avatar').textContent = initials;
-        }
-        
-        // Fix the chat link - this was the problem!
+document.addEventListener('DOMContentLoaded', function() {
+    // Get user data first
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (!token || !userStr) {
+        window.location.href = '../login.html';
+        return;
+    }
+    
+    const user = JSON.parse(userStr);
+    
+    if (user.userType !== 'influencer') {
+        window.location.href = '../login.html';
+        return;
+    }
+    
+    // Update user display
+    document.getElementById('user-name').textContent = user.username;
+    if (user.username) {
+        const initials = user.username.split(' ')
+            .map(name => name[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+        document.getElementById('user-avatar').textContent = initials;
+    }
+    
+    // CRITICAL FIX: Set all chat links with username parameter
+    if (user.username) {
+        // Fix the main chat link input field
         const chatLinkInput = document.getElementById('chat-link');
         if (chatLinkInput) {
-            // Use the correct path structure
-            const chatLink = `${window.location.origin}/pages/chat.html?username=${user.username}`;
+            const chatLink = `${window.location.origin}/chat.html?username=${user.username}`;
             chatLinkInput.value = chatLink;
-            console.log('Chat link set to:', chatLink);
+            console.log('Dashboard chat link set to:', chatLink);
         }
         
-        // Update all "Preview Chat" links in the header
-        const previewChatLinks = document.querySelectorAll('a[href*="chat.html"]');
-        previewChatLinks.forEach(link => {
-            link.href = `chat.html?username=${user.username}`;
-            console.log('Preview chat link updated to:', link.href);
-        });
+        // Fix the header preview chat link
+        const previewChatLink = document.getElementById('preview-chat-link');
+        if (previewChatLink) {
+            previewChatLink.href = `chat.html?username=${user.username}`;
+            console.log('Header preview chat link set to:', previewChatLink.href);
+        }
         
-        // Copy link button
-        const copyLinkBtn = document.getElementById('copy-link-btn');
-        if (copyLinkBtn) {
-            copyLinkBtn.addEventListener('click', function() {
-                const linkInput = document.getElementById('chat-link');
-                if (linkInput) {
-                    linkInput.select();
-                    linkInput.setSelectionRange(0, 99999); // For mobile devices
-                    
-                    try {
-                        document.execCommand('copy');
+        // Fix any other chat links
+        const allChatLinks = document.querySelectorAll('a[href*="chat.html"]');
+        allChatLinks.forEach(link => {
+            if (!link.href.includes('username=')) {
+                link.href = `chat.html?username=${user.username}`;
+            }
+        });
+    }
+    
+    // Rest of your existing dashboard code...
+    loadDashboardData();
+    
+    // Copy link functionality
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', function() {
+            const linkInput = document.getElementById('chat-link');
+            if (linkInput) {
+                linkInput.select();
+                linkInput.setSelectionRange(0, 99999);
+                
+                try {
+                    document.execCommand('copy');
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        this.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    }, 2000);
+                } catch (err) {
+                    navigator.clipboard.writeText(linkInput.value).then(() => {
                         this.innerHTML = '<i class="fas fa-check"></i> Copied!';
                         setTimeout(() => {
                             this.innerHTML = '<i class="fas fa-copy"></i> Copy';
                         }, 2000);
-                    } catch (err) {
-                        console.error('Copy failed:', err);
-                        // Fallback for modern browsers
-                        navigator.clipboard.writeText(linkInput.value).then(() => {
-                            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                            setTimeout(() => {
-                                this.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                            }, 2000);
-                        }).catch(() => {
-                            alert('Please copy the link manually: ' + linkInput.value);
-                        });
-                    }
+                    }).catch(() => {
+                        alert('Please copy the link manually: ' + linkInput.value);
+                    });
                 }
-            });
-        }
+            }
+        });
+    }
         
         // Logout button
         const logoutBtn = document.getElementById('logout-btn');
@@ -1230,7 +1226,7 @@
             logoutBtn.addEventListener('click', function() {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                window.location.href = '../login.html';
+                window.location.href = '../pages/login.html';
             });
         }
         
