@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Influencer Dashboard - AvatarCommerce</title>
+    <script src="../js/config.js"></script>
     <style>
         /* Reset and base styles */
         * {
@@ -1134,20 +1135,23 @@
     </main>
 
     <script>
+// FIXED DASHBOARD JAVASCRIPT - Embed Generation Section
+// Replace the embed functionality section in dashboard.html
+
 document.addEventListener('DOMContentLoaded', function() {
     // Get user data first
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     
     if (!token || !userStr) {
-        window.location.href = '../login.html';
+        window.location.href = '../pages/login.html';
         return;
     }
     
     const user = JSON.parse(userStr);
     
     if (user.userType !== 'influencer') {
-        window.location.href = '../login.html';
+        window.location.href = '../pages/login.html';
         return;
     }
     
@@ -1162,44 +1166,85 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('user-avatar').textContent = initials;
     }
     
-    // CRITICAL FIX: Set all chat links with username parameter
-    if (user.username) {
-        // Fix the main chat link input field
-        const chatLinkInput = document.getElementById('chat-link');
-        if (chatLinkInput) {
-            const chatLink = `${window.location.origin}/chat.html?username=${user.username}`;
-            chatLinkInput.value = chatLink;
-            console.log('Dashboard chat link set to:', chatLink);
-        }
+    // CRITICAL FIX: Wait for ChatLinkManager to be available
+    function waitForChatLinkManager(callback, timeout = 5000) {
+        const startTime = Date.now();
         
-        // Fix the header preview chat link
-        const previewChatLink = document.getElementById('preview-chat-link');
-        if (previewChatLink) {
-            previewChatLink.href = `chat.html?username=${user.username}`;
-            console.log('Header preview chat link set to:', previewChatLink.href);
-        }
-        
-        // Fix any other chat links
-        const allChatLinks = document.querySelectorAll('a[href*="chat.html"]');
-        allChatLinks.forEach(link => {
-            if (!link.href.includes('username=')) {
-                link.href = `chat.html?username=${user.username}`;
+        function checkForManager() {
+            if (window.ChatLinkManager) {
+                callback();
+            } else if (Date.now() - startTime < timeout) {
+                setTimeout(checkForManager, 100);
+            } else {
+                console.error('ChatLinkManager not loaded after timeout');
+                showAlert('Chat system not ready. Please refresh the page.', 'error');
             }
-        });
+        }
+        
+        checkForManager();
     }
     
-    // Rest of your existing dashboard code...
-    loadDashboardData();
+    // Set chat links once ChatLinkManager is available
+    waitForChatLinkManager(() => {
+        setChatLinks();
+        initializeEmbedFunctionality();
+    });
     
-    // Copy link functionality
+    function setChatLinks() {
+        if (user.username && window.ChatLinkManager) {
+            // Fix the main chat link input field
+            const chatLinkInput = document.getElementById('chat-link');
+            if (chatLinkInput) {
+                const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
+                chatLinkInput.value = chatLink;
+                console.log('Dashboard chat link set to:', chatLink);
+            }
+            
+            // Fix the header preview chat link
+            const previewChatLink = document.getElementById('preview-chat-link');
+            if (previewChatLink) {
+                const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
+                previewChatLink.href = chatLink;
+                console.log('Header preview chat link set to:', chatLink);
+            }
+            
+            // Fix any other chat links that might have template variables
+            const allChatLinks = document.querySelectorAll('a[href*="chat.html"]');
+            allChatLinks.forEach(link => {
+                if (link.href.includes('${user.username}') || !link.href.includes('username=')) {
+                    link.href = window.ChatLinkManager.generateChatUrl(user.username);
+                }
+            });
+            
+            console.log('All chat links updated successfully');
+        }
+    }
+    
+    // Copy link functionality with enhanced feedback
     const copyLinkBtn = document.getElementById('copy-link-btn');
     if (copyLinkBtn) {
         copyLinkBtn.addEventListener('click', function() {
             const linkInput = document.getElementById('chat-link');
-            if (linkInput) {
+            if (linkInput && window.ChatLinkManager) {
+                // Use ChatLinkManager's copy function
+                window.ChatLinkManager.copyToClipboard(linkInput.value).then(success => {
+                    if (success) {
+                        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        window.ChatLinkManager.showSuccessMessage('Chat link copied!', this);
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                        }, 2000);
+                    } else {
+                        // Fallback selection method
+                        linkInput.select();
+                        linkInput.setSelectionRange(0, 99999);
+                        alert('Please copy the link manually: ' + linkInput.value);
+                    }
+                });
+            } else {
+                // Fallback without ChatLinkManager
                 linkInput.select();
                 linkInput.setSelectionRange(0, 99999);
-                
                 try {
                     document.execCommand('copy');
                     this.innerHTML = '<i class="fas fa-check"></i> Copied!';
@@ -1207,401 +1252,452 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.innerHTML = '<i class="fas fa-copy"></i> Copy';
                     }, 2000);
                 } catch (err) {
-                    navigator.clipboard.writeText(linkInput.value).then(() => {
-                        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                        setTimeout(() => {
-                            this.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                        }, 2000);
-                    }).catch(() => {
-                        alert('Please copy the link manually: ' + linkInput.value);
-                    });
+                    alert('Please copy the link manually: ' + linkInput.value);
                 }
             }
         });
     }
+    
+    // Enhanced embed functionality with proper ChatLinkManager integration
+    function initializeEmbedFunctionality() {
+        const API_BASE_URL = 'http://localhost:2000/api';
         
-        // Logout button
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function() {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '../pages/login.html';
-            });
+        // DOM elements for embed functionality
+        const embedWidth = document.getElementById('embed-width');
+        const embedHeight = document.getElementById('embed-height');
+        const embedPosition = document.getElementById('embed-position');
+        const embedTheme = document.getElementById('embed-theme');
+        const embedTriggerText = document.getElementById('embed-trigger-text');
+        const embedAutoOpen = document.getElementById('embed-auto-open');
+        const embedCustomCSS = document.getElementById('embed-custom-css');
+        const generateBtn = document.getElementById('generate-embed');
+        const previewBtn = document.getElementById('preview-embed');
+        const embedCodePanel = document.getElementById('embed-code-panel');
+        const embedCodeDisplay = document.getElementById('embed-code-display');
+        const copyBtn = document.getElementById('copy-embed-code');
+        const previewLink = document.getElementById('preview-link');
+        const directChatLink = document.getElementById('direct-chat-link');
+        const embedAnalytics = document.getElementById('embed-analytics');
+        
+        // FIXED: Generate embed code with proper ChatLinkManager usage
+        function generateEmbedCode() {
+            try {
+                console.log('Generating embed code...');
+                
+                // Check if ChatLinkManager is available
+                if (!window.ChatLinkManager) {
+                    console.error('ChatLinkManager not available');
+                    throw new Error('Chat system not ready. Please refresh the page and try again.');
+                }
+                
+                // Validate username
+                if (!user.username) {
+                    throw new Error('Username not available. Please log in again.');
+                }
+                
+                // Get configuration
+                const config = {
+                    width: embedWidth?.value || '400px',
+                    height: embedHeight?.value || '600px',
+                    position: embedPosition?.value || 'bottom-right',
+                    theme: embedTheme?.value || 'default',
+                    trigger_text: embedTriggerText?.value || 'Chat with me!',
+                    auto_open: embedAutoOpen?.checked || false,
+                    custom_css: embedCustomCSS?.value || '',
+                    auto_open_delay: 3000
+                };
+                
+                console.log('Embed config:', config);
+                console.log('Username:', user.username);
+                
+                // Validate configuration
+                const validation = window.ChatLinkManager.validateEmbedConfig(config);
+                if (!validation.isValid) {
+                    throw new Error('Invalid configuration: ' + validation.errors.join(', '));
+                }
+                
+                // Show warnings if any
+                if (validation.warnings.length > 0) {
+                    validation.warnings.forEach(warning => {
+                        console.warn('Embed config warning:', warning);
+                    });
+                }
+                
+                // Generate embed code using ChatLinkManager
+                const embedCode = window.ChatLinkManager.generateEmbedCode(config, user.username);
+                
+                console.log('Embed code generated successfully');
+                
+                // Display embed code
+                if (embedCodeDisplay) {
+                    embedCodeDisplay.textContent = embedCode;
+                }
+                
+                // Show the panel
+                if (embedCodePanel) {
+                    embedCodePanel.style.display = 'block';
+                }
+                
+                // Update preview links using ChatLinkManager
+                if (previewLink) {
+                    previewLink.href = window.ChatLinkManager.generatePreviewUrl(user.username, config);
+                }
+                
+                if (directChatLink) {
+                    directChatLink.href = window.ChatLinkManager.generateChatUrl(user.username);
+                }
+                
+                // Also send to backend for storage (optional)
+                saveEmbedConfigToBackend(config, embedCode);
+                
+                showAlert('Embed code generated successfully!', 'success');
+                
+            } catch (error) {
+                console.error('Error generating embed code:', error);
+                showAlert('Failed to generate embed code: ' + error.message, 'error');
+            }
         }
         
-        // Load dashboard data
-        loadDashboardData();
-            
-            async function loadDashboardData() {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/analytics/dashboard`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to load dashboard data');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        updateDashboardStats(data.data);
-                        updateInteractionsList(data.data.recent_interactions);
-                        updateSetupProgress(data.data);
-                    }
-                } catch (error) {
-                    console.error('Error loading dashboard data:', error);
-                }
+        // FIXED: Copy embed code with proper error handling
+        function copyEmbedCode() {
+            if (!embedCodeDisplay || !copyBtn) {
+                showAlert('Embed code not available', 'error');
+                return;
             }
             
-            function updateDashboardStats(data) {
-                // Update stat values
-                document.getElementById('total-interactions').textContent = data.total_interactions || 0;
-                document.getElementById('product-recommendations').textContent = data.product_interactions || 0;
-                
-                // Calculate percentage for product recommendations
-                const totalInteractions = data.total_interactions || 0;
-                const productInteractions = data.product_interactions || 0;
-                
-                let percentage = 0;
-                if (totalInteractions > 0) {
-                    percentage = Math.round((productInteractions / totalInteractions) * 100);
-                }
-                
-                const productStatsEl = document.querySelector('#product-recommendations').nextElementSibling;
-                productStatsEl.textContent = `${percentage}% of total interactions`;
-                
-                // Set unique visitors (placeholder for now)
-                document.getElementById('unique-visitors').textContent = Math.floor(totalInteractions * 0.7) || 0;
+            const code = embedCodeDisplay.textContent;
+            
+            if (!code) {
+                showAlert('No embed code to copy. Please generate code first.', 'warning');
+                return;
             }
             
-            function updateInteractionsList(interactions) {
-                const interactionList = document.getElementById('interaction-list');
-                const noInteractionsMessage = document.getElementById('no-interactions-message');
-                
-                if (!interactions || interactions.length === 0) {
-                    noInteractionsMessage.style.display = 'block';
-                    interactionList.style.display = 'none';
-                    return;
-                }
-                
-                // Display interactions
-                noInteractionsMessage.style.display = 'none';
-                interactionList.style.display = 'block';
-                interactionList.innerHTML = '';
-                
-                // Take only the first 5 interactions
-                const recentInteractions = interactions.slice(0, 5);
-                
-                recentInteractions.forEach(interaction => {
-                    const li = document.createElement('li');
-                    li.className = 'interaction-item';
-                    
-                    // Format timestamp
-                    const date = new Date(interaction.created_at);
-                    const formattedDate = formatDate(date);
-                    
-                    // Check if it has product recommendations
-                    const hasProductRecs = interaction.product_recommendations;
-                    
-                    li.innerHTML = `
-                        <div class="interaction-header">
-                            <div class="interaction-user">
-                                ${interaction.fan_id ? 'Registered Fan' : 'Anonymous User'}
-                            </div>
-                            <div class="interaction-time">${formattedDate}</div>
-                        </div>
-                        <div class="interaction-message">
-                            ${escapeHtml(interaction.user_message)}
-                        </div>
-                        <div class="interaction-response">
-                            ${escapeHtml(interaction.bot_response)}
-                            ${hasProductRecs ? '<div class="product-recommendations"><i class="fas fa-tags"></i> Product recommendations included</div>' : ''}
-                        </div>
-                    `;
-                    
-                    interactionList.appendChild(li);
-                });
-            }
-            
-            function updateSetupProgress(data) {
-                // Calculate setup progress based on avatar status and other indicators
-                let progress = 0.25; // Account creation is done (25%)
-                let completedSteps = 1;
-                let remainingSteps = 3;
-                
-                // Check avatar setup
-                if (data.avatar_status) {
-                    progress += 0.25;
-                    completedSteps++;
-                    remainingSteps--;
-                    
-                    // Update UI for avatar step
-                    document.querySelectorAll('.step')[1].classList.add('completed');
-                    document.querySelectorAll('.step')[1].classList.remove('active');
-                    document.querySelectorAll('.step')[2].classList.add('active');
-                    
-                    // Hide avatar incomplete step
-                    document.querySelectorAll('.incomplete-step')[0].style.display = 'none';
-                }
-                
-                // Check voice setup (placeholder - you would need actual data)
-                if (data.voice_id) {
-                    progress += 0.25;
-                    completedSteps++;
-                    remainingSteps--;
-                    
-                    // Update UI for voice step
-                    document.querySelectorAll('.step')[2].classList.add('completed');
-                    document.querySelectorAll('.step')[2].classList.remove('active');
-                    document.querySelectorAll('.step')[3].classList.add('active');
-                    
-                    // Hide voice incomplete step
-                    document.querySelectorAll('.incomplete-step')[1].style.display = 'none';
-                }
-                
-                // Check affiliate/product setup
-                if (data.affiliate_status) {
-                    progress += 0.25;
-                    completedSteps++;
-                    remainingSteps--;
-                    
-                    // Update UI for product step
-                    document.querySelectorAll('.step')[3].classList.add('completed');
-                    
-                    // Hide product incomplete step
-                    document.querySelectorAll('.incomplete-step')[2].style.display = 'none';
-                }
-                
-                // Update progress bar
-                document.getElementById('progress-bar').style.setProperty('--progress', progress);
-                
-                // Update setup progress stat
-                document.getElementById('setup-progress').textContent = `${Math.round(progress * 100)}%`;
-                document.getElementById('setup-progress').nextElementSibling.textContent = 
-                    remainingSteps > 0 ? `${remainingSteps} step${remainingSteps > 1 ? 's' : ''} remaining` : 'All steps completed!';
-                
-                // Hide setup warning if all steps completed
-                if (remainingSteps === 0) {
-                    document.getElementById('setup-warning').style.display = 'none';
-                }
-            }
-            
-            // Helper function to format dates
-            function formatDate(date) {
-                const now = new Date();
-                const diffMs = now - date;
-                const diffSec = Math.floor(diffMs / 1000);
-                const diffMin = Math.floor(diffSec / 60);
-                const diffHour = Math.floor(diffMin / 60);
-                const diffDay = Math.floor(diffHour / 24);
-                
-                if (diffSec < 60) {
-                    return 'just now';
-                } else if (diffMin < 60) {
-                    return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
-                } else if (diffHour < 24) {
-                    return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
-                } else if (diffDay < 7) {
-                    return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
-                } else {
-                    const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-                    return date.toLocaleDateString('en-US', options);
-                }
-            }
-            
-            // Helper function to escape HTML
-            function escapeHtml(unsafe) {
-                return unsafe
-                    .replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;")
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-            }
-        });
-    </script>
-
-       <!-- Load shared scripts -->
-    <script src="../js/config.js"></script>
-    <script>
-        // Embed Configuration JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            const API_BASE_URL = CONFIG.API.BASE_URL;
-            
-            // DOM elements
-            const embedWidth = document.getElementById('embed-width');
-            const embedHeight = document.getElementById('embed-height');
-            const embedPosition = document.getElementById('embed-position');
-            const embedTheme = document.getElementById('embed-theme');
-            const embedTriggerText = document.getElementById('embed-trigger-text');
-            const embedAutoOpen = document.getElementById('embed-auto-open');
-            const embedCustomCSS = document.getElementById('embed-custom-css');
-            const generateBtn = document.getElementById('generate-embed');
-            const previewBtn = document.getElementById('preview-embed');
-            const embedCodePanel = document.getElementById('embed-code-panel');
-            const embedCodeDisplay = document.getElementById('embed-code-display');
-            const copyBtn = document.getElementById('copy-embed-code');
-            const previewLink = document.getElementById('preview-link');
-            const directChatLink = document.getElementById('direct-chat-link');
-            const embedAnalytics = document.getElementById('embed-analytics');
-            
-            // Load current configuration
-            async function loadEmbedConfig() {
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE_URL}/embed/config`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        const config = data.data.config;
-                        
-                        // Populate form with current config
-                        embedWidth.value = config.width || '400px';
-                        embedHeight.value = config.height || '600px';
-                        embedPosition.value = config.position || 'bottom-right';
-                        embedTheme.value = config.theme || 'default';
-                        embedTriggerText.value = config.trigger_text || 'Chat with me!';
-                        embedAutoOpen.checked = config.auto_open || false;
-                        embedCustomCSS.value = config.custom_css || '';
-                        
-                        // Set preview link
-                        if (data.data.preview_url) {
-                            previewLink.href = data.data.preview_url;
-                        }
-                        
-                        // Show analytics if user has avatar
-                        if (data.data.has_avatar) {
-                            loadEmbedAnalytics();
-                            embedAnalytics.style.display = 'block';
-                        }
-                        
-                        // Set direct chat link
-                        const user = JSON.parse(localStorage.getItem('user'));
-                        directChatLink.href = `/chat/${user.username}`;
-                    }
-                } catch (error) {
-                    console.error('Error loading embed config:', error);
-                }
-            }
-            
-            // Generate embed code
-            async function generateEmbedCode() {
-                try {
-                    const token = localStorage.getItem('token');
-                    const config = {
-                        width: embedWidth.value,
-                        height: embedHeight.value,
-                        position: embedPosition.value,
-                        theme: embedTheme.value,
-                        trigger_text: embedTriggerText.value,
-                        auto_open: embedAutoOpen.checked,
-                        custom_css: embedCustomCSS.value
-                    };
-                    
-                    const response = await fetch(`${API_BASE_URL}/embed/generate`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(config)
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        // Display embed code
-                        embedCodeDisplay.textContent = data.data.embed_code;
-                        embedCodePanel.style.display = 'block';
-                        
-                        // Update preview link
-                        previewLink.href = data.data.preview_url;
-                        
-                        // Show success message
-                        showAlert('Embed code generated successfully!', 'success');
-                    } else {
-                        showAlert(data.message || 'Failed to generate embed code', 'danger');
-                    }
-                } catch (error) {
-                    console.error('Error generating embed code:', error);
-                    showAlert('Error generating embed code', 'danger');
-                }
-            }
-            
-            // Copy embed code to clipboard
-            function copyEmbedCode() {
-                const code = embedCodeDisplay.textContent;
-                
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(code).then(() => {
+            if (window.ChatLinkManager) {
+                window.ChatLinkManager.copyToClipboard(code).then(success => {
+                    if (success) {
                         copyBtn.textContent = 'Copied!';
+                        window.ChatLinkManager.showSuccessMessage('Embed code copied!', copyBtn);
                         setTimeout(() => {
                             copyBtn.textContent = 'Copy Code';
                         }, 2000);
-                    });
-                } else {
-                    // Fallback for older browsers
-                    const textArea = document.createElement('textarea');
-                    textArea.value = code;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    
+                    } else {
+                        fallbackCopy(code);
+                    }
+                });
+            } else {
+                fallbackCopy(code);
+            }
+        }
+        
+        function fallbackCopy(text) {
+            // Fallback copy method
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'absolute';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                const success = document.execCommand('copy');
+                if (success) {
                     copyBtn.textContent = 'Copied!';
                     setTimeout(() => {
                         copyBtn.textContent = 'Copy Code';
                     }, 2000);
+                } else {
+                    throw new Error('Copy command failed');
                 }
+            } catch (error) {
+                alert('Please copy the code manually');
+            } finally {
+                document.body.removeChild(textArea);
             }
-            
-            // Load embed analytics
-            async function loadEmbedAnalytics() {
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE_URL}/analytics/embed?days=30`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        const analytics = data.data;
-                        
-                        document.getElementById('total-embed-chats').textContent = analytics.total_embed_chats;
-                        document.getElementById('embed-unique-visitors').textContent = analytics.unique_visitors;
-                        document.getElementById('avg-daily-chats').textContent = analytics.avg_daily_chats.toFixed(1);
+        }
+        
+        // Save embed configuration to backend
+        async function saveEmbedConfigToBackend(config, embedCode) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/embed/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(config)
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    console.log('Embed configuration saved to backend');
+                } else {
+                    console.warn('Failed to save embed config to backend:', data.message);
+                }
+            } catch (error) {
+                console.warn('Could not save embed config to backend:', error);
+                // Don't show error to user as this is not critical
+            }
+        }
+        
+        // Load embed analytics
+        async function loadEmbedAnalytics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/analytics/embed?days=30`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
-                } catch (error) {
-                    console.error('Error loading embed analytics:', error);
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const analytics = data.data;
+                    
+                    const totalEmbedChats = document.getElementById('total-embed-chats');
+                    const embedUniqueVisitors = document.getElementById('embed-unique-visitors');
+                    const avgDailyChats = document.getElementById('avg-daily-chats');
+                    
+                    if (totalEmbedChats) totalEmbedChats.textContent = analytics.total_embed_chats || '0';
+                    if (embedUniqueVisitors) embedUniqueVisitors.textContent = analytics.unique_visitors || '0';
+                    if (avgDailyChats) avgDailyChats.textContent = (analytics.avg_daily_chats || 0).toFixed(1);
                 }
+            } catch (error) {
+                console.error('Error loading embed analytics:', error);
             }
-            
-            // Event listeners
+        }
+        
+        // Event listeners
+        if (generateBtn) {
             generateBtn.addEventListener('click', generateEmbedCode);
+        }
+        
+        if (previewBtn) {
             previewBtn.addEventListener('click', () => {
-                if (previewLink.href !== '#') {
+                if (previewLink && previewLink.href && previewLink.href !== '#') {
                     window.open(previewLink.href, '_blank');
                 } else {
                     showAlert('Please generate embed code first', 'warning');
                 }
             });
+        }
+        
+        if (copyBtn) {
             copyBtn.addEventListener('click', copyEmbedCode);
-            
-            // Initialize
-            loadEmbedConfig();
+        }
+        
+        // Set initial direct chat link
+        if (directChatLink && window.ChatLinkManager) {
+            directChatLink.href = window.ChatLinkManager.generateChatUrl(user.username);
+        }
+        
+        // Initialize analytics if available
+        if (embedAnalytics) {
+            loadEmbedAnalytics();
+            embedAnalytics.style.display = 'block';
+        }
+        
+        console.log('Embed functionality initialized successfully');
+    }
+    
+    // Test ChatLinkManager availability
+    function testChatLinkManager() {
+        if (window.ChatLinkManager) {
+            console.log('✅ ChatLinkManager is available');
+            console.log('🔗 Test URL generation:', window.ChatLinkManager.generateChatUrl('testuser'));
+            return true;
+        } else {
+            console.error('❌ ChatLinkManager is not available');
+            return false;
+        }
+    }
+    
+    // Debug function to manually check ChatLinkManager
+    window.debugChatLinkManager = testChatLinkManager;
+    
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../pages/login.html';
         });
+    }
+    
+    // Load dashboard data
+    loadDashboardData();
+    
+    // Helper function to show alerts
+    function showAlert(message, type) {
+        // Create alert if it doesn't exist
+        let alertElement = document.getElementById('dashboard-alert');
+        if (!alertElement) {
+            alertElement = document.createElement('div');
+            alertElement.id = 'dashboard-alert';
+            alertElement.className = 'alert';
+            alertElement.style.cssText = `
+                display: none;
+                padding: 15px;
+                margin-bottom: 20px;
+                border-radius: 6px;
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                max-width: 400px;
+            `;
+            document.body.appendChild(alertElement);
+        }
+        
+        // Set alert type and content
+        alertElement.className = `alert alert-${type}`;
+        alertElement.textContent = message;
+        alertElement.style.display = 'block';
+        
+        // Style based on type
+        if (type === 'success') {
+            alertElement.style.backgroundColor = '#d1fae5';
+            alertElement.style.color = '#065f46';
+            alertElement.style.border = '1px solid #10b981';
+        } else if (type === 'error') {
+            alertElement.style.backgroundColor = '#fee2e2';
+            alertElement.style.color = '#991b1b';
+            alertElement.style.border = '1px solid #ef4444';
+        } else if (type === 'warning') {
+            alertElement.style.backgroundColor = '#fef3c7';
+            alertElement.style.color = '#92400e';
+            alertElement.style.border = '1px solid #fde68a';
+        }
+        
+        // Auto-hide after delay
+        const hideDelay = type === 'error' ? 8000 : 5000;
+        setTimeout(() => {
+            alertElement.style.display = 'none';
+        }, hideDelay);
+    }
+    
+    // Rest of dashboard functions (loadDashboardData, etc.)
+    async function loadDashboardData() {
+        try {
+            const API_BASE_URL = 'http://localhost:2000/api';
+            const response = await fetch(`${API_BASE_URL}/analytics/dashboard`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to load dashboard data');
+            }
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                updateDashboardStats(data.data);
+                updateInteractionsList(data.data.recent_interactions);
+                updateSetupProgress(data.data);
+            }
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+        }
+    }
+    
+    function updateDashboardStats(data) {
+        const totalInteractionsEl = document.getElementById('total-interactions');
+        const productRecommendationsEl = document.getElementById('product-recommendations');
+        const uniqueVisitorsEl = document.getElementById('unique-visitors');
+        const setupProgressEl = document.getElementById('setup-progress');
+        
+        if (totalInteractionsEl) totalInteractionsEl.textContent = data.total_interactions || 0;
+        if (productRecommendationsEl) productRecommendationsEl.textContent = data.product_interactions || 0;
+        if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = Math.floor((data.total_interactions || 0) * 0.7);
+        if (setupProgressEl) setupProgressEl.textContent = '25%';
+    }
+    
+    function updateInteractionsList(interactions) {
+        const interactionList = document.getElementById('interaction-list');
+        const noInteractionsMessage = document.getElementById('no-interactions-message');
+        
+        if (!interactions || interactions.length === 0) {
+            if (noInteractionsMessage) noInteractionsMessage.style.display = 'block';
+            if (interactionList) interactionList.style.display = 'none';
+            return;
+        }
+        
+        if (noInteractionsMessage) noInteractionsMessage.style.display = 'none';
+        if (interactionList) {
+            interactionList.style.display = 'block';
+            interactionList.innerHTML = '';
+            
+            const recentInteractions = interactions.slice(0, 5);
+            
+            recentInteractions.forEach(interaction => {
+                const li = document.createElement('li');
+                li.className = 'interaction-item';
+                
+                const date = new Date(interaction.created_at);
+                const formattedDate = formatDate(date);
+                const hasProductRecs = interaction.product_recommendations;
+                
+                li.innerHTML = `
+                    <div class="interaction-header">
+                        <div class="interaction-user">
+                            ${interaction.fan_id ? 'Registered Fan' : 'Anonymous User'}
+                        </div>
+                        <div class="interaction-time">${formattedDate}</div>
+                    </div>
+                    <div class="interaction-message">
+                        ${escapeHtml(interaction.user_message)}
+                    </div>
+                    <div class="interaction-response">
+                        ${escapeHtml(interaction.bot_response)}
+                        ${hasProductRecs ? '<div class="product-recommendations"><i class="fas fa-tags"></i> Product recommendations included</div>' : ''}
+                    </div>
+                `;
+                
+                interactionList.appendChild(li);
+            });
+        }
+    }
+    
+    function updateSetupProgress(data) {
+        console.log('Updating setup progress with data:', data);
+    }
+    
+    function formatDate(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+        
+        if (diffSec < 60) {
+            return 'just now';
+        } else if (diffMin < 60) {
+            return `${diffMin} minute${diffMin > 1 ? 's' : ''} ago`;
+        } else if (diffHour < 24) {
+            return `${diffHour} hour${diffHour > 1 ? 's' : ''} ago`;
+        } else if (diffDay < 7) {
+            return `${diffDay} day${diffDay > 1 ? 's' : ''} ago`;
+        } else {
+            const options = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return date.toLocaleDateString('en-US', options);
+        }
+    }
+    
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/</g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+});
+
+console.log('📊 Dashboard JavaScript loaded - waiting for ChatLinkManager...');
     </script>
 </body>
 </html>

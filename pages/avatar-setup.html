@@ -753,216 +753,53 @@
             </div>
         </div>
 
-        <!-- Chat Preview Section -->
-        <div class="chat-preview">
-            <h4><i class="fas fa-comments"></i> Live Chat Preview</h4>
-            
-            <div class="preview-message">
-                <strong>Fan:</strong> Hi! Can you recommend some products for me?
-            </div>
-            
-            <div class="preview-message" id="avatarResponse" style="display: none;">
-                <strong>Your Avatar:</strong> Hello! I'd be happy to help you find the perfect products. What are you looking for today?
-                <div style="margin-top: 10px;">
-                    <video id="previewVideo" style="width: 100%; max-width: 300px; border-radius: 8px;" controls></video>
-                </div>
-            </div>
-
-            <div class="preview-controls">
-                <button class="btn btn-secondary" onclick="generatePreview()">
-                    <i class="fas fa-play"></i> Test Avatar Response
-                </button>
-                <span id="previewStatus"></span>
-            </div>
-        </div>
-
-        <div class="actions">
-            <button class="btn" onclick="saveSetup()" id="saveBtn" disabled>
-                <i class="fas fa-save"></i> Save Avatar Setup
-            </button>
-            <button class="btn btn-secondary" onclick="openPreviewChat()">
-                <i class="fas fa-external-link-alt"></i> Preview Live Chat
-            </button>
-        </div>
     </main>
 
     <script>
-        // Global variables
-        let avatarData = {
-            avatarId: null,
-            avatarUrl: null,
-            selectedVoice: 'default',
-            isReady: false
-        };
+// FIXED AVATAR SETUP JAVASCRIPT - Replace the existing script section in avatar-setup.html
 
-        let availableVoices = {
-            all: [],
-            loaded: false
-        };
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing enhanced avatar setup page...');
+    initializeAuth();
+    setupEventListeners();
+    
+    // Load voices first, then user preference
+    loadExtendedVoices().then(() => {
+        loadUserVoicePreference();
+    });
+    
+    loadExistingAvatar();
+});
 
-        let previewChatUrl = '#';
+// Global variables
+let avatarData = {
+    avatarId: null,
+    avatarUrl: null,
+    selectedVoice: 'default',
+    isReady: false
+};
 
-        // API base URL
-        const API_BASE_URL = 'http://localhost:2000/api';
+let availableVoices = {
+    all: [],
+    loaded: false
+};
 
-        // Extended voice list with 10 options
-        const extendedVoiceList = [
-            {
-                voice_id: "2d5b0e6cf36f460aa7fc47e3eee4ba54",
-                name: "Sarah (Professional)",
-                gender: "Female",
-                language: "English",
-                style: "Professional"
-            },
-            {
-                voice_id: "d7bbcdd6964c47bdaae26decade4a933", 
-                name: "David (Professional)",
-                gender: "Male",
-                language: "English",
-                style: "Professional"
-            },
-            {
-                voice_id: "4d2b8e6cf36f460aa7fc47e3eee4ba12",
-                name: "Emma (Friendly)",
-                gender: "Female", 
-                language: "English",
-                style: "Friendly"
-            },
-            {
-                voice_id: "3a1c7d5bf24e350bb6dc46e2dee3ab21",
-                name: "Michael (Casual)",
-                gender: "Male",
-                language: "English", 
-                style: "Casual"
-            },
-            {
-                voice_id: "1bd001e7e50f421d891986aad5158bc8",
-                name: "Olivia (Warm)",
-                gender: "Female",
-                language: "English",
-                style: "Warm"
-            },
-            {
-                voice_id: "26b2064088674c80b1e5fc5ab1a068ec",
-                name: "James (Confident)",
-                gender: "Male", 
-                language: "English",
-                style: "Confident"
-            },
-            {
-                voice_id: "5c8e6a2b1f3d45e7a9c4b8d6f2e1a9c8",
-                name: "Luna (Energetic)",
-                gender: "Female",
-                language: "English",
-                style: "Energetic"
-            },
-            {
-                voice_id: "7f9d2c4e6b8a1d5f3e9c7a2b4f6d8e1a",
-                name: "Alexander (Sophisticated)",
-                gender: "Male",
-                language: "English",
-                style: "Sophisticated"
-            },
-            {
-                voice_id: "9a5e3f7b2d8c4a6e1f9b5d3a7c2f8e4b",
-                name: "Sophia (Gentle)",
-                gender: "Female",
-                language: "English",
-                style: "Gentle"
-            },
-            {
-                voice_id: "2c8f4a6e1b7d3f9c5a8e2b4f6d1a9c7e",
-                name: "Marcus (Dynamic)",
-                gender: "Male",
-                language: "English",
-                style: "Dynamic"
-            }
-        ];
+let previewChatUrl = '#';
+const API_BASE_URL = 'http://localhost:2000/api';
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing enhanced avatar setup page...');
-            initializeAuth();
-            setupEventListeners();
-            loadExtendedVoices();
-            loadExistingAvatar();
-        });
-
-        function loadExtendedVoices() {
-            console.log('Loading extended voice list with 10 options...');
-            
-            availableVoices.all = extendedVoiceList;
-            renderExtendedVoiceOptions();
-            availableVoices.loaded = true;
-            
-            console.log(`Loaded ${extendedVoiceList.length} voice options`);
-        }
-
-        function renderExtendedVoiceOptions() {
-            const voiceContainer = document.getElementById('voiceSelection');
-            
-            voiceContainer.innerHTML = `
-                <div class="voice-categories">
-                    <div class="voice-category">
-                        <h4 class="category-title">
-                            <i class="fas fa-microphone"></i> Professional Voices (${extendedVoiceList.length} Available)
-                        </h4>
-                        <div class="voice-grid">
-                            ${extendedVoiceList.map((voice, index) => `
-                                <div class="voice-option ${index === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
-                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 ? 'checked' : ''}>
-                                    <div class="voice-info">
-                                        <div class="voice-name">${voice.name}</div>
-                                        <div class="voice-details">${voice.language} • ${voice.gender} • ${voice.style}</div>
-                                    </div>
-                                    <button class="voice-preview-btn" onclick="playVoicePreview('${voice.voice_id}', '${voice.name}')">
-                                        <i class="fas fa-play"></i> Preview
-                                    </button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="voice-category">
-                        <h4 class="category-title">
-                            <i class="fas fa-user-cog"></i> Custom Voice
-                        </h4>
-                        <div class="voice-grid">
-                            <div class="voice-option" data-voice="custom">
-                                <input type="radio" name="voice" value="custom">
-                                <div class="voice-info">
-                                    <div class="voice-name">Your Cloned Voice</div>
-                                    <div class="voice-details">Custom • Personal • Upload required</div>
-                                </div>
-                                <button class="voice-preview-btn" onclick="showVoiceCloning()">
-                                    <i class="fas fa-microphone"></i> Setup
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            if (extendedVoiceList.length > 0) {
-                avatarData.selectedVoice = extendedVoiceList[0].voice_id;
-            }
-            
-            setupVoiceEventListeners();
-        }
-
-        function initializeAuth() {
+function initializeAuth() {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
     
     if (!token || !userStr) {
-        window.location.href = '../login.html';
+        window.location.href = '../pages/login.html';
         return;
     }
     
     const user = JSON.parse(userStr);
     
     if (user.userType !== 'influencer') {
-        window.location.href = '../login.html';
+        window.location.href = '../pages/login.html';
         return;
     }
     
@@ -976,349 +813,138 @@
         document.getElementById('user-avatar').textContent = initials;
     }
     
-    // FIXED: Set correct preview chat link with username
-    if (user.username) {
-        // CRITICAL FIX: Use the correct path structure with username parameter
-        previewChatUrl = `${window.location.origin}/chat.html?username=${user.username}`;
-        const previewLink = document.getElementById('preview-chat-link');
-        if (previewLink) {
-            previewLink.href = previewChatUrl;
+    // CRITICAL FIX: Set preview chat link using proper URL generation
+    function setPreviewChatLink() {
+        if (user.username && window.ChatLinkManager) {
+            const previewChatLink = document.getElementById('preview-chat-link');
+            if (previewChatLink) {
+                const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
+                previewChatLink.href = chatUrl;
+                console.log('Avatar setup - Preview chat link set to:', chatUrl);
+            }
+        } else {
+            // Fallback if ChatLinkManager not available
+            const previewChatLink = document.getElementById('preview-chat-link');
+            if (previewChatLink && user.username) {
+                const chatUrl = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
+                previewChatLink.href = chatUrl;
+                console.log('Avatar setup - Preview chat link set to (fallback):', chatUrl);
+            }
         }
-        console.log('Preview chat URL set to:', previewChatUrl);
     }
-
+    
+    // Set chat link immediately and retry if ChatLinkManager not ready
+    setPreviewChatLink();
+    
+    // Retry after a delay if needed
+    if (!window.ChatLinkManager) {
+        setTimeout(setPreviewChatLink, 500);
+    }
+    
+    // Logout functionality
     document.getElementById('logout-btn').addEventListener('click', function() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '../login.html';
+        window.location.href = '../pages/login.html';
     });
 }
 
-        function setupEventListeners() {
-            const uploadArea = document.getElementById('uploadArea');
-            const photoInput = document.getElementById('photoInput');
-
-            uploadArea.addEventListener('click', () => photoInput.click());
-            uploadArea.addEventListener('dragover', handleDragOver);
-            uploadArea.addEventListener('drop', handleDrop);
-            photoInput.addEventListener('change', handleFileSelect);
-        }
-
-        function setupVoiceEventListeners() {
-            document.querySelectorAll('.voice-option').forEach(option => {
-                option.addEventListener('click', function() {
-                    selectVoice(this.dataset.voice);
-                });
-            });
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('dragover');
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                processFile(files[0]);
-            }
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                processFile(file);
-            }
-        }
-
-        function processFile(file) {
-            if (!file.type.startsWith('image/')) {
-                showAlert('Please select an image file', 'error');
-                return;
-            }
-
-            document.getElementById('avatarLoading').classList.add('active');
-            document.getElementById('uploadArea').style.display = 'none';
-
-            createAvatar(file);
-        }
-
-        async function createAvatar(file) {
-            try {
-                const token = localStorage.getItem('token');
-                const formData = new FormData();
-                formData.append('file', file);
-
-                console.log('Creating avatar with file:', file.name, 'Size:', file.size);
-
-                const response = await fetch(`${API_BASE_URL}/avatar/create`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-
-                console.log('Avatar creation response status:', response.status);
-                const data = await response.json();
-                console.log('Avatar creation response data:', data);
-
-                if (data.status === 'success') {
-                    avatarData.avatarId = data.data.avatar_id;
-                    avatarData.isReady = true;
-
-                    showAlert('Custom avatar created from your photo!', 'success');
-                    
-                    await displayAvatarWithAutoPreview(data.data.avatar_id, data.data);
-                    updateSaveButton();
-                } else {
-                    throw new Error(data.message || 'Failed to create avatar');
-                }
-
-            } catch (error) {
-                console.error('Avatar creation failed:', error);
-                showAlert('Failed to create avatar. Please try again.', 'error');
-                showUploadArea();
-            } finally {
-                document.getElementById('avatarLoading').classList.remove('active');
-            }
-        }
-
-        async function displayAvatarWithAutoPreview(avatarId, avatarData) {
-            const preview = document.getElementById('avatarPreview');
-            const status = document.getElementById('avatarStatus');
+async function loadExtendedVoices() {
+    console.log('Loading voices from API...');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/avatar/list-voices`);
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data.voices) {
+            availableVoices.all = data.data.voices;
+            renderExtendedVoiceOptions();
+            availableVoices.loaded = true;
             
-            console.log('Displaying avatar with ID:', avatarId);
+            console.log(`Loaded ${data.data.voices.length} voice options from API`);
+        } else {
+            console.warn('Failed to load voices from API, using fallback');
+            loadFallbackVoices();
+        }
+    } catch (error) {
+        console.error('Failed to load voices from API:', error);
+        loadFallbackVoices();
+    }
+}
 
-            preview.innerHTML = `
-                <div class="placeholder-avatar">
-                    <i class="fas fa-robot"></i>
+function loadFallbackVoices() {
+    availableVoices.all = [
+        {
+            voice_id: "2d5b0e6cf36f460aa7fc47e3eee4ba54",
+            name: "Rachel (Professional)",
+            gender: "Female",
+            language: "English",
+            style: "Professional"
+        },
+        {
+            voice_id: "d7bbcdd6964c47bdaae26decade4a933",
+            name: "David (Professional)", 
+            gender: "Male",
+            language: "English",
+            style: "Professional"
+        }
+    ];
+    renderExtendedVoiceOptions();
+    availableVoices.loaded = true;
+    
+    // Set default voice
+    if (availableVoices.all.length > 0) {
+        avatarData.selectedVoice = availableVoices.all[0].voice_id;
+        selectVoice(availableVoices.all[0].voice_id);
+    }
+}
+
+function renderExtendedVoiceOptions() {
+    const voiceContainer = document.getElementById('voiceSelection');
+    const voiceList = availableVoices.all;
+    
+    voiceContainer.innerHTML = `
+        <div class="voice-categories">
+            <div class="voice-category">
+                <h4 class="category-title">
+                    <i class="fas fa-microphone"></i> Available Voices (${voiceList.length} Options)
+                </h4>
+                <div class="voice-grid">
+                    ${voiceList.map((voice, index) => `
+                        <div class="voice-option ${index === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
+                            <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 ? 'checked' : ''}>
+                            <div class="voice-info">
+                                <div class="voice-name">${voice.name}</div>
+                                <div class="voice-details">${voice.language} • ${voice.gender} • ${voice.style}</div>
+                            </div>
+                            <button class="voice-preview-btn" onclick="playVoicePreview('${voice.voice_id}', '${voice.name}')">
+                                <i class="fas fa-play"></i> Preview
+                            </button>
+                        </div>
+                    `).join('')}
                 </div>
-                <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
-                <p style="color: #64748b; font-size: 0.9rem;">Avatar ID: ${avatarId}</p>
-                <p style="color: #5e60ce; font-size: 0.9rem; margin-top: 5px;">✨ Created from your photo!</p>
-            `;
+            </div>
+        </div>
+    `;
+    
+    if (voiceList.length > 0) {
+        avatarData.selectedVoice = voiceList[0].voice_id;
+    }
+    
+    setupVoiceEventListeners();
+}
 
-            status.innerHTML = `
-                <span class="status-indicator status-ready">
-                    <i class="fas fa-check-circle"></i>
-                    Custom avatar ready
-                </span>
-            `;
-
-            // Automatically generate preview video with selected voice
-            showAlert('Generating video preview with your selected voice...', 'info');
-            await generateAvatarPreviewVideo(avatarId);
-
-            showReplaceAvatarOption();
-        }
-
-        // Update the original function to use the new one
-        async function generateAvatarPreviewVideo(avatarId) {
-            return generateAvatarPreviewVideoWithVoice(avatarId, avatarData.selectedVoice);
-        }
-
-        // FIXED: Enhanced video generation with proper voice handling
-        async function generateAvatarPreviewVideo(avatarId) {
-            try {
-                const token = localStorage.getItem('token');
-                const selectedVoice = avatarData.selectedVoice;
-                const selectedVoiceName = getVoiceName(selectedVoice);
-                const previewText = `Hello! I'm your custom AI avatar created from your photo. I'm excited to chat with your fans using the ${selectedVoiceName} voice!`;
-
-                console.log('Generating preview video for avatar:', avatarId, 'with voice:', selectedVoice);
-
-                const preview = document.getElementById('avatarPreview');
-                
-                // Show generating status
-                preview.innerHTML = `
-                    <div class="placeholder-avatar">
-                        <div class="spinner"></div>
-                    </div>
-                    <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
-                    <p style="color: #64748b; font-size: 0.9rem;">Generating video preview...</p>
-                    <p style="color: #5e60ce; font-size: 0.8rem; margin-top: 5px;">Using voice: ${selectedVoiceName}</p>
-                `;
-
-                // FIXED: Use the actual selected voice ID
-                console.log('Using voice ID:', selectedVoice);
-
-                const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        avatar_id: avatarId,
-                        text: previewText,
-                        voice_id: selectedVoice  // Use the selected voice directly
-                    })
-                });
-
-                console.log('Test video API response status:', response.status);
-                const data = await response.json();
-                console.log('Test video response data:', data);
-
-                if (data.status === 'success') {
-                    if (data.data.video_id) {
-                        console.log('Video generation started, video_id:', data.data.video_id);
-                        checkVideoStatusAndDisplay(data.data.video_id, avatarId);
-                    } else if (data.data.video_url) {
-                        console.log('Video immediately available:', data.data.video_url);
-                        displayCompletedVideo(data.data.video_url, avatarId);
-                    } else {
-                        console.warn('No video_id or video_url in response');
-                        showAvatarFallbackPreview(avatarId);
-                    }
-                } else {
-                    console.error('Video generation failed:', data.message);
-                    showAlert(`Video generation failed: ${data.message}`, 'info');
-                    showAvatarFallbackPreview(avatarId);
-                }
-
-            } catch (error) {
-                console.error('Failed to generate preview video:', error);
-                showAlert('Failed to generate video preview. Avatar is still ready for use.', 'info');
-                showAvatarFallbackPreview(avatarId);
-            }
-        }
-
-        function getVoiceName(voiceId) {
-            const voice = extendedVoiceList.find(v => v.voice_id === voiceId);
-            return voice ? voice.name : 'Selected Voice';
-        }
-
-        function displayCompletedVideo(videoUrl, avatarId) {
-            const preview = document.getElementById('avatarPreview');
-            preview.innerHTML = `
-                <video class="avatar-video" controls autoplay muted style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                    <source src="${videoUrl}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar Preview</p>
-                <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created with ${getVoiceName(avatarData.selectedVoice)} voice</p>
-            `;
-            
-            showAlert('Avatar video preview generated successfully!', 'success');
-        }
-
-        async function checkVideoStatusAndDisplay(videoId, avatarId) {
-            const preview = document.getElementById('avatarPreview');
-            let attempts = 0;
-            const maxAttempts = 20;
-
-            const checkStatus = async () => {
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    const data = await response.json();
-                    console.log('Video status check:', data);
-
-                    if (data.status === 'success') {
-                        const videoStatus = data.data.status;
-                        const videoUrl = data.data.video_url;
-
-                        if (videoStatus === 'completed' && videoUrl) {
-                            displayCompletedVideo(videoUrl, avatarId);
-                            return;
-                        } else if (videoStatus === 'processing' || videoStatus === 'pending') {
-                            const statusText = videoStatus === 'processing' ? 'Processing video...' : 'Video queued...';
-                            preview.innerHTML = `
-                                <div class="placeholder-avatar">
-                                    <div class="spinner"></div>
-                                </div>
-                                <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
-                                <p style="color: #64748b; font-size: 0.9rem;">${statusText}</p>
-                                <p style="color: #5e60ce; font-size: 0.8rem; margin-top: 5px;">Using voice: ${getVoiceName(avatarData.selectedVoice)}</p>
-                            `;
-                            
-                            if (attempts < maxAttempts) {
-                                attempts++;
-                                setTimeout(checkStatus, 6000);
-                            } else {
-                                showAvatarFallbackPreview(avatarId);
-                            }
-                        } else if (videoStatus === 'failed') {
-                            showAvatarFallbackPreview(avatarId);
-                        }
-                    } else {
-                        showAvatarFallbackPreview(avatarId);
-                    }
-
-                } catch (error) {
-                    console.error('Error checking video status:', error);
-                    if (attempts < maxAttempts) {
-                        attempts++;
-                        setTimeout(checkStatus, 6000);
-                    } else {
-                        showAvatarFallbackPreview(avatarId);
-                    }
-                }
-            };
-
-            checkStatus();
-        }
-
-        function showAvatarFallbackPreview(avatarId) {
-            const preview = document.getElementById('avatarPreview');
-            preview.innerHTML = `
-                <div class="placeholder-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
-                <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created from your photo</p>
-                <p style="color: #64748b; font-size: 0.8rem; margin-top: 10px;">Video preview not available, but avatar is ready for use</p>
-                <button onclick="generateAvatarPreviewVideo('${avatarId}')" class="btn btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.9rem;">
-                    <i class="fas fa-redo"></i> Try Generate Video Again
-                </button>
-            `;
-        }
-
-        function showReplaceAvatarOption() {
-            const uploadArea = document.getElementById('uploadArea');
-            uploadArea.style.display = 'flex';
-            uploadArea.innerHTML = `
-                <div class="upload-icon">
-                    <i class="fas fa-sync-alt"></i>
-                </div>
-                <h4>Replace Avatar</h4>
-                <p>Upload a new photo to replace your current custom avatar</p>
-                <small>Best results with clear face photos (JPG, PNG)</small>
-                <input type="file" id="photoInput" accept="image/*" style="display: none;">
-            `;
-            
-            setupFileUploadListeners();
-        }
-
-        function setupFileUploadListeners() {
-            const uploadArea = document.getElementById('uploadArea');
-            const photoInput = document.getElementById('photoInput');
-
-            uploadArea.replaceWith(uploadArea.cloneNode(true));
-            const newUploadArea = document.getElementById('uploadArea');
-            const newPhotoInput = document.getElementById('photoInput');
-
-            newUploadArea.addEventListener('click', () => newPhotoInput.click());
-            newUploadArea.addEventListener('dragover', handleDragOver);
-            newUploadArea.addEventListener('drop', handleDrop);
-            newPhotoInput.addEventListener('change', handleFileSelect);
-        }
-
-        function showUploadArea() {
-            document.getElementById('uploadArea').style.display = 'flex';
-        }
-
-        // FIXED: Enhanced voice selection with immediate video regeneration
-        function selectVoice(voiceId) {
-    document.querySelectorAll('.voice-option').forEach(option => {
+// CRITICAL FIX: Enhanced voice selection with proper persistence
+function selectVoice(voiceId) {
+    console.log('Selecting voice:', voiceId);
+    
+    const voiceOptions = document.querySelectorAll('.voice-option');
+    if (voiceOptions.length === 0) {
+        console.warn('No voice options found');
+        return;
+    }
+    
+    voiceOptions.forEach(option => {
         option.classList.remove('selected');
     });
     
@@ -1332,28 +958,56 @@
         }
     }
     
-    // CRITICAL FIX: Update avatarData.selectedVoice BEFORE any API calls
+    // CRITICAL FIX: Update avatarData.selectedVoice IMMEDIATELY
     avatarData.selectedVoice = voiceId;
-    updateSaveButton();
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('selectedVoice', voiceId);
     
     console.log('Voice changed to:', voiceId, '- Voice name:', getVoiceName(voiceId));
     
-    // Save voice preference to backend immediately
-    saveVoicePreference(voiceId);
+    // CRITICAL FIX: Save voice preference to backend using VoicePreferenceManager
+    if (window.VoicePreferenceManager) {
+        window.VoicePreferenceManager.saveVoicePreference(voiceId).then(() => {
+            console.log('Voice preference saved to backend');
+        }).catch(error => {
+            console.error('Failed to save voice preference:', error);
+        });
+    }
     
-    // FIXED: If we have an avatar, regenerate the preview with the new voice
+    // Only regenerate if we have an avatar ready
     if (avatarData.avatarId && avatarData.isReady) {
         console.log('Regenerating avatar preview with new voice:', voiceId);
         showAlert(`Voice changed to ${getVoiceName(voiceId)}. Regenerating preview...`, 'info');
-        // IMPORTANT: Pass the voiceId explicitly to ensure it's used
         generateAvatarPreviewVideoWithVoice(avatarData.avatarId, voiceId);
+    } else {
+        showAlert(`Voice changed to ${getVoiceName(voiceId)}. Upload a photo to see the preview with this voice.`, 'success');
     }
 }
 
+// CRITICAL FIX: Load user voice preference with proper persistence
+async function loadUserVoicePreference() {
+    try {
+        if (window.VoicePreferenceManager) {
+            const preferredVoice = await window.VoicePreferenceManager.loadVoicePreference();
+            if (preferredVoice) {
+                avatarData.selectedVoice = preferredVoice;
+                // Select the voice if options are loaded
+                if (availableVoices.loaded) {
+                    selectVoice(preferredVoice);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user voice preference:', error);
+    }
+}
+
+// ENHANCED: Video generation with proper voice handling
 async function generateAvatarPreviewVideoWithVoice(avatarId, voiceId) {
     try {
         const token = localStorage.getItem('token');
-        const selectedVoice = voiceId || avatarData.selectedVoice; // Use passed voiceId or fallback
+        const selectedVoice = voiceId || avatarData.selectedVoice;
         const selectedVoiceName = getVoiceName(selectedVoice);
         const previewText = `Hello! I'm your custom AI avatar created from your photo. I'm excited to chat with your fans using the ${selectedVoiceName} voice!`;
 
@@ -1371,7 +1025,6 @@ async function generateAvatarPreviewVideoWithVoice(avatarId, voiceId) {
             <p style="color: #5e60ce; font-size: 0.8rem; margin-top: 5px;">Using voice: ${selectedVoiceName}</p>
         `;
 
-        // CRITICAL FIX: Ensure we use the correct voice ID
         console.log('API call using voice ID:', selectedVoice);
 
         const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
@@ -1383,7 +1036,7 @@ async function generateAvatarPreviewVideoWithVoice(avatarId, voiceId) {
             body: JSON.stringify({
                 avatar_id: avatarId,
                 text: previewText,
-                voice_id: selectedVoice  // Use the explicit voice ID
+                voice_id: selectedVoice  // CRITICAL: Always pass the voice ID
             })
         });
 
@@ -1415,246 +1068,409 @@ async function generateAvatarPreviewVideoWithVoice(avatarId, voiceId) {
     }
 }
 
+// ENHANCED: Avatar creation with proper voice handling
+async function createAvatar(file) {
+    try {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('file', file);
 
-        async function saveVoicePreference(voiceId) {
-            try {
-                const token = localStorage.getItem('token');
-                
-                const response = await fetch(`${API_BASE_URL}/voice/save`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        voice_id: voiceId
-                    })
-                });
+        console.log('Creating avatar with file:', file.name, 'Size:', file.size);
 
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    console.log('Voice preference saved successfully');
-                } else {
-                    console.error('Failed to save voice preference:', data.message);
-                }
+        const response = await fetch(`${API_BASE_URL}/avatar/create`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
 
-            } catch (error) {
-                console.error('Error saving voice preference:', error);
-            }
+        console.log('Avatar creation response status:', response.status);
+        
+        let data;
+        try {
+            data = await response.json();
+            console.log('Avatar creation response data:', data);
+        } catch (parseError) {
+            console.error('Failed to parse response JSON:', parseError);
+            throw new Error('Invalid response from server');
         }
 
-        function playVoicePreview(voiceId, voiceName) {
-            const previewTexts = {
-                '2d5b0e6cf36f460aa7fc47e3eee4ba54': "Hello! I'm Sarah, your professional AI assistant. I'm excited to help your fans discover amazing products!",
-                'd7bbcdd6964c47bdaae26decade4a933': "Hey there! I'm David, ready to provide personalized recommendations for your audience.",
-                '4d2b8e6cf36f460aa7fc47e3eee4ba12': "Hi! I'm Emma, your friendly AI helper, ready to chat with your followers!",
-                '3a1c7d5bf24e350bb6dc46e2dee3ab21': "What's up! I'm Michael, here to give casual recommendations to your fans.",
-                '1bd001e7e50f421d891986aad5158bc8': "Hello there! I'm Olivia, and I'm here to warmly assist your community.",
-                '26b2064088674c80b1e5fc5ab1a068ec': "Greetings! I'm James, confidently ready to help your audience find what they need.",
-                '5c8e6a2b1f3d45e7a9c4b8d6f2e1a9c8': "Hi everyone! I'm Luna, bringing energy and excitement to help your fans!",
-                '7f9d2c4e6b8a1d5f3e9c7a2b4f6d8e1a': "Good day! I'm Alexander, providing sophisticated assistance to your audience.",
-                '9a5e3f7b2d8c4a6e1f9b5d3a7c2f8e4b': "Hello! I'm Sophia, here to gently guide your followers to perfect products.",
-                '2c8f4a6e1b7d3f9c5a8e2b4f6d1a9c7e': "Hey! I'm Marcus, dynamically engaging with your community!"
+        if (response.ok && data.status === 'success') {
+            avatarData.avatarId = data.data.avatar_id;
+            avatarData.isReady = true;
+
+            showAlert('Custom avatar created from your photo!', 'success');
+            
+            // Wait a bit for DOM to be ready, then display with current voice
+            setTimeout(async () => {
+                await displayAvatarWithAutoPreview(data.data.avatar_id, data.data);
+            }, 100);
+        } else {
+            const errorMessage = data.message || `Server error: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+
+    } catch (error) {
+        console.error('Avatar creation failed:', error);
+        showAlert(`Failed to create avatar: ${error.message}`, 'error');
+        showUploadArea();
+    } finally {
+        const loadingElement = document.getElementById('avatarLoading');
+        if (loadingElement) {
+            loadingElement.classList.remove('active');
+        }
+    }
+}
+
+async function displayAvatarWithAutoPreview(avatarId, avatarData) {
+    const preview = document.getElementById('avatarPreview');
+    const status = document.getElementById('avatarStatus');
+    
+    if (!preview || !status) {
+        console.error('Avatar preview elements not found');
+        return;
+    }
+    
+    console.log('Displaying avatar with ID:', avatarId);
+
+    try {
+        preview.innerHTML = `
+            <div class="placeholder-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
+            <p style="color: #64748b; font-size: 0.9rem;">Avatar ID: ${avatarId}</p>
+            <p style="color: #5e60ce; font-size: 0.9rem; margin-top: 5px;">✨ Created from your photo!</p>
+        `;
+
+        status.innerHTML = `
+            <span class="status-indicator status-ready">
+                <i class="fas fa-check-circle"></i>
+                Custom avatar ready
+            </span>
+        `;
+    } catch (error) {
+        console.error('Error updating avatar preview DOM:', error);
+        return;
+    }
+
+    // CRITICAL FIX: Use the CURRENTLY SELECTED voice for preview
+    const currentVoice = avatarData.selectedVoice || 
+                        localStorage.getItem('selectedVoice') || 
+                        (availableVoices.all && availableVoices.all[0] ? availableVoices.all[0].voice_id : null);
+    
+    if (currentVoice) {
+        console.log('Using current voice for preview:', currentVoice);
+        showAlert(`Generating video preview with ${getVoiceName(currentVoice)} voice...`, 'info');
+        await generateAvatarPreviewVideoWithVoice(avatarId, currentVoice);
+    } else {
+        console.warn('No voice available for preview');
+    }
+
+    showReplaceAvatarOption();
+}
+
+// Rest of the functions remain the same but use the enhanced voice handling...
+
+function getVoiceName(voiceId) {
+    const voice = availableVoices.all.find(v => v.voice_id === voiceId);
+    return voice ? voice.name : 'Selected Voice';
+}
+
+function setupEventListeners() {
+    const uploadArea = document.getElementById('uploadArea');
+    const photoInput = document.getElementById('photoInput');
+
+    uploadArea.addEventListener('click', () => photoInput.click());
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('drop', handleDrop);
+    photoInput.addEventListener('change', handleFileSelect);
+}
+
+function setupVoiceEventListeners() {
+    document.querySelectorAll('.voice-option').forEach(option => {
+        option.addEventListener('click', function() {
+            selectVoice(this.dataset.voice);
+        });
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('dragover');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        processFile(files[0]);
+    }
+}
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        processFile(file);
+    }
+}
+
+function processFile(file) {
+    if (!file.type.startsWith('image/')) {
+        showAlert('Please select an image file', 'error');
+        return;
+    }
+
+    document.getElementById('avatarLoading').classList.add('active');
+    document.getElementById('uploadArea').style.display = 'none';
+
+    createAvatar(file);
+}
+
+function displayCompletedVideo(videoUrl, avatarId) {
+    const preview = document.getElementById('avatarPreview');
+    preview.innerHTML = `
+        <video class="avatar-video" controls autoplay muted style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <source src="${videoUrl}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar Preview</p>
+        <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created with ${getVoiceName(avatarData.selectedVoice)} voice</p>
+    `;
+    
+    showAlert('Avatar video preview generated successfully!', 'success');
+}
+
+async function checkVideoStatusAndDisplay(videoId, avatarId) {
+    const preview = document.getElementById('avatarPreview');
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const checkStatus = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            console.log('Video status check:', data);
+
+            if (data.status === 'success') {
+                const videoStatus = data.data.status;
+                const videoUrl = data.data.video_url;
+
+                if (videoStatus === 'completed' && videoUrl) {
+                    displayCompletedVideo(videoUrl, avatarId);
+                    return;
+                } else if (videoStatus === 'processing' || videoStatus === 'pending') {
+                    const statusText = videoStatus === 'processing' ? 'Processing video...' : 'Video queued...';
+                    preview.innerHTML = `
+                        <div class="placeholder-avatar">
+                            <div class="spinner"></div>
+                        </div>
+                        <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
+                        <p style="color: #64748b; font-size: 0.9rem;">${statusText}</p>
+                        <p style="color: #5e60ce; font-size: 0.8rem; margin-top: 5px;">Using voice: ${getVoiceName(avatarData.selectedVoice)}</p>
+                    `;
+                    
+                    if (attempts < maxAttempts) {
+                        attempts++;
+                        setTimeout(checkStatus, 6000);
+                    } else {
+                        showAvatarFallbackPreview(avatarId);
+                    }
+                } else if (videoStatus === 'failed') {
+                    showAvatarFallbackPreview(avatarId);
+                }
+            } else {
+                showAvatarFallbackPreview(avatarId);
+            }
+
+        } catch (error) {
+            console.error('Error checking video status:', error);
+            if (attempts < maxAttempts) {
+                attempts++;
+                setTimeout(checkStatus, 6000);
+            } else {
+                showAvatarFallbackPreview(avatarId);
+            }
+        }
+    };
+
+    checkStatus();
+}
+
+function showAvatarFallbackPreview(avatarId) {
+    const preview = document.getElementById('avatarPreview');
+    preview.innerHTML = `
+        <div class="placeholder-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
+        <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created from your photo</p>
+        <p style="color: #64748b; font-size: 0.8rem; margin-top: 10px;">Video preview not available, but avatar is ready for use</p>
+        <button onclick="generateAvatarPreviewVideoWithVoice('${avatarId}', '${avatarData.selectedVoice}')" class="btn btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.9rem;">
+            <i class="fas fa-redo"></i> Try Generate Video Again
+        </button>
+    `;
+}
+
+function showReplaceAvatarOption() {
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.style.display = 'flex';
+    uploadArea.innerHTML = `
+        <div class="upload-icon">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+        <h4>Replace Avatar</h4>
+        <p>Upload a new photo to replace your current custom avatar</p>
+        <small>Best results with clear face photos (JPG, PNG)</small>
+        <input type="file" id="photoInput" accept="image/*" style="display: none;">
+    `;
+    
+    setupFileUploadListeners();
+}
+
+function setupFileUploadListeners() {
+    const uploadArea = document.getElementById('uploadArea');
+    const photoInput = document.getElementById('photoInput');
+
+    uploadArea.replaceWith(uploadArea.cloneNode(true));
+    const newUploadArea = document.getElementById('uploadArea');
+    const newPhotoInput = document.getElementById('photoInput');
+
+    newUploadArea.addEventListener('click', () => newPhotoInput.click());
+    newUploadArea.addEventListener('dragover', handleDragOver);
+    newUploadArea.addEventListener('drop', handleDrop);
+    newPhotoInput.addEventListener('change', handleFileSelect);
+}
+
+function showUploadArea() {
+    document.getElementById('uploadArea').style.display = 'flex';
+}
+
+function playVoicePreview(voiceId, voiceName) {
+    const previewTexts = {
+        '2d5b0e6cf36f460aa7fc47e3eee4ba54': "Hello! I'm Sarah, your professional AI assistant. I'm excited to help your fans discover amazing products!",
+        'd7bbcdd6964c47bdaae26decade4a933': "Hey there! I'm David, ready to provide personalized recommendations for your audience."
+    };
+
+    const text = previewTexts[voiceId] || `Hi! I'm ${voiceName}, ready to help your fans with personalized recommendations!`;
+
+    if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = voiceId.includes('male') || ['d7bbcdd6964c47bdaae26decade4a933'].includes(voiceId) ? 0.8 : 1.1;
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function openPreviewChat() {
+    const previewChatLink = document.getElementById('preview-chat-link');
+    
+    if (previewChatLink && previewChatLink.href && previewChatLink.href !== '#' && !previewChatLink.href.includes('${user.username}')) {
+        window.open(previewChatLink.href, '_blank');
+    } else {
+        // Fallback: construct URL directly
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.username) {
+                const chatUrl = window.ChatLinkManager ? 
+                    window.ChatLinkManager.generateChatUrl(user.username) :
+                    `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
+                
+                window.open(chatUrl, '_blank');
+            } else {
+                showAlert('Username not found. Please refresh the page and try again.', 'error');
+            }
+        } else {
+            showAlert('Please ensure you are logged in and try again.', 'error');
+        }
+    }
+}
+
+function loadExistingAvatar() {
+    const saved = localStorage.getItem('avatarConfig');
+    if (saved) {
+        try {
+            const config = JSON.parse(saved);
+            avatarData = {
+                avatarId: config.avatarId,
+                selectedVoice: config.voice || '2d5b0e6cf36f460aa7fc47e3eee4ba54',
+                isReady: true
             };
 
-            const text = previewTexts[voiceId] || `Hi! I'm ${voiceName}, ready to help your fans with personalized recommendations!`;
-
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.rate = 0.9;
-                utterance.pitch = voiceId.includes('male') || ['d7bbcdd6964c47bdaae26decade4a933', '3a1c7d5bf24e350bb6dc46e2dee3ab21', '26b2064088674c80b1e5fc5ab1a068ec', '7f9d2c4e6b8a1d5f3e9c7a2b4f6d8e1a', '2c8f4a6e1b7d3f9c5a8e2b4f6d1a9c7e'].includes(voiceId) ? 0.8 : 1.1;
-                speechSynthesis.speak(utterance);
-            }
-        }
-
-        function showVoiceCloning() {
-            window.location.href = 'voice-setup.html';
-        }
-
-        // FIXED: Enhanced preview generation with correct API call
-        async function generatePreview() {
-            const previewBtn = document.querySelector('.preview-controls .btn');
-            const status = document.getElementById('previewStatus');
-            const response = document.getElementById('avatarResponse');
-            const video = document.getElementById('previewVideo');
-
-            if (!avatarData.isReady || !avatarData.avatarId) {
-                showAlert('Please create your avatar first', 'error');
-                return;
-            }
-
-            previewBtn.disabled = true;
-            status.textContent = 'Generating video response...';
-            status.style.color = '#92400e';
-
-            try {
-                const token = localStorage.getItem('token');
-                const user = JSON.parse(localStorage.getItem('user'));
-                const testMessage = "Can you recommend some products for me?";
-
-                // FIXED: Use the correct API endpoint for chat with proper username
-                const chatResponse = await fetch(`${API_BASE_URL}/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: testMessage,
-                        influencer_username: user.username,  // Use the logged-in user's username
-                        session_id: 'preview_' + Date.now()
-                    })
-                });
-
-                console.log('Chat API response status:', chatResponse.status);
-                const chatData = await chatResponse.json();
-                console.log('Chat API response data:', chatData);
-
-                if (chatData.status === 'success' && chatData.data.video_url) {
-                    response.style.display = 'block';
-                    video.src = chatData.data.video_url;
-                    status.textContent = 'Video generated successfully!';
-                    status.style.color = '#166534';
-                } else {
-                    throw new Error(chatData.message || 'No video generated');
-                }
-
-            } catch (error) {
-                console.error('Preview generation failed:', error);
-                status.textContent = 'Failed to generate preview';
-                status.style.color = '#991b1b';
-                
-                response.style.display = 'block';
-                video.style.display = 'none';
-            } finally {
-                previewBtn.disabled = false;
-                setTimeout(() => {
-                    status.textContent = '';
-                }, 5000);
-            }
-        }
-
-        function updateSaveButton() {
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.disabled = !avatarData.isReady;
-        }
-
-        async function saveSetup() {
-            if (!avatarData.isReady) {
-                showAlert('Please complete avatar setup first', 'error');
-                return;
-            }
-
-            try {
-                const config = {
-                    avatarId: avatarData.avatarId,
-                    voice: avatarData.selectedVoice,
-                    timestamp: new Date().toISOString()
-                };
-
-                localStorage.setItem('avatarConfig', JSON.stringify(config));
-                
-                await saveVoicePreference(avatarData.selectedVoice);
-                
-                showAlert(`Avatar setup saved! Your custom avatar with ${getVoiceName(avatarData.selectedVoice)} voice is ready for your fans!`, 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 2000);
-
-            } catch (error) {
-                console.error('Save failed:', error);
-                showAlert('Failed to save configuration. Please try again.', 'error');
-            }
-        }
-
-        // FIXED: Correct preview chat function
-        function openPreviewChat() {
-            if (previewChatUrl && previewChatUrl !== '#') {
-                window.open(previewChatUrl, '_blank');
-            } else {
-                showAlert('Preview chat link not available. Please ensure you are logged in.', 'error');
-            }
-        }
-
-        function loadExistingAvatar() {
-            const saved = localStorage.getItem('avatarConfig');
-            if (saved) {
-                try {
-                    const config = JSON.parse(saved);
-                    avatarData = {
-                        avatarId: config.avatarId,
-                        selectedVoice: config.voice || extendedVoiceList[0].voice_id,
-                        isReady: true
-                    };
-
-                    displayAvatarWithAutoPreview(config.avatarId, {});
-                    selectVoice(config.voice || extendedVoiceList[0].voice_id);
-                    updateSaveButton();
-                    
-                    showAlert('Existing avatar configuration loaded. You can upload a new photo to replace it.', 'info');
-                } catch (error) {
-                    console.error('Failed to load existing config:', error);
-                }
-            }
-
-            checkExistingAvatarAPI();
-        }
-
-        async function checkExistingAvatarAPI() {
-            try {
-                const token = localStorage.getItem('token');
-
-                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.status === 'success' && data.data.avatar_id) {
-                    avatarData.avatarId = data.data.avatar_id;
-                    avatarData.isReady = true;
-                    
-                    if (data.data.voice_id) {
-                        avatarData.selectedVoice = data.data.voice_id;
-                        selectVoice(data.data.voice_id);
-                    }
-                    
-                    await displayAvatarWithAutoPreview(data.data.avatar_id, data.data);
-                    updateSaveButton();
-                    
-                    showAlert('Existing custom avatar found! You can replace it by uploading a new photo.', 'info');
-                } else {
-                    showUploadArea();
-                }
-            } catch (error) {
-                console.log('No existing avatar found or API error:', error);
-                showUploadArea();
-            }
-        }
-
-        function showAlert(message, type) {
-            const alertElement = document.getElementById('alert');
+            displayAvatarWithAutoPreview(config.avatarId, {});
+            selectVoice(config.voice || '2d5b0e6cf36f460aa7fc47e3eee4ba54');
             
-            alertElement.className = 'alert';
-            alertElement.classList.add(type);
-            alertElement.textContent = message;
-            alertElement.style.display = 'block';
-            
-            const hideDelay = type === 'error' ? 8000 : 5000;
-            setTimeout(() => {
-                if (alertElement.style.display !== 'none') {
-                    alertElement.style.display = 'none';
-                }
-            }, hideDelay);
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showAlert('Existing avatar configuration loaded. You can upload a new photo to replace it.', 'info');
+        } catch (error) {
+            console.error('Failed to load existing config:', error);
         }
+    }
 
-        console.log('Enhanced Avatar Setup page loaded with 10 voice options and fixed functionality');
+    checkExistingAvatarAPI();
+}
+
+async function checkExistingAvatarAPI() {
+    try {
+        const token = localStorage.getItem('token');
+
+        const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success' && data.data.avatar_id) {
+            avatarData.avatarId = data.data.avatar_id;
+            avatarData.isReady = true;
+            
+            if (data.data.preferred_voice_id) {
+                avatarData.selectedVoice = data.data.preferred_voice_id;
+                selectVoice(data.data.preferred_voice_id);
+            }
+            
+            await displayAvatarWithAutoPreview(data.data.avatar_id, data.data);
+            
+            showAlert('Existing custom avatar found! You can replace it by uploading a new photo.', 'info');
+        } else {
+            showUploadArea();
+        }
+    } catch (error) {
+        console.log('No existing avatar found or API error:', error);
+        showUploadArea();
+    }
+}
+
+function showAlert(message, type) {
+    const alertElement = document.getElementById('alert');
+    
+    alertElement.className = 'alert';
+    alertElement.classList.add(type);
+    alertElement.textContent = message;
+    alertElement.style.display = 'block';
+    
+    const hideDelay = type === 'error' ? 8000 : 5000;
+    setTimeout(() => {
+        if (alertElement.style.display !== 'none') {
+            alertElement.style.display = 'none';
+        }
+    }, hideDelay);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+console.log('Enhanced Avatar Setup page loaded with fixed voice persistence and chat links');
     </script>
 </body>
 </html>

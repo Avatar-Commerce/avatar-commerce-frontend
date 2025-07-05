@@ -659,19 +659,28 @@
     </div>
 
     <script>
-        // Configuration
+        // COMPLETE CHAT.HTML JAVASCRIPT - FIXED VERSION
+        
+        // =============================================================================
+        // CONFIGURATION AND GLOBALS
+        // =============================================================================
+        
         const API_BASE_URL = 'http://localhost:2000/api';
         
-        // Chat state
-        let chatState = {
+        // Chat state management
+        const chatState = {
             messages: [],
             isTyping: false,
             videoEnabled: true,
             autoplayEnabled: true,
             avatarReady: false,
             influencerData: null,
-            sessionId: 'chat_' + Date.now(),
-            currentVoice: null
+            sessionId: 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+            currentVoice: null,
+            connectionStatus: 'connecting', // connecting, connected, error
+            retryCount: 0,
+            maxRetries: 3,
+            isEmbedded: false
         };
 
         // Voice information mapping
@@ -688,102 +697,294 @@
             '2c8f4a6e1b7d3f9c5a8e2b4f6d1a9c7e': 'Marcus (Dynamic)'
         };
 
-        // Initialize chat when page loads
+        // =============================================================================
+        // INITIALIZATION
+        // =============================================================================
+
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChat();
+            console.log('🚀 Chat page initializing...');
+            
+            // Check if embedded
+            checkEmbeddedMode();
+            
+            // Validate URL and initialize
+            if (validateChatUrl()) {
+                initializeChat();
+            }
         });
 
-        async function initializeChat() {
-            console.log('Initializing chat interface...');
-            
-            // Get username from URL parameters
+        function checkEmbeddedMode() {
             const urlParams = new URLSearchParams(window.location.search);
-            const username = urlParams.get('username');
+            chatState.isEmbedded = urlParams.get('embed') === 'true';
             
-            console.log('URL parameters:', urlParams.toString());
-            console.log('Extracted username:', username);
-            
-            if (!username) {
-                showError('No influencer specified. Please check the URL and make sure it includes ?username=INFLUENCER_NAME');
-                return;
-            }
-
-            console.log('Loading chat for influencer:', username);
-            
-            // Load influencer data
-            try {
-                await loadInfluencerData(username);
-                await initializeChatInterface();
-            } catch (error) {
-                console.error('Failed to initialize chat:', error);
-                showError(`Failed to load influencer data for "${username}". Please check the username and try again.`);
+            if (chatState.isEmbedded) {
+                console.log('🖼️ Running in embedded mode');
+                document.body.classList.add('embedded-chat');
+                
+                // Add embedded-specific styles
+                const embeddedStyles = document.createElement('style');
+                embeddedStyles.textContent = `
+                    .embedded-chat {
+                        margin: 0;
+                        padding: 0;
+                        height: 100vh;
+                        overflow: hidden;
+                    }
+                    .embedded-chat .chat-container {
+                        height: 100vh;
+                        max-width: none;
+                        box-shadow: none;
+                        border-radius: 0;
+                        grid-template-columns: 1fr;
+                        grid-template-rows: 1fr;
+                    }
+                    .embedded-chat .avatar-section {
+                        display: none;
+                    }
+                    .embedded-chat .chat-section {
+                        background: #f8fafc;
+                    }
+                `;
+                document.head.appendChild(embeddedStyles);
             }
         }
 
-        async function loadInfluencerData(username) {
-            try {
-                console.log('Fetching influencer data for:', username);
-                
-                const response = await fetch(`${API_BASE_URL}/chat/${username}`);
-                const data = await response.json();
-                
-                console.log('Influencer data response:', data);
+        function validateChatUrl() {
+            const username = getInfluencerFromUrl();
+            
+            if (!username) {
+                showError('❌ No influencer specified in the URL. Please check the chat link and try again.');
+                return false;
+            }
 
-                if (data.status === 'success') {
+            if (!isValidUsername(username)) {
+                showError(`❌ Invalid username format: "${username}". Please check the chat link.`);
+                return false;
+            }
+
+            console.log('✅ URL validation passed for username:', username);
+            return true;
+        }
+
+        async function initializeChat() {
+            console.log('🔄 Initializing chat interface...');
+            
+            const username = getInfluencerFromUrl();
+            
+            try {
+                // Show loading state
+                updateLoadingMessage(`Connecting to ${username}'s chat...`);
+                
+                // Load influencer data
+                await loadInfluencerData(username);
+                
+                // Initialize chat interface
+                await initializeChatInterface();
+                
+                console.log('✅ Chat initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Failed to initialize chat:', error);
+                handleInitializationError(error, username);
+            }
+        }
+
+        // =============================================================================
+        // URL PARSING AND VALIDATION
+        // =============================================================================
+
+        function getInfluencerFromUrl() {
+            // Method 1: Search parameters (?username=value)
+            const urlParams = new URLSearchParams(window.location.search);
+            let username = urlParams.get('username') || urlParams.get('u') || urlParams.get('user');
+            
+            if (username) {
+                return decodeURIComponent(username.trim());
+            }
+            
+            // Method 2: Hash parameters (#username=value)
+            if (window.location.hash) {
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                username = hashParams.get('username') || hashParams.get('u');
+                if (username) {
+                    return decodeURIComponent(username.trim());
+                }
+            }
+            
+            // Method 3: Path-based (/chat/username)
+            const pathParts = window.location.pathname.split('/').filter(part => part.length > 0);
+            const chatIndex = pathParts.findIndex(part => part.toLowerCase() === 'chat');
+            
+            if (chatIndex >= 0 && pathParts.length > chatIndex + 1) {
+                return decodeURIComponent(pathParts[chatIndex + 1]);
+            }
+            
+            // Method 4: Direct filename parsing (chat-username.html)
+            const filename = window.location.pathname.split('/').pop();
+            if (filename && filename.startsWith('chat-') && filename.endsWith('.html')) {
+                return filename.slice(5, -5); // Remove 'chat-' prefix and '.html' suffix
+            }
+            
+            return null;
+        }
+
+        function isValidUsername(username) {
+            if (!username || typeof username !== 'string') {
+                return false;
+            }
+            
+            // Allow letters, numbers, underscores, hyphens
+            const validPattern = /^[a-zA-Z0-9_-]+$/;
+            return validPattern.test(username.trim()) && username.length >= 2 && username.length <= 50;
+        }
+
+        // =============================================================================
+        // DATA LOADING
+        // =============================================================================
+
+        async function loadInfluencerData(username) {
+            console.log('📡 Fetching influencer data for:', username);
+            
+            try {
+                const response = await fetchWithRetry(`${API_BASE_URL}/chat/${encodeURIComponent(username)}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('📥 Influencer data response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await getErrorMessage(response)}`);
+                }
+                
+                const data = await response.json();
+                console.log('📊 Influencer data:', data);
+
+                if (data.status === 'success' && data.data) {
                     chatState.influencerData = data.data;
-                    
-                    // Update UI with influencer info
-                    document.getElementById('influencerName').textContent = data.data.username;
-                    document.getElementById('influencerBio').textContent = data.data.bio || 'AI-powered assistant ready to help you!';
-                    document.title = `Chat with ${data.data.username}'s AI Avatar`;
-                    document.getElementById('chatTitle').textContent = `Chat with ${data.data.username}`;
-                    
-                    // Set voice information
-                    if (data.data.voice_name) {
-                        chatState.currentVoice = data.data.voice_name;
-                        document.getElementById('currentVoiceName').textContent = data.data.voice_name;
-                    } else {
-                        document.getElementById('currentVoiceName').textContent = 'Default Voice';
-                    }
-                    
-                    chatState.avatarReady = data.data.has_avatar;
-                    
-                    if (chatState.avatarReady) {
-                        document.getElementById('avatarStatusText').textContent = 'Custom AI Avatar Online';
-                    }
-                    
-                    console.log('Influencer data loaded successfully');
+                    updateUIWithInfluencerData(data.data);
                     return data.data;
                 } else {
-                    throw new Error(data.message || 'Failed to load influencer data');
+                    throw new Error(data.message || 'Invalid response format from server');
                 }
             } catch (error) {
-                console.error('Error loading influencer data:', error);
+                console.error('❌ Error loading influencer data:', error);
                 throw error;
             }
         }
 
+        function updateUIWithInfluencerData(data) {
+            // Update UI elements
+            const elements = {
+                influencerName: document.getElementById('influencerName'),
+                influencerBio: document.getElementById('influencerBio'),
+                chatTitle: document.getElementById('chatTitle'),
+                currentVoiceName: document.getElementById('currentVoiceName'),
+                avatarStatusText: document.getElementById('avatarStatusText')
+            };
+
+            if (elements.influencerName) {
+                elements.influencerName.textContent = data.username;
+            }
+            
+            if (elements.influencerBio) {
+                elements.influencerBio.textContent = data.bio || 'AI-powered assistant ready to help you!';
+            }
+            
+            if (elements.chatTitle) {
+                elements.chatTitle.textContent = `Chat with ${data.username}`;
+            }
+            
+            // Update page title
+            document.title = `Chat with ${data.username}'s AI Avatar`;
+            
+            // Set voice information
+            if (elements.currentVoiceName) {
+                const voiceName = data.voice_name || 'Default Voice';
+                elements.currentVoiceName.textContent = voiceName;
+                chatState.currentVoice = voiceName;
+            }
+            
+            // Update avatar status
+            chatState.avatarReady = data.has_avatar;
+            if (elements.avatarStatusText) {
+                elements.avatarStatusText.textContent = chatState.avatarReady ? 
+                    'Custom AI Avatar Online' : 
+                    'AI Assistant Online';
+            }
+            
+            console.log('✅ UI updated with influencer data:', {
+                username: data.username,
+                hasAvatar: data.has_avatar,
+                voiceName: data.voice_name
+            });
+        }
+
         async function initializeChatInterface() {
             // Hide loading message
-            document.getElementById('loadingMessage').style.display = 'none';
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.style.display = 'none';
+            }
             
             // Show welcome message
             addWelcomeMessage();
             
-            // Enable input
-            document.getElementById('chatInput').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
-            document.getElementById('voiceBtn').disabled = false;
+            // Enable input controls
+            enableChatControls();
             
-            // Auto-resize textarea
-            const chatInput = document.getElementById('chatInput');
-            chatInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Update connection status
+            chatState.connectionStatus = 'connected';
+            
+            // Load previous messages from session if available
+            loadMessagesFromSession();
+            
+            // Track chat session start
+            trackChatEvent('chat_session_start', {
+                user_agent: navigator.userAgent,
+                is_embedded: chatState.isEmbedded,
+                has_avatar: chatState.avatarReady
             });
             
-            console.log('Chat interface initialized successfully');
+            console.log('✅ Chat interface initialized successfully');
         }
+
+        function enableChatControls() {
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const voiceBtn = document.getElementById('voiceBtn');
+            
+            if (chatInput) {
+                chatInput.disabled = false;
+                chatInput.placeholder = "Type your message here...";
+            }
+            if (sendBtn) sendBtn.disabled = false;
+            if (voiceBtn) voiceBtn.disabled = false;
+        }
+
+        function setupEventListeners() {
+            const chatInput = document.getElementById('chatInput');
+            
+            if (chatInput) {
+                // Auto-resize textarea
+                chatInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+                
+                // Enter key handling
+                chatInput.addEventListener('keydown', handleKeyPress);
+            }
+        }
+
+        // =============================================================================
+        // MESSAGE HANDLING
+        // =============================================================================
 
         function addWelcomeMessage() {
             const influencerName = chatState.influencerData.username;
@@ -805,17 +1006,39 @@
             
             if (!message || chatState.isTyping) return;
             
+            // Validate connection
+            if (chatState.connectionStatus === 'error') {
+                const isConnected = await checkConnection();
+                if (!isConnected) {
+                    showAlert('Connection lost. Please refresh the page and try again.', 'error');
+                    return;
+                }
+            }
+            
             // Add user message
             addMessage(message, 'user');
             input.value = '';
             input.style.height = 'auto';
             
-            // Generate avatar response
-            await generateAvatarResponse(message);
+            // Generate avatar response with retry logic
+            try {
+                await retryRequest(() => generateAvatarResponse(message));
+            } catch (error) {
+                console.error('❌ Failed to send message after retries:', error);
+                hideTypingIndicator();
+                chatState.isTyping = false;
+                
+                addMessage(
+                    "I'm sorry, I'm having trouble responding right now. Please check your connection and try again.",
+                    'avatar'
+                );
+            }
         }
 
         function addMessage(text, sender, videoUrl = null, products = null) {
             const messagesContainer = document.getElementById('chatMessages');
+            if (!messagesContainer) return;
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
             
@@ -838,10 +1061,24 @@
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
             
-            // Play avatar video if it's an avatar response with video
+            // Play avatar video if available
             if (sender === 'avatar' && videoUrl && chatState.avatarReady && chatState.videoEnabled) {
                 playMainAvatarVideo(videoUrl);
             }
+            
+            // Track analytics
+            trackChatEvent('message_sent', {
+                sender: sender,
+                has_video: !!videoUrl,
+                has_products: !!products,
+                message_length: text.length
+            });
+            
+            // Save to session
+            saveMessageToSession(text, sender);
+            
+            // Update message count
+            chatState.messages.push({ text, sender, timestamp: Date.now() });
         }
 
         async function generateAvatarResponse(userMessage) {
@@ -849,9 +1086,9 @@
             chatState.isTyping = true;
             
             try {
-                console.log('Generating response for message:', userMessage);
+                console.log('🤖 Generating response for:', userMessage);
                 
-                const response = await fetch(`${API_BASE_URL}/chat`, {
+                const response = await fetchWithRetry(`${API_BASE_URL}/chat`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -863,9 +1100,14 @@
                     })
                 });
 
-                console.log('Chat API response status:', response.status);
+                console.log('📤 Chat API response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${await getErrorMessage(response)}`);
+                }
+                
                 const data = await response.json();
-                console.log('Chat API response data:', data);
+                console.log('📊 Chat API response:', data);
 
                 hideTypingIndicator();
                 chatState.isTyping = false;
@@ -874,9 +1116,10 @@
                     const responseData = data.data;
                     
                     // Extract products if any
-                    const products = responseData.has_product_recommendations ? extractProductsFromResponse(responseData.text) : null;
+                    const products = responseData.has_product_recommendations ? 
+                        extractProductsFromResponse(responseData.text) : null;
                     
-                    // Add avatar response with video if available
+                    // Add avatar response
                     addMessage(
                         responseData.text, 
                         'avatar', 
@@ -889,7 +1132,7 @@
                 }
 
             } catch (error) {
-                console.error('Failed to generate response:', error);
+                console.error('❌ Failed to generate response:', error);
                 hideTypingIndicator();
                 chatState.isTyping = false;
                 
@@ -900,9 +1143,109 @@
             }
         }
 
+        // =============================================================================
+        // UI HELPERS
+        // =============================================================================
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            if (!messagesContainer) return;
+            
+            // Remove existing typing indicator
+            const existingIndicator = document.getElementById('typingIndicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            
+            typingDiv.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div style="flex: 1;">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            scrollToBottom();
+            
+            // Auto-hide after 30 seconds
+            setTimeout(() => {
+                if (document.getElementById('typingIndicator')) {
+                    hideTypingIndicator();
+                    if (chatState.isTyping) {
+                        chatState.isTyping = false;
+                        addMessage(
+                            "Sorry for the delay. Please try sending your message again.",
+                            'avatar'
+                        );
+                    }
+                }
+            }, 30000);
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('chatMessages');
+            if (messagesContainer) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function updateLoadingMessage(message) {
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.innerHTML = `
+                    <div class="spinner"></div>
+                    <p>${message}</p>
+                `;
+            }
+        }
+
+        function playMainAvatarVideo(videoUrl) {
+            const avatarVideo = document.getElementById('avatarVideo');
+            const placeholder = document.getElementById('avatarPlaceholder');
+            
+            if (!avatarVideo || !placeholder) return;
+            
+            // Show video, hide placeholder
+            placeholder.style.display = 'none';
+            avatarVideo.style.display = 'block';
+            avatarVideo.src = videoUrl;
+            avatarVideo.classList.add('speaking');
+            
+            if (chatState.autoplayEnabled) {
+                avatarVideo.play().catch(e => console.log('Autoplay prevented:', e));
+            }
+            
+            // Remove speaking effect when video ends
+            avatarVideo.addEventListener('ended', function() {
+                avatarVideo.classList.remove('speaking');
+                setTimeout(() => {
+                    avatarVideo.style.display = 'none';
+                    placeholder.style.display = 'flex';
+                }, 2000);
+            }, { once: true });
+        }
+
+        // =============================================================================
+        // PRODUCT RECOMMENDATIONS
+        // =============================================================================
+
         function extractProductsFromResponse(text) {
             // Simple product extraction for demo
-            // In real implementation, this would parse the actual product data from the API
             if (text.toLowerCase().includes('product') || text.toLowerCase().includes('recommend')) {
                 return [
                     { name: "Stylish Handbag", price: "$89", icon: "fas fa-shopping-bag" },
@@ -934,74 +1277,25 @@
             `;
         }
 
-        function playMainAvatarVideo(videoUrl) {
-            const avatarVideo = document.getElementById('avatarVideo');
-            const placeholder = document.getElementById('avatarPlaceholder');
-            
-            // Show video, hide placeholder
-            placeholder.style.display = 'none';
-            avatarVideo.style.display = 'block';
-            avatarVideo.src = videoUrl;
-            avatarVideo.classList.add('speaking');
-            
-            if (chatState.autoplayEnabled) {
-                avatarVideo.play().catch(e => console.log('Autoplay prevented:', e));
-            }
-            
-            // Remove speaking effect when video ends
-            avatarVideo.addEventListener('ended', function() {
-                avatarVideo.classList.remove('speaking');
-                // Optionally hide video and show placeholder again
-                setTimeout(() => {
-                    avatarVideo.style.display = 'none';
-                    placeholder.style.display = 'flex';
-                }, 2000);
-            }, { once: true });
+        function openProductLink(productName) {
+            console.log('🛒 Opening product link for:', productName);
+            alert(`Opening product link for: ${productName}\n\nThis would redirect to the affiliate link for this product.`);
         }
 
-        function showTypingIndicator() {
-            const messagesContainer = document.getElementById('chatMessages');
-            const typingDiv = document.createElement('div');
-            typingDiv.id = 'typingIndicator';
-            typingDiv.className = 'typing-indicator';
-            
-            typingDiv.innerHTML = `
-                <div class="message-avatar">AI</div>
-                <div style="flex: 1;">
-                    <div class="typing-dots">
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                        <div class="typing-dot"></div>
-                    </div>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(typingDiv);
-            scrollToBottom();
-        }
-
-        function hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typingIndicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-
-        function scrollToBottom() {
-            const messagesContainer = document.getElementById('chatMessages');
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+        // =============================================================================
+        // VOICE FEATURES
+        // =============================================================================
 
         function toggleVideoResponses(toggle) {
             toggle.classList.toggle('active');
             chatState.videoEnabled = toggle.classList.contains('active');
-            console.log('Video responses:', chatState.videoEnabled ? 'enabled' : 'disabled');
+            console.log('🎥 Video responses:', chatState.videoEnabled ? 'enabled' : 'disabled');
         }
 
         function toggleAutoplay(toggle) {
             toggle.classList.toggle('active');
             chatState.autoplayEnabled = toggle.classList.contains('active');
-            console.log('Autoplay:', chatState.autoplayEnabled ? 'enabled' : 'disabled');
+            console.log('▶️ Autoplay:', chatState.autoplayEnabled ? 'enabled' : 'disabled');
         }
 
         function toggleVoiceInput() {
@@ -1020,10 +1314,9 @@
             voiceBtn.classList.add('recording');
             voiceBtn.innerHTML = '<i class="fas fa-stop"></i>';
             
-            // Simulate voice recording
-            console.log('Voice recording started');
+            console.log('🎤 Voice recording started');
             
-            // Simulate voice-to-text after 3 seconds
+            // Simulate voice recording for demo
             setTimeout(() => {
                 stopVoiceRecording();
                 const input = document.getElementById('chatInput');
@@ -1037,24 +1330,346 @@
             voiceBtn.classList.remove('recording');
             voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
             
-            console.log('Voice recording stopped');
+            console.log('🎤 Voice recording stopped');
         }
 
-        function openProductLink(productName) {
-            console.log('Opening product link for:', productName);
-            alert(`Opening product link for: ${productName}\n\nThis would redirect to the affiliate link for this product.`);
+        // =============================================================================
+        // ERROR HANDLING
+        // =============================================================================
+
+        function handleInitializationError(error, username) {
+            if (error.message.includes('404')) {
+                showError(`Influencer "${username}" not found. Please check the username and try again.`);
+            } else if (error.message.includes('network') || error.name === 'TypeError') {
+                showError('Network connection error. Please check your internet connection and try again.');
+            } else {
+                showError(`Failed to load chat for "${username}". ${error.message}`);
+            }
         }
 
         function showError(message) {
+            console.error('❌ Chat error:', message);
+            
             const messagesContainer = document.getElementById('chatMessages');
-            messagesContainer.innerHTML = `
-                <div class="error-message">
-                    <i class="fas fa-exclamation-triangle" style="margin-bottom: 10px; font-size: 2rem;"></i>
-                    <h3>Oops! Something went wrong</h3>
-                    <p>${message}</p>
-                </div>
-            `;
+            if (messagesContainer) {
+                messagesContainer.innerHTML = `
+                    <div class="error-message" style="
+                        background: #fee2e2;
+                        border: 1px solid #fecaca;
+                        color: #991b1b;
+                        padding: 30px;
+                        border-radius: 15px;
+                        text-align: center;
+                        margin: 40px 20px;
+                        max-width: 600px;
+                        margin-left: auto;
+                        margin-right: auto;
+                    ">
+                        <i class="fas fa-exclamation-triangle" style="
+                            margin-bottom: 15px; 
+                            font-size: 3rem;
+                            color: #dc2626;
+                        "></i>
+                        <h3 style="margin-bottom: 15px; color: #991b1b;">Connection Error</h3>
+                        <p style="margin-bottom: 20px; line-height: 1.6;">${message}</p>
+                        <button onclick="window.location.reload()" style="
+                            background: #dc2626;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='#b91c1c'" 
+                           onmouseout="this.style.background='#dc2626'">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                `;
+            }
+            
+            // Hide loading message
+            const loadingMessage = document.getElementById('loadingMessage');
+            if (loadingMessage) {
+                loadingMessage.style.display = 'none';
+            }
+            
+            // Disable input controls
+            disableChatControls();
         }
+
+        function disableChatControls() {
+            const chatInput = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const voiceBtn = document.getElementById('voiceBtn');
+            
+            if (chatInput) {
+                chatInput.disabled = true;
+                chatInput.placeholder = "Chat unavailable";
+            }
+            if (sendBtn) sendBtn.disabled = true;
+            if (voiceBtn) voiceBtn.disabled = true;
+        }
+
+        function showAlert(message, type = 'info') {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            
+            // Create alert element
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                max-width: 400px;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            
+            // Set background color
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            alert.style.background = colors[type] || colors.info;
+            alert.textContent = message;
+            
+            document.body.appendChild(alert);
+            
+            // Animate in
+            setTimeout(() => alert.style.transform = 'translateX(0)', 10);
+            
+            // Auto-remove
+            setTimeout(() => {
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (alert.parentNode) {
+                        alert.parentNode.removeChild(alert);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // =============================================================================
+        // NETWORK UTILITIES
+        // =============================================================================
+
+        async function fetchWithRetry(url, options = {}, maxRetries = 3) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const response = await fetch(url, {
+                        ...options,
+                        timeout: 15000
+                    });
+                    return response;
+                } catch (error) {
+                    console.warn(`Request attempt ${attempt} failed:`, error);
+                    
+                    if (attempt === maxRetries) {
+                        throw error;
+                    }
+                    
+                    // Exponential backoff
+                    const delay = Math.pow(2, attempt) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        async function getErrorMessage(response) {
+            try {
+                const data = await response.json();
+                return data.message || response.statusText;
+            } catch {
+                return response.statusText;
+            }
+        }
+
+        async function checkConnection() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    chatState.connectionStatus = 'connected';
+                    chatState.retryCount = 0;
+                    return true;
+                }
+            } catch (error) {
+                console.warn('Connection check failed:', error);
+            }
+            
+            chatState.connectionStatus = 'error';
+            return false;
+        }
+
+        async function retryRequest(requestFn, maxRetries = 3) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const result = await requestFn();
+                    return result;
+                } catch (error) {
+                    console.warn(`Request attempt ${attempt} failed:`, error);
+                    
+                    if (attempt === maxRetries) {
+                        throw error;
+                    }
+                    
+                    // Exponential backoff
+                    const delay = Math.pow(2, attempt) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        // =============================================================================
+        // MESSAGE PERSISTENCE
+        // =============================================================================
+
+        function saveMessageToSession(message, sender) {
+            try {
+                const sessionKey = `chat_messages_${chatState.influencerData?.username || 'unknown'}`;
+                let messages = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                
+                messages.push({
+                    text: message,
+                    sender: sender,
+                    timestamp: Date.now()
+                });
+                
+                // Keep only last 10 messages
+                if (messages.length > 10) {
+                    messages = messages.slice(-10);
+                }
+                
+                sessionStorage.setItem(sessionKey, JSON.stringify(messages));
+            } catch (error) {
+                // SessionStorage not available or quota exceeded
+                console.warn('Could not save message to session storage:', error);
+            }
+        }
+
+        function loadMessagesFromSession() {
+            try {
+                const sessionKey = `chat_messages_${chatState.influencerData?.username || 'unknown'}`;
+                const messages = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                
+                // Only restore if less than 30 minutes old
+                const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
+                const recentMessages = messages.filter(msg => msg.timestamp > thirtyMinutesAgo);
+                
+                if (recentMessages.length > 0) {
+                    // Add a separator for restored messages
+                    const messagesContainer = document.getElementById('chatMessages');
+                    if (messagesContainer && recentMessages.length > 0) {
+                        const separator = document.createElement('div');
+                        separator.className = 'message-separator';
+                        separator.innerHTML = `
+                            <div style="
+                                text-align: center;
+                                color: #64748b;
+                                font-size: 0.8rem;
+                                margin: 20px 0;
+                                position: relative;
+                            ">
+                                <span style="
+                                    background: #f8fafc;
+                                    padding: 0 15px;
+                                    position: relative;
+                                    z-index: 1;
+                                ">Previous conversation</span>
+                                <div style="
+                                    position: absolute;
+                                    top: 50%;
+                                    left: 0;
+                                    right: 0;
+                                    height: 1px;
+                                    background: #e2e8f0;
+                                    z-index: 0;
+                                "></div>
+                            </div>
+                        `;
+                        messagesContainer.appendChild(separator);
+                    }
+                    
+                    // Restore messages without triggering analytics or session save
+                    recentMessages.forEach(msg => {
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${msg.sender}`;
+                        
+                        const avatarInitial = msg.sender === 'user' ? 'U' : 'AI';
+                        const timestamp = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        messageDiv.innerHTML = `
+                            <div class="message-avatar">${avatarInitial}</div>
+                            <div class="message-content">
+                                <div class="message-bubble">
+                                    ${escapeHtml(msg.text)}
+                                </div>
+                                <div class="message-time">${timestamp}</div>
+                            </div>
+                        `;
+                        
+                        messagesContainer.appendChild(messageDiv);
+                    });
+                    
+                    scrollToBottom();
+                    console.log(`📋 Restored ${recentMessages.length} messages from session`);
+                }
+            } catch (error) {
+                console.warn('Could not load messages from session storage:', error);
+            }
+        }
+
+        // =============================================================================
+        // ANALYTICS TRACKING
+        // =============================================================================
+
+        function trackChatEvent(eventName, data = {}) {
+            try {
+                // Send analytics event if analytics service is available
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', eventName, {
+                        event_category: 'chat',
+                        influencer: chatState.influencerData?.username,
+                        ...data
+                    });
+                }
+                
+                // Send to custom analytics endpoint (non-blocking)
+                if (chatState.influencerData?.username) {
+                    fetch(`${API_BASE_URL}/analytics/track`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            event: eventName,
+                            influencer: chatState.influencerData.username,
+                            session_id: chatState.sessionId,
+                            timestamp: Date.now(),
+                            data: data
+                        })
+                    }).catch(() => {
+                        // Analytics tracking failed, ignore silently
+                    });
+                }
+            } catch (error) {
+                // Analytics not available, ignore
+            }
+        }
+
+        // =============================================================================
+        // UTILITY FUNCTIONS
+        // =============================================================================
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -1062,10 +1677,268 @@
             return div.innerHTML;
         }
 
-        // Initialize with some sample interactions for demo
-        window.addEventListener('load', function() {
-            console.log('Enhanced chat interface loaded successfully');
+        function formatTimestamp(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            
+            if (diffSec < 60) {
+                return 'just now';
+            } else if (diffMin < 60) {
+                return `${diffMin}m ago`;
+            } else if (diffHour < 24) {
+                return `${diffHour}h ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+
+        // =============================================================================
+        // BROWSER EVENT HANDLERS
+        // =============================================================================
+
+        // Handle browser back/forward navigation
+        window.addEventListener('popstate', function(event) {
+            // Re-validate URL if user navigates
+            if (!validateChatUrl()) {
+                window.location.reload();
+            }
         });
+
+        // Handle online/offline events
+        window.addEventListener('online', function() {
+            console.log('🌐 Connection restored');
+            chatState.connectionStatus = 'connected';
+            showAlert('Connection restored!', 'success');
+        });
+
+        window.addEventListener('offline', function() {
+            console.log('📡 Connection lost');
+            chatState.connectionStatus = 'error';
+            showAlert('Connection lost. Please check your internet connection.', 'warning');
+        });
+
+        // Auto-focus chat input when page loads
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput && !chatInput.disabled && !chatState.isEmbedded) {
+                    chatInput.focus();
+                }
+            }, 1000);
+        });
+
+        // Prevent form submission on Enter in embedded mode
+        document.addEventListener('keydown', function(event) {
+            if (chatState.isEmbedded && event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') {
+                event.preventDefault();
+            }
+        });
+
+        // Handle visibility change for reconnection
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && chatState.connectionStatus === 'error') {
+                console.log('🔄 Page became visible, checking connection...');
+                checkConnection();
+            }
+        });
+
+        // =============================================================================
+        // EMBEDDED MODE FEATURES
+        // =============================================================================
+
+        if (chatState.isEmbedded) {
+            // Send ready message to parent window
+            window.addEventListener('load', function() {
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'avatarcommerce-chat-ready',
+                        username: getInfluencerFromUrl(),
+                        sessionId: chatState.sessionId
+                    }, '*');
+                }
+            });
+
+            // Listen for messages from parent window
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'avatarcommerce-chat-command') {
+                    switch (event.data.command) {
+                        case 'send-message':
+                            if (event.data.message) {
+                                const chatInput = document.getElementById('chatInput');
+                                if (chatInput) {
+                                    chatInput.value = event.data.message;
+                                    sendMessage();
+                                }
+                            }
+                            break;
+                        case 'get-status':
+                            event.source.postMessage({
+                                type: 'avatarcommerce-chat-status',
+                                status: chatState.connectionStatus,
+                                isTyping: chatState.isTyping,
+                                messageCount: chatState.messages.length,
+                                sessionId: chatState.sessionId
+                            }, event.origin);
+                            break;
+                        case 'clear-chat':
+                            const messagesContainer = document.getElementById('chatMessages');
+                            if (messagesContainer) {
+                                messagesContainer.innerHTML = '';
+                                chatState.messages = [];
+                                addWelcomeMessage();
+                            }
+                            break;
+                        case 'toggle-video':
+                            const videoToggle = document.getElementById('videoToggle');
+                            if (videoToggle) {
+                                toggleVideoResponses(videoToggle);
+                            }
+                            break;
+                    }
+                }
+            });
+
+            // Send status updates to parent
+            setInterval(() => {
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        type: 'avatarcommerce-chat-heartbeat',
+                        status: chatState.connectionStatus,
+                        messageCount: chatState.messages.length,
+                        isTyping: chatState.isTyping
+                    }, '*');
+                }
+            }, 10000); // Every 10 seconds
+        }
+
+        // =============================================================================
+        // PERFORMANCE MONITORING
+        // =============================================================================
+
+        if (typeof performance !== 'undefined' && performance.mark) {
+            performance.mark('chat-script-end');
+            
+            window.addEventListener('load', function() {
+                performance.mark('chat-page-loaded');
+                
+                // Log performance metrics in debug mode
+                setTimeout(() => {
+                    try {
+                        const navigationEntry = performance.getEntriesByType('navigation')[0];
+                        const performanceData = {
+                            domContentLoaded: navigationEntry.domContentLoadedEventEnd - navigationEntry.navigationStart,
+                            pageLoad: navigationEntry.loadEventEnd - navigationEntry.navigationStart,
+                            scriptExecution: performance.getEntriesByName('chat-script-end')[0].startTime
+                        };
+                        
+                        console.log('⏱️ Chat page performance:', performanceData);
+                        
+                        // Track performance analytics
+                        trackChatEvent('page_performance', performanceData);
+                        
+                    } catch (e) {
+                        // Performance API not fully supported, ignore
+                    }
+                }, 1000);
+            });
+        }
+
+        // =============================================================================
+        // ERROR HANDLING AND DEBUGGING
+        // =============================================================================
+
+        // Global error handling
+        window.addEventListener('error', (event) => {
+            console.error('🚨 Global error in chat:', event.error);
+            
+            if (chatState.connectionStatus === 'connected') {
+                // Only show error alert if we were previously connected
+                showAlert('An unexpected error occurred. Please refresh the page if problems persist.', 'error');
+            }
+            
+            // Track error for debugging
+            trackChatEvent('javascript_error', {
+                message: event.error?.message || 'Unknown error',
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        // Unhandled promise rejection handling
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('🚨 Unhandled promise rejection:', event.reason);
+            
+            // Track promise rejection
+            trackChatEvent('promise_rejection', {
+                reason: event.reason?.toString() || 'Unknown rejection'
+            });
+        });
+
+        // Export debugging tools
+        if (typeof window !== 'undefined') {
+            window.chatDebug = {
+                chatState,
+                checkConnection,
+                getInfluencerFromUrl,
+                isValidUsername,
+                retryRequest,
+                showError,
+                addMessage,
+                loadMessagesFromSession,
+                saveMessageToSession,
+                trackChatEvent,
+                sendTestMessage: () => {
+                    const input = document.getElementById('chatInput');
+                    if (input.value.trim()) {
+                        sendMessage();
+                    } else {
+                        input.value = "This is a test message from debug tools";
+                        sendMessage();
+                    }
+                },
+                simulateError: () => {
+                    showError('This is a test error message');
+                },
+                getSessionMessages: () => {
+                    try {
+                        const sessionKey = `chat_messages_${chatState.influencerData?.username || 'unknown'}`;
+                        return JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+                    } catch {
+                        return [];
+                    }
+                },
+                clearSession: () => {
+                    try {
+                        const sessionKey = `chat_messages_${chatState.influencerData?.username || 'unknown'}`;
+                        sessionStorage.removeItem(sessionKey);
+                        console.log('Session storage cleared');
+                    } catch (error) {
+                        console.error('Failed to clear session:', error);
+                    }
+                }
+            };
+            
+            console.log('🐛 Chat debug tools available in window.chatDebug');
+            console.log('💡 Try: chatDebug.sendTestMessage(), chatDebug.simulateError(), chatDebug.getSessionMessages()');
+        }
+
+        // Initialize with sample interactions for demo
+        window.addEventListener('load', function() {
+            console.log('✅ Enhanced chat interface loaded successfully');
+            console.log('🔗 Chat URL parameters:', window.location.search);
+            console.log('👤 Detected username:', getInfluencerFromUrl());
+            console.log('📱 Embedded mode:', chatState.isEmbedded);
+            console.log('🆔 Session ID:', chatState.sessionId);
+        });
+
+        // Final initialization message
+        console.log('🎯 Chat.html JavaScript fully loaded and enhanced');
+        console.log('📋 Features enabled: URL parsing, error handling, retry logic, embedded mode, analytics, session persistence');
     </script>
 </body>
 </html>
