@@ -643,6 +643,10 @@
                 <i class="fas fa-microphone"></i>
                 <span>Voice Setup</span>
             </a>
+            <a href="knowledge.html" class="menu-item">
+                <i class="fas fa-brain"></i>
+                <span>Add Knowledge</span>
+            </a>
             
             <div class="menu-category">MONETIZATION</div>
             <a href="products.html" class="menu-item">
@@ -815,31 +819,31 @@ function initializeAuth() {
     
     // CRITICAL FIX: Set preview chat link using proper URL generation
     function setPreviewChatLink() {
-        if (user.username && window.ChatLinkManager) {
-            const previewChatLink = document.getElementById('preview-chat-link');
-            if (previewChatLink) {
-                const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
-                previewChatLink.href = chatUrl;
-                console.log('Avatar setup - Preview chat link set to:', chatUrl);
-            }
-        } else {
-            // Fallback if ChatLinkManager not available
-            const previewChatLink = document.getElementById('preview-chat-link');
-            if (previewChatLink && user.username) {
-                const chatUrl = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
-                previewChatLink.href = chatUrl;
-                console.log('Avatar setup - Preview chat link set to (fallback):', chatUrl);
-            }
+    if (user.username && window.ChatLinkManager) {
+        const previewChatLink = document.getElementById('preview-chat-link');
+        if (previewChatLink) {
+            const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
+            previewChatLink.href = chatUrl;
+            console.log('Avatar setup - Preview chat link set to:', chatUrl);
+        }
+    } else {
+        // Fallback if ChatLinkManager not available
+        const previewChatLink = document.getElementById('preview-chat-link');
+        if (previewChatLink && user.username) {
+            const chatUrl = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
+            previewChatLink.href = chatUrl;
+            console.log('Avatar setup - Preview chat link set to (fallback):', chatUrl);
         }
     }
-    
-    // Set chat link immediately and retry if ChatLinkManager not ready
-    setPreviewChatLink();
-    
-    // Retry after a delay if needed
-    if (!window.ChatLinkManager) {
-        setTimeout(setPreviewChatLink, 500);
-    }
+}
+
+// Set chat link immediately and retry if ChatLinkManager not ready
+setPreviewChatLink();
+
+// Retry after ChatLinkManager loads
+if (!window.ChatLinkManager) {
+    setTimeout(setPreviewChatLink, 1000);
+}
     
     // Logout functionality
     document.getElementById('logout-btn').addEventListener('click', function() {

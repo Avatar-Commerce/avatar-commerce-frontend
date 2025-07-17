@@ -350,27 +350,40 @@ ${config.custom_css ? `<style>\n/* Custom CSS */\n${config.custom_css}\n</style>
         return styles;
     }
 
-    /**
-     * Generate a preview URL for the embed widget
-     * @param {string} username - Influencer username
-     * @param {Object} config - Widget configuration
-     * @returns {string} - Preview URL
-     */
-    generatePreviewUrl(username, config = {}) {
-        if (!username) {
-            return '#';
-        }
-        
-        const cleanUsername = this.cleanUsername(username);
-        const params = new URLSearchParams();
-        params.set('username', cleanUsername);
-        
-        if (config.width) params.set('width', config.width);
-        if (config.height) params.set('height', config.height);
-        if (config.position) params.set('position', config.position);
-        
-        return `${this.baseUrl}/embed-preview.html?${params.toString()}`;
+/**
+ * Generate a preview URL for the embed widget
+ * @param {string} username - Influencer username
+ * @param {Object} config - Widget configuration
+ * @returns {string} - Preview URL
+ */
+generatePreviewUrl(username, config = {}) {
+    if (!username) {
+        console.warn('Username required for preview URL generation');
+        return '#';
     }
+    
+    const cleanUsername = this.cleanUsername(username);
+    if (!this.isValidUsername(cleanUsername)) {
+        console.error('Invalid username for preview URL:', username);
+        return '#';
+    }
+    
+    // Check if embed-preview.html exists, otherwise fallback to regular chat
+    const params = new URLSearchParams();
+    params.set('username', cleanUsername);
+    params.set('preview', 'true');
+    
+    if (config.width) params.set('width', config.width);
+    if (config.height) params.set('height', config.height);
+    if (config.position) params.set('position', config.position);
+    if (config.theme) params.set('theme', config.theme);
+    
+    // Use chat.html with preview parameter as fallback
+    const previewUrl = `${this.baseUrl}/chat.html?${params.toString()}`;
+    
+    console.log(`Generated preview URL for ${username}:`, previewUrl);
+    return previewUrl;
+}
 
     /**
      * Clean username for URL usage

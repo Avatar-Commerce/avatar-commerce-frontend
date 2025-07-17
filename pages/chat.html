@@ -1081,67 +1081,120 @@
             chatState.messages.push({ text, sender, timestamp: Date.now() });
         }
 
-        async function generateAvatarResponse(userMessage) {
-            showTypingIndicator();
-            chatState.isTyping = true;
-            
-            try {
-                console.log('🤖 Generating response for:', userMessage);
-                
-                const response = await fetchWithRetry(`${API_BASE_URL}/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: userMessage,
-                        influencer_username: chatState.influencerData.username,
-                        session_id: chatState.sessionId
-                    })
-                });
-
-                console.log('📤 Chat API response status:', response.status);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${await getErrorMessage(response)}`);
-                }
-                
-                const data = await response.json();
-                console.log('📊 Chat API response:', data);
-
-                hideTypingIndicator();
-                chatState.isTyping = false;
-
-                if (data.status === 'success') {
-                    const responseData = data.data;
-                    
-                    // Extract products if any
-                    const products = responseData.has_product_recommendations ? 
-                        extractProductsFromResponse(responseData.text) : null;
-                    
-                    // Add avatar response
-                    addMessage(
-                        responseData.text, 
-                        'avatar', 
-                        responseData.video_url, 
-                        products
-                    );
-                    
-                } else {
-                    throw new Error(data.message || 'Failed to get response');
-                }
-
-            } catch (error) {
-                console.error('❌ Failed to generate response:', error);
-                hideTypingIndicator();
-                chatState.isTyping = false;
-                
-                addMessage(
-                    "I'm sorry, I'm having trouble responding right now. Please try again in a moment.",
-                    'avatar'
-                );
-            }
+        async function generateAvatarResponse(message) {
+    if (chatState.isTyping) return;
+    
+    chatState.isTyping = true;
+    showTypingIndicator();
+    
+    try {
+        console.log('🚀 Generating avatar response for:', message);
+        
+        // Get current user data for proper API calls
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const influencerUsername = getInfluencerUsername();
+        
+        // Prepare request payload
+        const requestPayload = {
+            message: message.trim(),
+            influencer_id: currentUser.id || null,
+            session_id: chatState.sessionId || null,
+            voice_mode: chatState.voiceEnabled,
+            username: influencerUsername
+        };
+        
+        console.log('📤 Sending request:', requestPayload);
+        
+        // Make API call with improved error handling
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(requestPayload)
+        });
+        
+        console.log('📡 Response status:', response.status);
+        
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+        
+        // Parse response
+        const data = await response.json();
+        console.log('📋 Response data:', data);
+        
+        // Hide typing indicator
+        hideTypingIndicator();
+        chatState.isTyping = false;
+        
+        // Handle successful response
+        if (data.status === 'success' && data.data) {
+            const responseData = data.data;
+            
+            // Update session ID if provided
+            if (responseData.session_id) {
+                chatState.sessionId = responseData.session_id;
+            }
+            
+            // Extract products if available
+            const products = responseData.text ? 
+                extractProductsFromResponse(responseData.text) : null;
+            
+            // Add avatar response with video and products
+            addMessage(
+                responseData.text || "I received your message, but I'm not sure how to respond right now.", 
+                'avatar', 
+                responseData.video_url, 
+                products
+            );
+            
+        } else {
+            // Handle API error response
+            const errorMessage = data.message || 'Unexpected response format';
+            throw new Error(errorMessage);
+        }
+        
+    } catch (error) {
+        console.error('❌ Chat error details:', {
+            error: error.message,
+            type: error.name,
+            stack: error.stack
+        });
+        
+        hideTypingIndicator();
+        chatState.isTyping = false;
+        
+        // Provide more specific error messages based on error type
+        let userMessage = "I'm having trouble responding right now. ";
+        
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            userMessage += "Please check your internet connection and try again.";
+        } else if (error.message.includes('404')) {
+            userMessage += "The chat service is temporarily unavailable.";
+        } else if (error.message.includes('500')) {
+            userMessage += "There's a server issue. Please try again in a moment.";
+        } else if (error.message.includes('timeout')) {
+            userMessage += "The request timed out. Please try again.";
+        } else {
+            userMessage += "Please try again in a moment.";
+        }
+        
+        addMessage(userMessage, 'avatar');
+        
+        // Optional: Retry mechanism for certain errors
+        if (error.message.includes('timeout') || error.message.includes('500')) {
+            console.log('🔄 Will attempt retry after delay...');
+            setTimeout(() => {
+                if (confirm('Would you like me to try sending your message again?')) {
+                    generateAvatarResponse(message);
+                }
+            }, 3000);
+        }
+    }
+}
 
         // =============================================================================
         // UI HELPERS
@@ -1494,24 +1547,43 @@
         }
 
         async function checkConnection() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/health`, {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-                
-                if (response.ok) {
-                    chatState.connectionStatus = 'connected';
-                    chatState.retryCount = 0;
-                    return true;
-                }
-            } catch (error) {
-                console.warn('Connection check failed:', error);
+    try {
+        const response = await fetch(`${API_BASE_URL}/health`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+        
+        chatState.connectionStatus = response.ok ? 'connected' : 'error';
+        return response.ok;
+    } catch (error) {
+        console.error('Connection check failed:', error);
+        chatState.connectionStatus = 'error';
+        return false;
+    }
+}
+
+async function retryRequest(requestFunction, maxRetries = 2) {
+    let attempt = 0;
+    
+    while (attempt < maxRetries) {
+        try {
+            await requestFunction();
+            return; // Success, exit retry loop
+        } catch (error) {
+            attempt++;
+            console.log(`Retry attempt ${attempt}/${maxRetries} failed:`, error.message);
+            
+            if (attempt >= maxRetries) {
+                throw error; // Final attempt failed, re-throw error
             }
             
-            chatState.connectionStatus = 'error';
-            return false;
+            // Wait before retrying (exponential backoff)
+            const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s...
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
+    }
+}
+
 
         async function retryRequest(requestFn, maxRetries = 3) {
             for (let attempt = 1; attempt <= maxRetries; attempt++) {

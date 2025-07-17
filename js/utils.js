@@ -381,5 +381,35 @@ const UTILS = {
     }
 };
 
+// Add this function to handle template variables in HTML
+function fixTemplateVariables() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.username) {
+            // Fix href attributes
+            document.querySelectorAll('[href*="${user.username}"]').forEach(element => {
+                element.href = element.href.replace('${user.username}', user.username);
+                console.log('Fixed template variable in href:', element.href);
+            });
+            
+            // Fix text content
+            document.querySelectorAll('*').forEach(element => {
+                if (element.childNodes.length === 1 && 
+                    element.childNodes[0].nodeType === Node.TEXT_NODE &&
+                    element.textContent.includes('${user.username}')) {
+                    element.textContent = element.textContent.replace('${user.username}', user.username);
+                    console.log('Fixed template variable in text:', element.textContent);
+                }
+            });
+        }
+    }
+}
+
+// Call this after DOM loads and after user data is available
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fixTemplateVariables, 100);
+});
+
 // Freeze the utils object to prevent modifications
 Object.freeze(UTILS);

@@ -805,6 +805,10 @@
                 <i class="fas fa-microphone"></i>
                 <span>Voice Setup</span>
             </a>
+            <a href="knowledge.html" class="menu-item">
+                <i class="fas fa-brain"></i>
+                <span>Add Knowledge</span>
+            </a>
             
             <div class="menu-category">MONETIZATION</div>
             <a href="products.html" class="menu-item">
@@ -1131,7 +1135,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>        
     </main>
 
     <script>
@@ -1191,34 +1195,60 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function setChatLinks() {
-        if (user.username && window.ChatLinkManager) {
-            // Fix the main chat link input field
-            const chatLinkInput = document.getElementById('chat-link');
-            if (chatLinkInput) {
-                const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
-                chatLinkInput.value = chatLink;
-                console.log('Dashboard chat link set to:', chatLink);
+    if (user.username && window.ChatLinkManager) {
+        // Fix the main chat link input field
+        const chatLinkInput = document.getElementById('chat-link');
+        if (chatLinkInput) {
+            const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
+            chatLinkInput.value = chatLink;
+            console.log('Dashboard chat link set to:', chatLink);
+        }
+        
+        // Fix the header preview chat link
+        const previewChatLink = document.getElementById('preview-chat-link');
+        if (previewChatLink) {
+            const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
+            previewChatLink.href = chatLink;
+            console.log('Header preview chat link set to:', chatLink);
+        }
+        
+        // CRITICAL FIX: Fix any other chat links that might have template variables
+        const allChatLinks = document.querySelectorAll('a[href*="chat.html"]');
+        allChatLinks.forEach(link => {
+            // Check for template variables or missing username parameter
+            if (link.href.includes('${user.username}') || 
+                (!link.href.includes('username=') && link.href.includes('chat.html'))) {
+                link.href = window.ChatLinkManager.generateChatUrl(user.username);
+                console.log('Fixed chat link:', link.href);
             }
-            
-            // Fix the header preview chat link
-            const previewChatLink = document.getElementById('preview-chat-link');
-            if (previewChatLink) {
-                const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
-                previewChatLink.href = chatLink;
-                console.log('Header preview chat link set to:', chatLink);
-            }
-            
-            // Fix any other chat links that might have template variables
-            const allChatLinks = document.querySelectorAll('a[href*="chat.html"]');
-            allChatLinks.forEach(link => {
-                if (link.href.includes('${user.username}') || !link.href.includes('username=')) {
-                    link.href = window.ChatLinkManager.generateChatUrl(user.username);
-                }
+        });
+        
+        console.log('All chat links updated successfully');
+    }
+}
+
+function fixRemainingTemplateVariables() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user.username) {
+            // Fix any remaining template variables in href attributes
+            document.querySelectorAll('[href*="${user.username}"]').forEach(element => {
+                element.href = element.href.replace('${user.username}', user.username);
+                console.log('Fixed template variable in href:', element.href);
             });
             
-            console.log('All chat links updated successfully');
+            // Fix any remaining template variables in text content
+            document.querySelectorAll('*').forEach(element => {
+                if (element.childNodes.length === 1 && 
+                    element.childNodes[0].nodeType === Node.TEXT_NODE &&
+                    element.textContent.includes('${user.username}')) {
+                    element.textContent = element.textContent.replace('${user.username}', user.username);
+                }
+            });
         }
     }
+}
     
     // Copy link functionality with enhanced feedback
     const copyLinkBtn = document.getElementById('copy-link-btn');
@@ -1260,245 +1290,238 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Enhanced embed functionality with proper ChatLinkManager integration
     function initializeEmbedFunctionality() {
-        const API_BASE_URL = 'http://localhost:2000/api';
-        
-        // DOM elements for embed functionality
-        const embedWidth = document.getElementById('embed-width');
-        const embedHeight = document.getElementById('embed-height');
-        const embedPosition = document.getElementById('embed-position');
-        const embedTheme = document.getElementById('embed-theme');
-        const embedTriggerText = document.getElementById('embed-trigger-text');
-        const embedAutoOpen = document.getElementById('embed-auto-open');
-        const embedCustomCSS = document.getElementById('embed-custom-css');
-        const generateBtn = document.getElementById('generate-embed');
-        const previewBtn = document.getElementById('preview-embed');
-        const embedCodePanel = document.getElementById('embed-code-panel');
-        const embedCodeDisplay = document.getElementById('embed-code-display');
-        const copyBtn = document.getElementById('copy-embed-code');
-        const previewLink = document.getElementById('preview-link');
-        const directChatLink = document.getElementById('direct-chat-link');
-        const embedAnalytics = document.getElementById('embed-analytics');
-        
-        // FIXED: Generate embed code with proper ChatLinkManager usage
-        function generateEmbedCode() {
-            try {
-                console.log('Generating embed code...');
-                
-                // Check if ChatLinkManager is available
-                if (!window.ChatLinkManager) {
-                    console.error('ChatLinkManager not available');
-                    throw new Error('Chat system not ready. Please refresh the page and try again.');
-                }
-                
-                // Validate username
-                if (!user.username) {
-                    throw new Error('Username not available. Please log in again.');
-                }
-                
-                // Get configuration
-                const config = {
-                    width: embedWidth?.value || '400px',
-                    height: embedHeight?.value || '600px',
-                    position: embedPosition?.value || 'bottom-right',
-                    theme: embedTheme?.value || 'default',
-                    trigger_text: embedTriggerText?.value || 'Chat with me!',
-                    auto_open: embedAutoOpen?.checked || false,
-                    custom_css: embedCustomCSS?.value || '',
-                    auto_open_delay: 3000
-                };
-                
-                console.log('Embed config:', config);
-                console.log('Username:', user.username);
-                
-                // Validate configuration
-                const validation = window.ChatLinkManager.validateEmbedConfig(config);
-                if (!validation.isValid) {
-                    throw new Error('Invalid configuration: ' + validation.errors.join(', '));
-                }
-                
-                // Show warnings if any
-                if (validation.warnings.length > 0) {
-                    validation.warnings.forEach(warning => {
-                        console.warn('Embed config warning:', warning);
-                    });
-                }
-                
-                // Generate embed code using ChatLinkManager
-                const embedCode = window.ChatLinkManager.generateEmbedCode(config, user.username);
-                
-                console.log('Embed code generated successfully');
-                
-                // Display embed code
-                if (embedCodeDisplay) {
-                    embedCodeDisplay.textContent = embedCode;
-                }
-                
-                // Show the panel
-                if (embedCodePanel) {
-                    embedCodePanel.style.display = 'block';
-                }
-                
-                // Update preview links using ChatLinkManager
-                if (previewLink) {
-                    previewLink.href = window.ChatLinkManager.generatePreviewUrl(user.username, config);
-                }
-                
-                if (directChatLink) {
-                    directChatLink.href = window.ChatLinkManager.generateChatUrl(user.username);
-                }
-                
-                // Also send to backend for storage (optional)
-                saveEmbedConfigToBackend(config, embedCode);
-                
-                showAlert('Embed code generated successfully!', 'success');
-                
-            } catch (error) {
-                console.error('Error generating embed code:', error);
-                showAlert('Failed to generate embed code: ' + error.message, 'error');
-            }
+    const API_BASE_URL = 'http://localhost:2000/api';
+    
+    // DOM elements for embed functionality
+    const embedWidth = document.getElementById('embed-width');
+    const embedHeight = document.getElementById('embed-height');
+    const embedPosition = document.getElementById('embed-position');
+    const embedTheme = document.getElementById('embed-theme');
+    const embedTriggerText = document.getElementById('embed-trigger-text');
+    const embedAutoOpen = document.getElementById('embed-auto-open');
+    const embedCustomCSS = document.getElementById('embed-custom-css');
+    const generateBtn = document.getElementById('generate-embed');
+    const previewBtn = document.getElementById('preview-embed');
+    const embedCodePanel = document.getElementById('embed-code-panel');
+    const embedCodeDisplay = document.getElementById('embed-code-display');
+    const copyBtn = document.getElementById('copy-embed-code');
+    const previewLink = document.getElementById('preview-link');
+    const directChatLink = document.getElementById('direct-chat-link');
+    const embedAnalytics = document.getElementById('embed-analytics');
+    
+    // FIXED: Get current user data inside this function
+    function getCurrentUser() {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            throw new Error('User data not found. Please log in again.');
         }
         
-        // FIXED: Copy embed code with proper error handling
-        function copyEmbedCode() {
-            if (!embedCodeDisplay || !copyBtn) {
-                showAlert('Embed code not available', 'error');
-                return;
+        const user = JSON.parse(userStr);
+        if (!user.username) {
+            throw new Error('Username not available. Please log in again.');
+        }
+        
+        return user;
+    }
+    
+    // FIXED: Generate embed code with proper user data access
+    function generateEmbedCode() {
+        try {
+            console.log('Generating embed code...');
+            
+            // Check if ChatLinkManager is available
+            if (!window.ChatLinkManager) {
+                console.error('ChatLinkManager not available');
+                throw new Error('Chat system not ready. Please refresh the page and try again.');
             }
             
-            const code = embedCodeDisplay.textContent;
+            // Get current user data
+            const currentUser = getCurrentUser();
             
-            if (!code) {
-                showAlert('No embed code to copy. Please generate code first.', 'warning');
-                return;
+            // Get configuration
+            const config = {
+                width: embedWidth?.value || '400px',
+                height: embedHeight?.value || '600px',
+                position: embedPosition?.value || 'bottom-right',
+                theme: embedTheme?.value || 'default',
+                trigger_text: embedTriggerText?.value || 'Chat with me!',
+                auto_open: embedAutoOpen?.checked || false,
+                custom_css: embedCustomCSS?.value || '',
+                auto_open_delay: 3000
+            };
+            
+            console.log('Embed config:', config);
+            console.log('Username:', currentUser.username);
+            
+            // Validate configuration
+            const validation = window.ChatLinkManager.validateEmbedConfig(config);
+            if (!validation.isValid) {
+                throw new Error('Invalid configuration: ' + validation.errors.join(', '));
             }
             
-            if (window.ChatLinkManager) {
-                window.ChatLinkManager.copyToClipboard(code).then(success => {
-                    if (success) {
-                        copyBtn.textContent = 'Copied!';
-                        window.ChatLinkManager.showSuccessMessage('Embed code copied!', copyBtn);
-                        setTimeout(() => {
-                            copyBtn.textContent = 'Copy Code';
-                        }, 2000);
-                    } else {
-                        fallbackCopy(code);
-                    }
+            // Show warnings if any
+            if (validation.warnings.length > 0) {
+                validation.warnings.forEach(warning => {
+                    console.warn('Embed config warning:', warning);
                 });
-            } else {
-                fallbackCopy(code);
             }
+            
+            // Generate embed code using ChatLinkManager
+            const embedCode = window.ChatLinkManager.generateEmbedCode(config, currentUser.username);
+            
+            console.log('Embed code generated successfully');
+            
+            // Display embed code
+            if (embedCodeDisplay) {
+                embedCodeDisplay.textContent = embedCode;
+            }
+            
+            // Show the panel
+            if (embedCodePanel) {
+                embedCodePanel.style.display = 'block';
+            }
+            
+            // Update preview links using ChatLinkManager
+            if (previewLink) {
+                previewLink.href = window.ChatLinkManager.generatePreviewUrl(currentUser.username, config);
+            }
+            
+            if (directChatLink) {
+                directChatLink.href = window.ChatLinkManager.generateChatUrl(currentUser.username);
+            }
+            
+            // Also send to backend for storage (optional)
+            saveEmbedConfigToBackend(config, embedCode);
+            
+            showAlert('Embed code generated successfully!', 'success');
+            
+        } catch (error) {
+            console.error('Embed code generation error:', error);
+            showAlert(error.message || 'Failed to generate embed code', 'error');
+        }
+    }
+    
+    // Copy embed code to clipboard
+    function copyEmbedCode() {
+        if (!embedCodeDisplay || !embedCodeDisplay.textContent) {
+            showAlert('No embed code to copy. Please generate embed code first.', 'warning');
+            return;
         }
         
-        function fallbackCopy(text) {
-            // Fallback copy method
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'absolute';
-            textArea.style.left = '-9999px';
-            document.body.appendChild(textArea);
+        const textArea = document.createElement('textarea');
+        textArea.value = embedCodeDisplay.textContent;
+        document.body.appendChild(textArea);
+        
+        try {
             textArea.select();
+            textArea.setSelectionRange(0, 99999);
             
-            try {
-                const success = document.execCommand('copy');
-                if (success) {
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => {
-                        copyBtn.textContent = 'Copy Code';
-                    }, 2000);
-                } else {
-                    throw new Error('Copy command failed');
-                }
-            } catch (error) {
-                alert('Please copy the code manually');
-            } finally {
-                document.body.removeChild(textArea);
+            if (document.execCommand('copy')) {
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy Code';
+                }, 2000);
+            } else {
+                throw new Error('Copy command failed');
             }
+        } catch (error) {
+            alert('Please copy the code manually');
+        } finally {
+            document.body.removeChild(textArea);
         }
-        
-        // Save embed configuration to backend
-        async function saveEmbedConfigToBackend(config, embedCode) {
-            try {
-                const response = await fetch(`${API_BASE_URL}/embed/generate`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(config)
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    console.log('Embed configuration saved to backend');
-                } else {
-                    console.warn('Failed to save embed config to backend:', data.message);
-                }
-            } catch (error) {
-                console.warn('Could not save embed config to backend:', error);
-                // Don't show error to user as this is not critical
+    }
+    
+    // Save embed configuration to backend
+    async function saveEmbedConfigToBackend(config, embedCode) {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/embed/generate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(config)
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                console.log('Embed configuration saved to backend');
+            } else {
+                console.warn('Failed to save embed config to backend:', data.message);
             }
+        } catch (error) {
+            console.warn('Could not save embed config to backend:', error);
+            // Don't show error to user as this is not critical
         }
-        
-        // Load embed analytics
-        async function loadEmbedAnalytics() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/analytics/embed?days=30`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    const analytics = data.data;
-                    
-                    const totalEmbedChats = document.getElementById('total-embed-chats');
-                    const embedUniqueVisitors = document.getElementById('embed-unique-visitors');
-                    const avgDailyChats = document.getElementById('avg-daily-chats');
-                    
-                    if (totalEmbedChats) totalEmbedChats.textContent = analytics.total_embed_chats || '0';
-                    if (embedUniqueVisitors) embedUniqueVisitors.textContent = analytics.unique_visitors || '0';
-                    if (avgDailyChats) avgDailyChats.textContent = (analytics.avg_daily_chats || 0).toFixed(1);
-                }
-            } catch (error) {
-                console.error('Error loading embed analytics:', error);
-            }
-        }
-        
-        // Event listeners
-        if (generateBtn) {
-            generateBtn.addEventListener('click', generateEmbedCode);
-        }
-        
-        if (previewBtn) {
-            previewBtn.addEventListener('click', () => {
-                if (previewLink && previewLink.href && previewLink.href !== '#') {
-                    window.open(previewLink.href, '_blank');
-                } else {
-                    showAlert('Please generate embed code first', 'warning');
+    }
+    
+    // Load embed analytics
+    async function loadEmbedAnalytics() {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/analytics/embed?days=30`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
             });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                const analytics = data.data;
+                
+                const totalEmbedChats = document.getElementById('total-embed-chats');
+                const embedUniqueVisitors = document.getElementById('embed-unique-visitors');
+                const avgDailyChats = document.getElementById('avg-daily-chats');
+                
+                if (totalEmbedChats) totalEmbedChats.textContent = analytics.total_embed_chats || '0';
+                if (embedUniqueVisitors) embedUniqueVisitors.textContent = analytics.unique_visitors || '0';
+                if (avgDailyChats) avgDailyChats.textContent = (analytics.avg_daily_chats || 0).toFixed(1);
+            }
+        } catch (error) {
+            console.error('Error loading embed analytics:', error);
         }
-        
-        if (copyBtn) {
-            copyBtn.addEventListener('click', copyEmbedCode);
-        }
-        
-        // Set initial direct chat link
-        if (directChatLink && window.ChatLinkManager) {
-            directChatLink.href = window.ChatLinkManager.generateChatUrl(user.username);
-        }
-        
-        // Initialize analytics if available
-        if (embedAnalytics) {
-            loadEmbedAnalytics();
-            embedAnalytics.style.display = 'block';
-        }
-        
-        console.log('Embed functionality initialized successfully');
     }
+    
+    // Event listeners
+    if (generateBtn) {
+        generateBtn.addEventListener('click', generateEmbedCode);
+    }
+    
+    if (previewBtn) {
+        previewBtn.addEventListener('click', () => {
+            if (previewLink && previewLink.href && previewLink.href !== '#') {
+                window.open(previewLink.href, '_blank');
+            } else {
+                showAlert('Please generate embed code first', 'warning');
+            }
+        });
+    }
+    
+    if (copyBtn) {
+        copyBtn.addEventListener('click', copyEmbedCode);
+    }
+    
+    // Set initial direct chat link
+    try {
+        const currentUser = getCurrentUser();
+        if (directChatLink && window.ChatLinkManager) {
+            directChatLink.href = window.ChatLinkManager.generateChatUrl(currentUser.username);
+        }
+    } catch (error) {
+        console.warn('Could not set initial direct chat link:', error);
+    }
+    
+    // Initialize analytics if available
+    if (embedAnalytics) {
+        loadEmbedAnalytics();
+        embedAnalytics.style.display = 'block';
+    }
+    
+    console.log('Embed functionality initialized successfully');
+}
     
     // Test ChatLinkManager availability
     function testChatLinkManager() {
