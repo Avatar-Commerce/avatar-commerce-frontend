@@ -672,14 +672,10 @@
                 <span>Add Knowledge</span>
             </a>
             
-            <div class="menu-category">MONETIZATION</div>
-            <a href="products.html" class="menu-item">
-                <i class="fas fa-tags"></i>
-                <span>Products</span>
-            </a>
-            <a href="promotion-settings.html" class="menu-item">
-                <i class="fas fa-bullhorn"></i>
-                <span>Promotion Settings</span>
+            <div class="menu-category">AFFILIATE</div>
+            <a href="affiliate-management.html" class="menu-item">
+                <i class="fas fa-link"></i>
+                <span>Affiliate Management</span>
             </a>
             
             <div class="menu-category">ACCOUNT</div>
@@ -689,14 +685,6 @@
             </a>
         </nav>
         
-        <div class="sidebar-footer">
-            <div class="user-info">
-                <div id="user-avatar" class="user-avatar">JD</div>
-                <div class="user-details">
-                    <div id="user-name" class="user-name">John Doe</div>
-                    <div class="user-role">Influencer</div>
-                </div>
-            </div>
             <button id="logout-btn" class="logout-btn">Sign Out</button>
         </div>
     </aside>
@@ -898,10 +886,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const previewChatLink = document.getElementById('preview-chat-link');
         
         if (previewChatLink && user && user.username) {
-            if (window.ChatLinkManager) {
-                const chatLink = window.ChatLinkManager.generateChatUrl(user.username);
-                previewChatLink.href = chatLink;
-                console.log('Voice setup - Preview chat link set to:', chatLink);
+            if (previewChatLink && user && user.username) {
+                previewChatLink.href = window.ChatLinkManager 
+                    ? window.ChatLinkManager.generateChatUrl(user.username)
+                    : `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
             } else {
                 // Fallback URL generation
                 const chatLink = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
