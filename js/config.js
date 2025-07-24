@@ -1,5 +1,5 @@
 // =============================================================================
-// CONFIG.JS - Complete AvatarCommerce Configuration with ChatLinkManager
+// CONFIG.JS - Complete AvatarCommerce Configuration with ChatLinkManager - FIXED
 // =============================================================================
 
 (function() {
@@ -448,7 +448,7 @@
             const widgetId = `preview-widget-${Date.now()}`;
             
             return `
-                <div id="${widgetId}" style="position: relative; width: 100%; height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; overflow: hidden;">
+                <div id="${widgetId}" style="position: relative; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; overflow: hidden;">
                     <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 14px; font-weight: 500;">
                         <i class="fas fa-desktop" style="margin-right: 8px;"></i>
                         Website Preview
@@ -944,12 +944,20 @@
     }
     
     // =============================================================================
-    // UTILITY FUNCTIONS
+    // UTILITY FUNCTIONS - FIXED
     // =============================================================================
     
     window.UTILS = {
-        // Authentication utilities
+        // Authentication utilities - FIXED with getToken method
         auth: {
+            /**
+             * Get authentication token
+             * @returns {string|null} JWT token or null
+             */
+            getToken: () => {
+                return localStorage.getItem(CONFIG.AUTH.TOKEN_KEY);
+            },
+            
             isAuthenticated: () => {
                 const token = localStorage.getItem(CONFIG.AUTH.TOKEN_KEY);
                 const user = localStorage.getItem(CONFIG.AUTH.USER_KEY);
@@ -1098,6 +1106,6 @@
         window.initializeAvatarCommerce();
     }
     
-    console.log('📦 AvatarCommerce Config.js loaded with integrated ChatLinkManager');
+    console.log('📦 AvatarCommerce Config.js loaded with integrated ChatLinkManager - FIXED');
     
 })();

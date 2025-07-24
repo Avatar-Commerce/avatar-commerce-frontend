@@ -730,6 +730,7 @@
             </a>
         </nav>
         
+        <div class="sidebar-footer">
             <button id="logout-btn" class="logout-btn">Sign Out</button>
         </div>
     </aside>
@@ -916,6 +917,9 @@
                     </div>
                     
                     <div class="code-container" id="embed-code-container" style="display: none;">
+                        <button class="copy-btn" onclick="copyEmbedCode()">
+                            <i class="fas fa-copy"></i> Copy
+                        </button>
                         <pre id="embed-code-display"></pre>
                     </div>
                 </div>
@@ -978,265 +982,432 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Dashboard DOM loaded, checking authentication...');
+            
             // Authentication check
             if (!UTILS.auth.requireInfluencer()) {
+                console.log('❌ Authentication failed, redirecting...');
                 return;
             }
             
             const user = UTILS.auth.getCurrentUser();
+            console.log('✅ User authenticated:', user.username);
             
-            // Initialize page
-            initializePage(user);
-            
-            // Ensure chat links are set up
-            setupChatLinks(user);
+            // Initialize dashboard
+            initializeDashboard(user);
         });
         
         function initializeDashboard(user) {
             console.log('🔧 Setting up dashboard for:', user.username);
             
-            // Update user display
-            document.getElementById('user-name').textContent = user.username;
-            document.getElementById('user-avatar').textContent = UTILS.ui.getInitials(user.username);
-            
-            // Initialize chat links
-            setupChatLinks(user);
-            
-            // Initialize embed functionality
-            setupEmbedFunctionality(user);
-            
-            // Initialize social sharing
-            setupSocialSharing(user);
-            
-            // Initialize QR code
-            setupQRCode(user);
-            
-            // Setup logout
-            document.getElementById('logout-btn').addEventListener('click', UTILS.auth.logout);
-            
-            // Load dashboard data
-            loadDashboardStats();
-            
-            console.log('✅ Dashboard initialized successfully');
+            try {
+                // Update user display
+                updateUserDisplay(user);
+                
+                // Initialize all functionality
+                setupChatLinks(user);
+                setupEmbedFunctionality(user);
+                setupSocialSharing(user);
+                setupQRCode(user);
+                setupEventHandlers();
+                loadDashboardStats();
+                
+                console.log('✅ Dashboard initialized successfully');
+            } catch (error) {
+                console.error('❌ Dashboard initialization error:', error);
+                showAlert('Dashboard initialization failed: ' + error.message, 'error');
+            }
+        }
+        
+        function updateUserDisplay(user) {
+            try {
+                document.getElementById('user-name').textContent = user.username;
+                document.getElementById('user-avatar').textContent = UTILS.ui.getInitials(user.username);
+                console.log('✅ User display updated');
+            } catch (error) {
+                console.error('❌ Error updating user display:', error);
+            }
         }
         
         function setupChatLinks(user) {
-            if (!user || !user.username) return;
+            if (!user || !user.username) {
+                console.error('❌ No user or username provided to setupChatLinks');
+                return;
+            }
             
-            // Set main chat link
-            const chatLinkInput = document.getElementById('chat-link');
-            if (chatLinkInput) {
+            console.log('🔗 Setting up chat links for:', user.username);
+            
+            try {
+                // Check if ChatLinkManager is available
+                if (!window.ChatLinkManager) {
+                    console.error('❌ ChatLinkManager not available');
+                    showAlert('Chat link system not available', 'error');
+                    return;
+                }
+                
+                // Generate chat URL
                 const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
-                chatLinkInput.value = chatUrl;
-            }
-            
-            // Set preview chat link
-            const previewChatLink = document.getElementById('preview-chat-link');
-            if (previewChatLink) {
-                previewChatLink.href = window.ChatLinkManager.generateChatUrl(user.username);
-            }
-            
-            // Set copy button data
-            const copyBtn = document.getElementById('copy-link-btn');
-            if (copyBtn) {
-                copyBtn.dataset.copy = window.ChatLinkManager.generateChatUrl(user.username);
+                console.log('🔗 Generated chat URL:', chatUrl);
+                
+                // Set main chat link
+                const chatLinkInput = document.getElementById('chat-link');
+                if (chatLinkInput) {
+                    chatLinkInput.value = chatUrl;
+                    console.log('✅ Chat link input set');
+                } else {
+                    console.error('❌ Chat link input not found');
+                }
+                
+                // Set copy button data
+                const copyBtn = document.getElementById('copy-link-btn');
+                if (copyBtn) {
+                    copyBtn.setAttribute('data-copy', chatUrl);
+                    console.log('✅ Copy button data set');
+                } else {
+                    console.error('❌ Copy button not found');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error setting up chat links:', error);
+                showAlert('Error setting up chat links: ' + error.message, 'error');
             }
         }
         
         function setupEmbedFunctionality(user) {
-            // Get elements
-            const generateBtn = document.getElementById('generate-embed');
-            const copyBtn = document.getElementById('copy-embed-code');
-            const codeContainer = document.getElementById('embed-code-container');
-            const codeDisplay = document.getElementById('embed-code-display');
+            console.log('🎨 Setting up embed functionality for:', user.username);
             
-            // Configuration elements
-            const widthSelect = document.getElementById('embed-width');
-            const heightSelect = document.getElementById('embed-height');
-            const positionSelect = document.getElementById('embed-position');
-            const themeSelect = document.getElementById('embed-theme');
-            const triggerTextInput = document.getElementById('embed-trigger-text');
-            const autoOpenCheckbox = document.getElementById('embed-auto-open');
-            const customCSSTextarea = document.getElementById('embed-custom-css');
-            
-            // Preview elements
-            const previewContent = document.getElementById('preview-content');
-            const previewStatus = document.getElementById('preview-status');
-            const previewDimensions = document.getElementById('preview-dimensions');
-            const previewPosition = document.getElementById('preview-position');
-            const previewTheme = document.getElementById('preview-theme');
-            const refreshBtn = document.getElementById('refresh-preview');
-            
-            // Generate embed code
-            generateBtn.addEventListener('click', function() {
-                const config = {
-                    width: widthSelect.value,
-                    height: heightSelect.value,
-                    position: positionSelect.value,
-                    theme: themeSelect.value,
-                    trigger_text: triggerTextInput.value,
-                    auto_open: autoOpenCheckbox.checked,
-                    custom_css: customCSSTextarea.value
-                };
+            try {
+                // Get elements
+                const generateBtn = document.getElementById('generate-embed');
+                const copyBtn = document.getElementById('copy-embed-code');
+                const codeContainer = document.getElementById('embed-code-container');
+                const codeDisplay = document.getElementById('embed-code-display');
                 
-                try {
-                    const embedCode = window.ChatLinkManager.generateEmbedCode(config, user.username);
-                    
-                    // Display code
-                    codeDisplay.textContent = embedCode;
-                    codeContainer.style.display = 'block';
-                    
-                    // Enable copy button
-                    copyBtn.disabled = false;
-                    copyBtn.dataset.copy = embedCode;
-                    
-                    // Update preview
-                    updateLivePreview(config, user.username);
-                    
-                    // Update preview info
-                    updatePreviewInfo(config);
-                    
-                    UTILS.ui.showAlert('Embed code generated successfully!', 'success');
-                } catch (error) {
-                    console.error('Error generating embed code:', error);
-                    UTILS.ui.showAlert('Error generating embed code: ' + error.message, 'error');
+                // Configuration elements
+                const widthSelect = document.getElementById('embed-width');
+                const heightSelect = document.getElementById('embed-height');
+                const positionSelect = document.getElementById('embed-position');
+                const themeSelect = document.getElementById('embed-theme');
+                const triggerTextInput = document.getElementById('embed-trigger-text');
+                const autoOpenCheckbox = document.getElementById('embed-auto-open');
+                const customCSSTextarea = document.getElementById('embed-custom-css');
+                
+                // Preview elements
+                const previewContent = document.getElementById('preview-content');
+                const previewStatus = document.getElementById('preview-status');
+                const previewDimensions = document.getElementById('preview-dimensions');
+                const previewPosition = document.getElementById('preview-position');
+                const previewTheme = document.getElementById('preview-theme');
+                const refreshBtn = document.getElementById('refresh-preview');
+                
+                if (!generateBtn || !window.ChatLinkManager) {
+                    console.error('❌ Required elements or ChatLinkManager not found');
+                    return;
                 }
-            });
-            
-            // Auto-update preview on changes
-            [widthSelect, heightSelect, positionSelect, themeSelect, triggerTextInput, autoOpenCheckbox].forEach(element => {
-                element.addEventListener('change', function() {
+                
+                // Generate embed code
+                generateBtn.addEventListener('click', function() {
+                    console.log('🎨 Generate embed code clicked');
+                    
                     const config = getCurrentConfig();
-                    updateLivePreview(config, user.username);
-                    updatePreviewInfo(config);
+                    console.log('🎨 Current config:', config);
+                    
+                    try {
+                        const embedCode = window.ChatLinkManager.generateEmbedCode(config, user.username);
+                        console.log('✅ Embed code generated successfully');
+                        
+                        // Display code
+                        codeDisplay.textContent = embedCode;
+                        codeContainer.style.display = 'block';
+                        
+                        // Enable copy button
+                        copyBtn.disabled = false;
+                        copyBtn.setAttribute('data-copy', embedCode);
+                        
+                        // Update preview
+                        updateLivePreview(config, user.username);
+                        updatePreviewInfo(config);
+                        
+                        showAlert('Embed code generated successfully!', 'success');
+                    } catch (error) {
+                        console.error('❌ Error generating embed code:', error);
+                        showAlert('Error generating embed code: ' + error.message, 'error');
+                    }
                 });
-            });
-            
-            // Custom CSS changes
-            customCSSTextarea.addEventListener('input', function() {
-                const config = getCurrentConfig();
-                updateLivePreview(config, user.username);
-            });
-            
-            // Initial preview update
-            const initialConfig = getCurrentConfig();
-            updateLivePreview(initialConfig, user.username);
-            updatePreviewInfo(initialConfig);
-            
-            // Refresh preview
-            refreshBtn.addEventListener('click', function() {
-                const config = getCurrentConfig();
-                updateLivePreview(config, user.username);
-                this.innerHTML = '<i class="fas fa-check"></i> Refreshed';
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-refresh"></i> Refresh';
-                }, 1000);
-            });
-            
-            // Fullscreen preview
-            document.getElementById('fullscreen-preview').addEventListener('click', function() {
-                const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
-                window.open(chatUrl, '_blank');
-            });
-            
-            function getCurrentConfig() {
-                return {
-                    width: widthSelect.value,
-                    height: heightSelect.value,
-                    position: positionSelect.value,
-                    theme: themeSelect.value,
-                    trigger_text: triggerTextInput.value,
-                    auto_open: autoOpenCheckbox.checked,
-                    custom_css: customCSSTextarea.value
-                };
-            }
-            
-            function updateLivePreview(config, username) {
-                const previewHTML = window.ChatLinkManager.generatePreviewHTML(config, username);
-                previewContent.innerHTML = previewHTML;
                 
-                // Update status
-                previewStatus.textContent = 'Live';
-                previewStatus.classList.add('active');
+                // Auto-update preview on changes
+                [widthSelect, heightSelect, positionSelect, themeSelect, triggerTextInput, autoOpenCheckbox].forEach(element => {
+                    if (element) {
+                        element.addEventListener('change', function() {
+                            const config = getCurrentConfig();
+                            updateLivePreview(config, user.username);
+                            updatePreviewInfo(config);
+                        });
+                    }
+                });
                 
-                setTimeout(() => {
-                    previewStatus.textContent = 'Ready';
-                    previewStatus.classList.remove('active');
-                }, 2000);
-            }
-            
-            function updatePreviewInfo(config) {
-                previewDimensions.textContent = `${config.width} × ${config.height}`;
-                previewPosition.textContent = config.position.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                previewTheme.textContent = config.theme.charAt(0).toUpperCase() + config.theme.slice(1);
+                // Custom CSS changes with debounce
+                if (customCSSTextarea) {
+                    let cssTimeout;
+                    customCSSTextarea.addEventListener('input', function() {
+                        clearTimeout(cssTimeout);
+                        cssTimeout = setTimeout(() => {
+                            const config = getCurrentConfig();
+                            updateLivePreview(config, user.username);
+                        }, 500);
+                    });
+                }
+                
+                // Initial preview update
+                const initialConfig = getCurrentConfig();
+                updateLivePreview(initialConfig, user.username);
+                updatePreviewInfo(initialConfig);
+                
+                // Refresh preview
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', function() {
+                        const config = getCurrentConfig();
+                        updateLivePreview(config, user.username);
+                        this.innerHTML = '<i class="fas fa-check"></i> Refreshed';
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="fas fa-refresh"></i> Refresh';
+                        }, 1000);
+                    });
+                }
+                
+                // Fullscreen preview
+                const fullscreenBtn = document.getElementById('fullscreen-preview');
+                if (fullscreenBtn) {
+                    fullscreenBtn.addEventListener('click', function() {
+                        const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
+                        window.open(chatUrl, '_blank');
+                    });
+                }
+                
+                function getCurrentConfig() {
+                    return {
+                        width: widthSelect?.value || '400px',
+                        height: heightSelect?.value || '600px',
+                        position: positionSelect?.value || 'bottom-right',
+                        theme: themeSelect?.value || 'default',
+                        trigger_text: triggerTextInput?.value || 'Chat with me!',
+                        auto_open: autoOpenCheckbox?.checked || false,
+                        custom_css: customCSSTextarea?.value || ''
+                    };
+                }
+                
+                function updateLivePreview(config, username) {
+                    if (!window.ChatLinkManager || !previewContent) return;
+                    
+                    try {
+                        const previewHTML = window.ChatLinkManager.generatePreviewHTML(config, username);
+                        previewContent.innerHTML = previewHTML;
+                        
+                        // Update status
+                        if (previewStatus) {
+                            previewStatus.textContent = 'Live';
+                            previewStatus.classList.add('active');
+                            
+                            setTimeout(() => {
+                                previewStatus.textContent = 'Ready';
+                                previewStatus.classList.remove('active');
+                            }, 2000);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error updating live preview:', error);
+                    }
+                }
+                
+                function updatePreviewInfo(config) {
+                    if (previewDimensions) previewDimensions.textContent = `${config.width} × ${config.height}`;
+                    if (previewPosition) previewPosition.textContent = config.position.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    if (previewTheme) previewTheme.textContent = config.theme.charAt(0).toUpperCase() + config.theme.slice(1);
+                }
+                
+                console.log('✅ Embed functionality setup complete');
+                
+            } catch (error) {
+                console.error('❌ Error setting up embed functionality:', error);
+                showAlert('Error setting up embed functionality: ' + error.message, 'error');
             }
         }
         
         function setupSocialSharing(user) {
-            const socialUrls = ChatLinkManager.generateSocialUrls(user.username);
+            if (!window.ChatLinkManager) {
+                console.error('❌ ChatLinkManager not available for social sharing');
+                return;
+            }
             
-            // Set social media links
-            document.getElementById('share-facebook').href = socialUrls.facebook;
-            document.getElementById('share-twitter').href = socialUrls.twitter;
-            document.getElementById('share-linkedin').href = socialUrls.linkedin;
-            document.getElementById('share-whatsapp').href = socialUrls.whatsapp;
+            console.log('📱 Setting up social sharing for:', user.username);
             
-            // Toggle social sharing
-            document.getElementById('share-social-btn').addEventListener('click', function() {
+            try {
+                const socialUrls = window.ChatLinkManager.generateSocialUrls(user.username);
+                
+                // Set social media links
+                const socialLinks = {
+                    'share-facebook': socialUrls.facebook,
+                    'share-twitter': socialUrls.twitter,
+                    'share-linkedin': socialUrls.linkedin,
+                    'share-whatsapp': socialUrls.whatsapp
+                };
+                
+                Object.entries(socialLinks).forEach(([id, url]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.href = url;
+                    }
+                });
+                
+                // Toggle social sharing
+                const shareBtn = document.getElementById('share-social-btn');
                 const socialShare = document.getElementById('social-share');
-                if (socialShare.style.display === 'none') {
-                    socialShare.style.display = 'grid';
-                    this.innerHTML = '<i class="fas fa-times"></i> Hide';
-                } else {
-                    socialShare.style.display = 'none';
-                    this.innerHTML = '<i class="fas fa-share-alt"></i> Share';
+                
+                if (shareBtn && socialShare) {
+                    shareBtn.addEventListener('click', function() {
+                        const isVisible = socialShare.style.display !== 'none';
+                        
+                        if (isVisible) {
+                            socialShare.style.display = 'none';
+                            this.innerHTML = '<i class="fas fa-share-alt"></i> Share';
+                        } else {
+                            socialShare.style.display = 'grid';
+                            this.innerHTML = '<i class="fas fa-times"></i> Hide';
+                        }
+                    });
                 }
-            });
-            
-            console.log('📱 Social sharing configured');
+                
+                console.log('✅ Social sharing setup complete');
+                
+            } catch (error) {
+                console.error('❌ Error setting up social sharing:', error);
+                showAlert('Error setting up social sharing: ' + error.message, 'error');
+            }
         }
         
         function setupQRCode(user) {
-            const chatUrl = ChatLinkManager.generateChatUrl(user.username);
-            const qrCodeUrl = ChatLinkManager.generateQRCodeUrl(chatUrl);
+            if (!window.ChatLinkManager) {
+                console.error('❌ ChatLinkManager not available for QR code');
+                return;
+            }
             
-            document.getElementById('qr-code-image').src = qrCodeUrl;
+            console.log('🔍 Setting up QR code for:', user.username);
             
-            // Toggle QR code
-            document.getElementById('generate-qr-btn').addEventListener('click', function() {
-                const qrContainer = document.getElementById('qr-container');
-                if (qrContainer.classList.contains('active')) {
-                    qrContainer.classList.remove('active');
-                    this.innerHTML = '<i class="fas fa-qrcode"></i> QR Code';
-                } else {
-                    qrContainer.classList.add('active');
-                    this.innerHTML = '<i class="fas fa-times"></i> Hide QR';
+            try {
+                const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
+                const qrCodeUrl = window.ChatLinkManager.generateQRCodeUrl(chatUrl);
+                
+                const qrImage = document.getElementById('qr-code-image');
+                if (qrImage) {
+                    qrImage.src = qrCodeUrl;
                 }
-            });
+                
+                // Toggle QR code
+                const qrBtn = document.getElementById('generate-qr-btn');
+                const qrContainer = document.getElementById('qr-container');
+                
+                if (qrBtn && qrContainer) {
+                    qrBtn.addEventListener('click', function() {
+                        const isActive = qrContainer.classList.contains('active');
+                        
+                        if (isActive) {
+                            qrContainer.classList.remove('active');
+                            this.innerHTML = '<i class="fas fa-qrcode"></i> QR Code';
+                        } else {
+                            qrContainer.classList.add('active');
+                            this.innerHTML = '<i class="fas fa-times"></i> Hide QR';
+                        }
+                    });
+                }
+                
+                console.log('✅ QR code setup complete');
+                
+            } catch (error) {
+                console.error('❌ Error setting up QR code:', error);
+                showAlert('Error setting up QR code: ' + error.message, 'error');
+            }
+        }
+        
+        function setupEventHandlers() {
+            console.log('🔧 Setting up event handlers');
             
-            console.log('🔍 QR code configured');
+            // Setup logout
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('Are you sure you want to sign out?')) {
+                        UTILS.auth.logout();
+                    }
+                });
+            }
+            
+            // Initialize copy buttons using ChatLinkManager
+            if (window.ChatLinkManager) {
+                window.ChatLinkManager.initializeCopyButtons();
+                console.log('✅ Copy buttons initialized');
+            }
+            
+            console.log('✅ Event handlers setup complete');
         }
         
         async function loadDashboardStats() {
             try {
-                // This would normally fetch from API
-                // For now, showing demo data
                 console.log('📊 Loading dashboard statistics...');
                 
-                // Simulate API delay
+                // Simulate API delay for demo
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                // Update stats (these would come from API)
-                document.getElementById('total-interactions').textContent = '0';
-                document.getElementById('chat-sessions').textContent = '0';
-                document.getElementById('unique-visitors').textContent = '0';
-                document.getElementById('setup-progress').textContent = '25%';
+                // Update stats (these would come from API in production)
+                const stats = {
+                    'total-interactions': '0',
+                    'chat-sessions': '0',
+                    'unique-visitors': '0',
+                    'setup-progress': '25%'
+                };
+                
+                Object.entries(stats).forEach(([id, value]) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.textContent = value;
+                    }
+                });
                 
                 console.log('✅ Dashboard stats loaded');
             } catch (error) {
-                console.error('Error loading dashboard stats:', error);
+                console.error('❌ Error loading dashboard stats:', error);
             }
         }
+        
+        function showAlert(message, type = 'info') {
+            if (UTILS && UTILS.ui && UTILS.ui.showAlert) {
+                UTILS.ui.showAlert(message, type);
+            } else {
+                console.log(`Alert [${type}]: ${message}`);
+            }
+        }
+        
+        // Global function for copy embed code button
+        window.copyEmbedCode = function() {
+            const embedCode = document.getElementById('embed-code-display').textContent;
+            if (embedCode && window.ChatLinkManager) {
+                window.ChatLinkManager.copyToClipboard(embedCode).then(success => {
+                    if (success) {
+                        const btn = document.querySelector('.code-container .copy-btn');
+                        if (btn) {
+                            const originalText = btn.innerHTML;
+                            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                            setTimeout(() => {
+                                btn.innerHTML = originalText;
+                            }, 2000);
+                        }
+                        showAlert('Embed code copied to clipboard!', 'success');
+                    } else {
+                        showAlert('Failed to copy embed code', 'error');
+                    }
+                });
+            }
+        };
+        
+        console.log('🚀 Dashboard script loaded and ready');
     </script>
 </body>
 </html>
