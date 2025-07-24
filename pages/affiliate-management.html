@@ -328,7 +328,7 @@
         .platform-logo.amazon { background: linear-gradient(135deg, #ff9900, #ffb84d); }
         .platform-logo.rakuten { background: linear-gradient(135deg, #bf0000, #e60026); }
         .platform-logo.shareasale { background: linear-gradient(135deg, #0066cc, #3399ff); }
-        .platform-logo.cj { background: linear-gradient(135deg, #6b46c1, #8b5cf6); }
+        .platform-logo.cj_affiliate { background: linear-gradient(135deg, #6b46c1, #8b5cf6); }
         .platform-logo.skimlinks { background: linear-gradient(135deg, #10b981, #34d399); }
 
         .platform-name {
@@ -597,44 +597,6 @@
             display: none;
         }
 
-        /* Tooltip */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-
-        .tooltip-content {
-            position: absolute;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1e293b;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 1000;
-        }
-
-        .tooltip:hover .tooltip-content {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .tooltip-content::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: #1e293b;
-        }
-
         /* Stats Grid */
         .stats-grid {
             display: grid;
@@ -661,6 +623,37 @@
         .stat-label {
             font-size: 0.9rem;
             color: #64748b;
+        }
+
+        /* Platform Selection */
+        .platform-selection {
+            display: grid;
+            gap: 12px;
+        }
+
+        .platform-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .platform-option:hover {
+            border-color: #5e60ce;
+            background: #f8fafc;
+        }
+
+        .platform-option.selected {
+            border-color: #5e60ce;
+            background: #f8fafc;
+        }
+
+        .platform-option input[type="radio"] {
+            margin-right: 15px;
+            scale: 1.2;
         }
 
         /* Responsive Design */
@@ -764,7 +757,7 @@
             </a>
             
             <div class="menu-category">AFFILIATE</div>
-            <a href="affiliate-management.html" class="menu-item">
+            <a href="affiliate-management.html" class="menu-item active">
                 <i class="fas fa-link"></i>
                 <span>Affiliate Management</span>
             </a>
@@ -861,7 +854,7 @@
                     Select an affiliate platform to connect to your account. We'll guide you through the setup process.
                 </p>
 
-                <div id="platform-selection" style="display: grid; gap: 12px;">
+                <div id="platform-selection" class="platform-selection">
                     <!-- Platform options will be generated here -->
                 </div>
             </div>
@@ -929,59 +922,9 @@
         </div>
     </div>
 
-    <!-- Edit Product Tags Modal -->
-    <div id="edit-tags-modal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title">Edit Product Tags</h3>
-                <button class="modal-close" onclick="closeModal('edit-tags-modal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label class="form-label">Product Categories & Tags</label>
-                    <input type="text" id="product-tags" class="form-input" 
-                           placeholder="e.g., fashion, electronics, home, beauty">
-                    <div class="form-help">
-                        Add comma-separated tags to help your AI avatar recommend relevant products.
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Recommended Products (Optional)</label>
-                    <textarea id="recommended-products" class="form-input" rows="4" 
-                              placeholder="List specific products you'd like to promote..."></textarea>
-                    <div class="form-help">
-                        Specific products your AI avatar should prioritize when making recommendations.
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('edit-tags-modal')">Cancel</button>
-                <button class="btn" onclick="saveProductTags()">
-                    <i class="fas fa-save"></i> Save Tags
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Load shared scripts -->
-    <script src="../js/config.js"></script>
-    <script src="../js/utils.js"></script>
-    <script src="../js/api-client.js"></script>
-    
     <script>
-        // Affiliate Management Dashboard JavaScript
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔗 Initializing Affiliate Management Dashboard...');
-            
-            // Enforce authentication
-            if (!UTILS.auth.requireInfluencer()) {
-                return;
-            }
-            
-            const user = UTILS.auth.getCurrentUser();
-            initializePage(user);
-        });
+        // Configuration
+        const API_BASE_URL = 'http://localhost:2000/api';
 
         // Global state
         let affiliateState = {
@@ -1046,28 +989,61 @@
             }
         };
 
-        function initializePage(user) {
-            console.log('🔧 Setting up affiliate management for:', user.username);
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔗 Initializing Affiliate Management Dashboard...');
             
-            // Update user display
-            document.getElementById('user-name').textContent = user.username;
-            document.getElementById('user-avatar').textContent = UTILS.ui.getInitials(user.username);
+            if (!initializeAuth()) {
+                return;
+            }
             
-            // Setup event listeners
             setupEventListeners();
-            
-            // Load affiliate data
             loadAffiliateData();
+        });
+
+        function initializeAuth() {
+            const token = localStorage.getItem('token');
+            const userStr = localStorage.getItem('user');
             
-            // Setup logout
-            document.getElementById('logout-btn').addEventListener('click', UTILS.auth.logout);
+            if (!token || !userStr) {
+                console.warn('No authentication found, redirecting to login');
+                window.location.href = '../pages/login.html';
+                return false;
+            }
             
-            console.log('✅ Affiliate management initialized successfully');
+            try {
+                const user = JSON.parse(userStr);
+                console.log('Authenticated user:', user.username);
+                
+                // Update UI with user info
+                document.getElementById('user-name').textContent = user.username;
+                if (user.username) {
+                    const initials = user.username.split(' ')
+                        .map(name => name[0])
+                        .join('')
+                        .toUpperCase()
+                        .substring(0, 2);
+                    document.getElementById('user-avatar').textContent = initials;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error parsing user data:', error);
+                window.location.href = '../pages/login.html';
+                return false;
+            }
         }
 
         function setupEventListeners() {
             // Connect platform button
             document.getElementById('connect-platform-btn').addEventListener('click', openConnectPlatformModal);
+            
+            // Logout button
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '../pages/login.html';
+            });
             
             // Modal close handlers
             document.addEventListener('click', function(e) {
@@ -1088,29 +1064,45 @@
             try {
                 console.log('📊 Loading affiliate data...');
                 
-                // Load connected platforms
-                const response = await API.get('/affiliate');
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/affiliate`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                if (response.status === 'success') {
-                    affiliateState.platforms = response.data.affiliate_links || [];
+                if (response.ok) {
+                    const data = await response.json();
                     
-                    // Update stats
-                    updateStats();
-                    
-                    // Render platform cards
-                    renderPlatformCards();
-                    
-                    // Hide onboarding if platforms are connected
-                    if (affiliateState.platforms.length > 0) {
-                        document.getElementById('onboarding-guide').style.display = 'none';
+                    if (data.status === 'success') {
+                        affiliateState.platforms = data.data.affiliate_links || [];
+                        
+                        console.log('✅ Loaded affiliate data:', affiliateState.platforms);
+                        
+                        // Update stats
+                        updateStats();
+                        
+                        // Render platform cards
+                        renderPlatformCards();
+                        
+                        // Hide onboarding if platforms are connected
+                        if (affiliateState.platforms.length > 0) {
+                            document.getElementById('onboarding-guide').style.display = 'none';
+                        }
+                    } else {
+                        console.warn('Failed to load affiliate data:', data.message);
+                        showAlert('Failed to load affiliate data: ' + data.message, 'error');
                     }
                 } else {
-                    console.warn('Failed to load affiliate data:', response.message);
+                    console.error('Failed to load affiliate data:', response.status);
+                    showAlert('Failed to load affiliate data. Please try again.', 'error');
                 }
                 
             } catch (error) {
                 console.error('Error loading affiliate data:', error);
-                showAlert('Failed to load affiliate data', 'error');
+                showAlert('Failed to load affiliate data: ' + error.message, 'error');
             }
         }
 
@@ -1184,15 +1176,9 @@
                     
                     <div class="platform-actions">
                         ${connected ? `
-                            <button class="btn btn-secondary" onclick="editProductTags('${platformKey}')">
-                                <i class="fas fa-tags"></i> Edit Tags
+                            <button class="btn btn-secondary" onclick="copyAffiliateLink('${platformKey}')">
+                                <i class="fas fa-copy"></i> Copy Link
                             </button>
-                            <div class="tooltip">
-                                <button class="btn btn-secondary" onclick="copyAffiliateLink('${platformKey}')">
-                                    <i class="fas fa-copy"></i> Copy Link
-                                </button>
-                                <div class="tooltip-content">Copy affiliate link</div>
-                            </div>
                             <button class="btn btn-danger" onclick="removePlatform('${platformKey}', '${config.name}')">
                                 <i class="fas fa-trash"></i> Remove
                             </button>
@@ -1226,15 +1212,6 @@
                 
                 const option = document.createElement('div');
                 option.className = 'platform-option';
-                option.style.cssText = `
-                    display: flex;
-                    align-items: center;
-                    padding: 15px;
-                    border: 2px solid #e2e8f0;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                `;
                 
                 option.innerHTML = `
                     <input type="radio" name="platform" value="${platformKey}" style="margin-right: 15px; scale: 1.2;">
@@ -1253,18 +1230,6 @@
                     selectPlatform(platformKey);
                 });
                 
-                option.addEventListener('mouseenter', function() {
-                    option.style.borderColor = '#5e60ce';
-                    option.style.backgroundColor = '#f8fafc';
-                });
-                
-                option.addEventListener('mouseleave', function() {
-                    if (!option.querySelector('input').checked) {
-                        option.style.borderColor = '#e2e8f0';
-                        option.style.backgroundColor = 'white';
-                    }
-                });
-                
                 container.appendChild(option);
             });
         }
@@ -1276,11 +1241,9 @@
             document.querySelectorAll('.platform-option').forEach(option => {
                 const radio = option.querySelector('input');
                 if (radio.value === platformKey) {
-                    option.style.borderColor = '#5e60ce';
-                    option.style.backgroundColor = '#f8fafc';
+                    option.classList.add('selected');
                 } else {
-                    option.style.borderColor = '#e2e8f0';
-                    option.style.backgroundColor = 'white';
+                    option.classList.remove('selected');
                 }
             });
             
@@ -1364,19 +1327,34 @@
                 connectBtn.disabled = true;
                 
                 // Send request to connect platform
-                const response = await API.post('/affiliate', {
-                    platform: affiliateState.selectedPlatform,
-                    ...formData
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/affiliate`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        platform: affiliateState.selectedPlatform,
+                        ...formData
+                    })
                 });
                 
-                if (response.status === 'success') {
-                    showAlert(`${config.name} connected successfully!`, 'success');
-                    closeModal('connect-platform-step2-modal');
+                if (response.ok) {
+                    const data = await response.json();
                     
-                    // Reload data
-                    await loadAffiliateData();
+                    if (data.status === 'success') {
+                        showAlert(`${config.name} connected successfully!`, 'success');
+                        closeModal('connect-platform-step2-modal');
+                        
+                        // Reload data
+                        await loadAffiliateData();
+                    } else {
+                        showAlert(data.message || 'Failed to connect platform', 'error');
+                    }
                 } else {
-                    showAlert(response.message || 'Failed to connect platform', 'error');
+                    const errorData = await response.json();
+                    showAlert(errorData.message || 'Failed to connect platform', 'error');
                 }
                 
                 // Reset button
@@ -1385,7 +1363,7 @@
                 
             } catch (error) {
                 console.error('Error connecting platform:', error);
-                showAlert('Failed to connect platform', 'error');
+                showAlert('Failed to connect platform: ' + error.message, 'error');
                 
                 // Reset button
                 const connectBtn = document.getElementById('connect-btn');
@@ -1399,38 +1377,14 @@
             proceedToStep2();
         }
 
-        function editProductTags(platformKey) {
-            const platform = affiliateState.platforms.find(p => p.platform === platformKey);
-            if (platform) {
-                document.getElementById('product-tags').value = platform.product_tags || '';
-                document.getElementById('recommended-products').value = platform.recommended_products || '';
-            }
-            
-            openModal('edit-tags-modal');
-        }
-
-        async function saveProductTags() {
-            try {
-                const tags = document.getElementById('product-tags').value;
-                const products = document.getElementById('recommended-products').value;
-                
-                // Here you would send the data to your API
-                // For now, just show success message
-                showAlert('Product tags updated successfully!', 'success');
-                closeModal('edit-tags-modal');
-                
-            } catch (error) {
-                console.error('Error saving product tags:', error);
-                showAlert('Failed to save product tags', 'error');
-            }
-        }
-
         function copyAffiliateLink(platformKey) {
             const platform = affiliateState.platforms.find(p => p.platform === platformKey);
             if (platform) {
                 const link = `https://yoursite.com/recommend?platform=${platformKey}&id=${platform.affiliate_id}`;
                 navigator.clipboard.writeText(link).then(() => {
                     showAlert('Affiliate link copied to clipboard!', 'success');
+                }).catch(() => {
+                    showAlert('Failed to copy link', 'error');
                 });
             }
         }
@@ -1443,21 +1397,35 @@
 
         async function confirmRemovePlatform(platformKey) {
             try {
-                const response = await API.delete(`/affiliate/${platformKey}`);
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/affiliate/${platformKey}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
                 
-                if (response.status === 'success') {
-                    showAlert('Platform removed successfully', 'success');
-                    closeModal('remove-platform-modal');
+                if (response.ok) {
+                    const data = await response.json();
                     
-                    // Reload data
-                    await loadAffiliateData();
+                    if (data.status === 'success') {
+                        showAlert('Platform removed successfully', 'success');
+                        closeModal('remove-platform-modal');
+                        
+                        // Reload data
+                        await loadAffiliateData();
+                    } else {
+                        showAlert(data.message || 'Failed to remove platform', 'error');
+                    }
                 } else {
-                    showAlert(response.message || 'Failed to remove platform', 'error');
+                    const errorData = await response.json();
+                    showAlert(errorData.message || 'Failed to remove platform', 'error');
                 }
                 
             } catch (error) {
                 console.error('Error removing platform:', error);
-                showAlert('Failed to remove platform', 'error');
+                showAlert('Failed to remove platform: ' + error.message, 'error');
             }
         }
 
