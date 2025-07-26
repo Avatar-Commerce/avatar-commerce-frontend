@@ -1,374 +1,261 @@
-// js/api-client.js - API Request Handler
+// FIXED API CLIENT - Remove problematic debug calls
 class APIClient {
-    constructor(baseURL = CONFIG.API.BASE_URL) {
-        this.baseURL = baseURL;
-        this.timeout = CONFIG.API.TIMEOUT;
+    constructor() {
+        this.baseURL = 'http://localhost:2000/api';
+        this.timeout = 15000;
+        
+        console.log('📡 API Client initialized:', this.baseURL);
     }
     
-    // Get authentication headers
-    getAuthHeaders() {
-        const token = UTILS.auth.getToken();
+    /**
+     * Get default headers for requests
+     */
+    getHeaders(includeAuth = true) {
         const headers = {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
         };
         
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+        if (includeAuth && window.UTILS?.auth?.getToken) {
+            const token = window.UTILS.auth.getToken();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
         }
         
         return headers;
     }
     
-    // Handle API response
-    async handleResponse(response) {
-        let data;
-        
-        try {
-            data = await response.json();
-        } catch (error) {
-            throw new Error('Invalid JSON response from server');
-        }
-        
-        if (!response.ok) {
-            // Handle authentication errors
-            if (response.status === 401) {
-                UTILS.auth.logout();
-                throw new Error('Authentication required');
-            }
-            
-            throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        return data;
-    }
-    
-    // Generic request method
+    /**
+     * Make HTTP request
+     */
     async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
         
-        const defaultOptions = {
-            headers: this.getAuthHeaders(),
-            timeout: this.timeout
+        const config = {
+            method: 'GET',
+            headers: this.getHeaders(options.auth !== false),
+            ...options
         };
         
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
+        // Don't stringify FormData
+        if (config.body && !options.isFormData && typeof config.body !== 'string') {
+            config.body = JSON.stringify(config.body);
+        }
         
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+            console.log(`📡 API Request: ${config.method} ${url}`);
             
-            const response = await fetch(url, {
-                ...finalOptions,
-                signal: controller.signal
-            });
+            const response = await fetch(url, config);
             
-            clearTimeout(timeoutId);
-            return await this.handleResponse(response);
+            let data;
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = { message: await response.text() };
+            }
+            
+            console.log(`📡 API Response (${response.status}):`, data);
+            
+            if (!response.ok) {
+                const error = new Error(data.message || `HTTP ${response.status}`);
+                error.status = response.status;
+                error.data = data;
+                throw error;
+            }
+            
+            return data;
             
         } catch (error) {
-            if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
-            }
+            console.error(`❌ API Request failed:`, error.message);
             throw error;
         }
     }
     
-    // GET request
-    async get(endpoint, params = {}) {
-        const queryString = new URLSearchParams(params).toString();
-        const url = queryString ? `${endpoint}?${queryString}` : endpoint;
-        
-        return this.request(url, {
-            method: 'GET'
-        });
+    /**
+     * GET request
+     */
+    async get(endpoint, options = {}) {
+        return this.request(endpoint, { ...options, method: 'GET' });
     }
     
-    // POST request
-    async post(endpoint, data = null) {
+    /**
+     * POST request
+     */
+    async post(endpoint, data = null, options = {}) {
         return this.request(endpoint, {
+            ...options,
             method: 'POST',
-            body: data ? JSON.stringify(data) : null
+            body: data
         });
     }
     
-    // PUT request
-    async put(endpoint, data = null) {
+    /**
+     * PUT request
+     */
+    async put(endpoint, data = null, options = {}) {
         return this.request(endpoint, {
+            ...options,
             method: 'PUT',
-            body: data ? JSON.stringify(data) : null
+            body: data
         });
     }
     
-    // PATCH request
-    async patch(endpoint, data = null) {
-        return this.request(endpoint, {
-            method: 'PATCH',
-            body: data ? JSON.stringify(data) : null
-        });
+    /**
+     * DELETE request
+     */
+    async delete(endpoint, options = {}) {
+        return this.request(endpoint, { ...options, method: 'DELETE' });
     }
     
-    // DELETE request
-    async delete(endpoint) {
-        return this.request(endpoint, {
-            method: 'DELETE'
-        });
-    }
-    
-    // File upload (multipart/form-data)
-    async upload(endpoint, formData) {
-        const token = UTILS.auth.getToken();
-        const headers = {};
-        
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+    /**
+     * Health check - FIXED to use correct endpoint
+     */
+    async healthCheck() {
+        try {
+            console.log('🏥 Performing health check...');
+            return await this.get('/health', { auth: false });
+        } catch (error) {
+            console.error('❌ Health check failed:', error);
+            throw error;
         }
-        
-        // Don't set Content-Type for FormData - browser will set it with boundary
-        return this.request(endpoint, {
-            method: 'POST',
-            headers,
-            body: formData
-        });
     }
     
-    // Specialized API methods
-    
-    // Authentication
-    async login(credentials) {
-        return this.post('/auth/login', credentials);
+    /**
+     * Test backend connection - SIMPLIFIED
+     */
+    async testConnection() {
+        try {
+            console.log('🔍 Testing backend connection...');
+            const health = await this.healthCheck();
+            console.log('✅ Backend connection successful');
+            return true;
+        } catch (error) {
+            console.log('❌ Backend connection failed:', error.message);
+            return false;
+        }
     }
     
+    // =============================================================================
+    // AUTHENTICATION METHODS
+    // =============================================================================
+    
+    /**
+     * Register new user
+     */
     async register(userData) {
-        return this.post('/auth/register', userData);
-    }
-    
-    // Profile
-    async getProfile() {
-        return this.get('/influencer/profile');
-    }
-    
-    async updateProfile(profileData) {
-        return this.put('/influencer/profile', profileData);
-    }
-    
-    // Avatar
-    async createAvatar(imageFile) {
-        const formData = new FormData();
-        formData.append('file', imageFile);
-        return this.upload('/avatar/create', formData);
-    }
-    
-    async listVoices() {
-        return this.get('/avatar/list-voices');
-    }
-    
-    async generateTestVideo(avatarId, text, voiceId) {
-        return this.post('/avatar/test-video', {
-            avatar_id: avatarId,
-            text,
-            voice_id: voiceId
-        });
-    }
-    
-    async getVideoStatus(videoId) {
-        return this.get(`/avatar/video-status/${videoId}`);
-    }
-    
-    // Voice
-    async saveVoicePreference(voiceId) {
-        return this.post('/voice/preference', {
-            voice_id: voiceId
-        });
-    }
-    
-    async getVoicePreference() {
-        return this.get('/voice/preference');
-    }
-    
-    async createVoiceClone(formData) {
-        return this.upload('/voice/clone', formData);
-    }
-    
-    async textToSpeech(text, voiceId) {
-        return this.post('/voice/text-to-speech', {
-            text,
-            voice_id: voiceId
-        });
-    }
-    
-    // Chat
-    async sendChatMessage(message, influencerId, sessionId, voiceMode = false) {
-        return this.post('/chat', {
-            message,
-            influencer_id: influencerId,
-            session_id: sessionId,
-            voice_mode: voiceMode
-        });
-    }
-    
-    async getChatInfo(username) {
-        return this.get(`/chat/${username}`);
-    }
-    
-    // Affiliate
-    async getAffiliateLinks() {
-        return this.get('/affiliate');
-    }
-    
-    async addAffiliateLink(platformData) {
-        return this.post('/affiliate', platformData);
-    }
-    
-    async removeAffiliateLink(platform) {
-        return this.delete(`/affiliate/${platform}`);
-    }
-    
-    async getAffiliateAnalytics(timeframe = '7d') {
-        return this.get('/affiliate/analytics', { timeframe });
-    }
-    
-    // Analytics
-    async getDashboardAnalytics() {
-        return this.get('/analytics/dashboard');
-    }
-    
-    async getPromotionAnalytics() {
-        return this.get('/analytics/promotion');
-    }
-    
-    // Settings
-    async getSettings() {
-        return this.get('/settings');
-    }
-    
-    async updateSettings(settings) {
-        return this.put('/settings', settings);
-    }
-    
-    // Knowledge Management
-    async savePersonalInfo(personalData) {
-        return this.post('/knowledge/personal-info', personalData);
-    }
-    
-    async uploadKnowledgeDocument(file) {
-        const formData = new FormData();
-        formData.append('document', file);
-        return this.upload('/knowledge/upload', formData);
-    }
-    
-    async getKnowledgeDocuments() {
-        return this.get('/knowledge/documents');
-    }
-    
-    async deleteKnowledgeDocument(documentId) {
-        return this.delete(`/knowledge/documents/${documentId}`);
-    }
-}
-
-// Enhanced API with error handling and loading states
-class EnhancedAPI extends APIClient {
-    constructor() {
-        super();
-        this.requestQueue = new Map();
-        this.loadingStates = new Map();
-    }
-    
-    // Show loading state for a request
-    setLoading(key, isLoading) {
-        this.loadingStates.set(key, isLoading);
-        
-        // Dispatch custom event for UI components to listen to
-        window.dispatchEvent(new CustomEvent('apiLoadingStateChange', {
-            detail: { key, isLoading }
-        }));
-        
-        return isLoading;
-    }
-    
-    // Check if a request is currently loading
-    isLoading(key) {
-        return this.loadingStates.get(key) || false;
-    }
-    
-    // Enhanced request with loading states and duplicate prevention
-    async enhancedRequest(key, requestFn, showAlert = true) {
-        // Prevent duplicate requests
-        if (this.requestQueue.has(key)) {
-            console.log(`Request "${key}" already in progress, using existing promise`);
-            return this.requestQueue.get(key);
-        }
-        
-        this.setLoading(key, true);
-        
-        const requestPromise = (async () => {
-            try {
-                const result = await requestFn();
-                
-                if (showAlert && result.status === 'success' && result.message) {
-                    UTILS.ui.showAlert(result.message, 'success');
-                }
-                
-                return result;
-                
-            } catch (error) {
-                console.error(`API request "${key}" failed:`, error);
-                
-                if (showAlert) {
-                    UTILS.ui.showAlert(error.message || 'Request failed', 'error');
-                }
-                
-                throw error;
-                
-            } finally {
-                this.setLoading(key, false);
-                this.requestQueue.delete(key);
+        try {
+            console.log('📝 Registering user:', userData.username);
+            const response = await this.post('/register', userData);
+            
+            if (response.status === 'success' && window.UTILS?.auth?.saveUserData) {
+                window.UTILS.auth.saveUserData(response);
             }
-        })();
-        
-        this.requestQueue.set(key, requestPromise);
-        return requestPromise;
+            
+            return response;
+        } catch (error) {
+            console.error('❌ Registration failed:', error);
+            throw error;
+        }
     }
     
-    // Enhanced methods with loading states
-    async loginWithLoading(credentials) {
-        return this.enhancedRequest('login', () => this.login(credentials));
+    /**
+     * Login user
+     */
+    async login(credentials) {
+        try {
+            console.log('🔐 Logging in user:', credentials.username);
+            const response = await this.post('/login', credentials);
+            
+            if (response.status === 'success' && window.UTILS?.auth?.saveUserData) {
+                window.UTILS.auth.saveUserData(response);
+            }
+            
+            return response;
+        } catch (error) {
+            console.error('❌ Login failed:', error);
+            throw error;
+        }
     }
     
-    async registerWithLoading(userData) {
-        return this.enhancedRequest('register', () => this.register(userData));
+    // =============================================================================
+    // CHAT METHODS
+    // =============================================================================
+    
+    /**
+     * Send chat message
+     */
+    async sendChatMessage(messageData) {
+        try {
+            console.log('💬 Sending chat message');
+            return await this.post('/chat', messageData, { auth: false });
+        } catch (error) {
+            console.error('❌ Send chat message failed:', error);
+            throw error;
+        }
     }
     
-    async createAvatarWithLoading(imageFile) {
-        return this.enhancedRequest('createAvatar', () => this.createAvatar(imageFile));
+    /**
+     * Get chat info for username
+     */
+    async getChatInfo(username) {
+        try {
+            console.log('💬 Getting chat info for:', username);
+            return await this.get(`/chat/${username}`, { auth: false });
+        } catch (error) {
+            console.error('❌ Get chat info failed:', error);
+            throw error;
+        }
     }
     
-    async saveVoicePreferenceWithLoading(voiceId) {
-        return this.enhancedRequest('saveVoicePreference', 
-            () => this.saveVoicePreference(voiceId), false);
+    // =============================================================================
+    // PROFILE METHODS
+    // =============================================================================
+    
+    /**
+     * Get user profile
+     */
+    async getProfile() {
+        try {
+            console.log('👤 Getting user profile');
+            return await this.get('/influencer/profile');
+        } catch (error) {
+            console.error('❌ Get profile failed:', error);
+            throw error;
+        }
     }
     
-    async loadAffiliateDataWithLoading() {
-        return this.enhancedRequest('loadAffiliateData', 
-            () => this.getAffiliateLinks(), false);
-    }
-    
-    async connectPlatformWithLoading(platformData) {
-        return this.enhancedRequest('connectPlatform', 
-            () => this.addAffiliateLink(platformData));
+    /**
+     * Update user profile
+     */
+    async updateProfile(profileData) {
+        try {
+            console.log('👤 Updating user profile');
+            return await this.put('/influencer/profile', profileData);
+        } catch (error) {
+            console.error('❌ Update profile failed:', error);
+            throw error;
+        }
     }
 }
 
 // Create global API instance
-const API = new EnhancedAPI();
+window.API = new APIClient();
 
-// Make API client globally available
-window.API = API;
+console.log('✅ Fixed API Client loaded successfully');
 
-console.log('🌐 API client loaded');
+// Test connection on load (optional)
+setTimeout(async () => {
+    try {
+        const connected = await window.API.testConnection();
+        if (connected) {
+            console.log('🌐 Backend connection verified');
+        } else {
+            console.log('⚠️ Backend connection issue - check if server is running');
+        }
+    } catch (error) {
+        console.log('⚠️ Could not verify backend connection');
+    }
+}, 2000);

@@ -479,137 +479,6 @@
             color: #64748b;
         }
 
-        /* Custom Voice Upload Section */
-        .custom-voice-section {
-            background: #f0f9ff;
-            border: 2px solid #0ea5e9;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .upload-voice-area {
-            border: 2px dashed #0ea5e9;
-            border-radius: 8px;
-            padding: 30px 20px;
-            text-align: center;
-            background: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .upload-voice-area:hover {
-            background: #f0f9ff;
-            transform: scale(1.02);
-        }
-
-        .upload-voice-area.dragover {
-            background: #e0f2fe;
-            border-color: #0369a1;
-        }
-
-        .recording-controls {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .record-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: none;
-            background: #ef4444;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .record-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .record-btn.recording {
-            background: #dc2626;
-            animation: pulse 1.5s ease-in-out infinite alternate;
-        }
-
-        @keyframes pulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.05); }
-        }
-
-        .recording-timer {
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #ef4444;
-        }
-
-        .voice-samples {
-            margin-top: 20px;
-        }
-
-        .sample-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 15px;
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .sample-info {
-            flex: 1;
-        }
-
-        .sample-name {
-            font-weight: 500;
-            color: #1e293b;
-        }
-
-        .sample-duration {
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-
-        .sample-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .sample-btn {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .play-btn {
-            background: #10b981;
-            color: white;
-        }
-
-        .delete-btn {
-            background: #ef4444;
-            color: white;
-        }
-
-        .sample-btn:hover {
-            transform: scale(1.05);
-        }
-
         /* Loading States */
         .loading {
             display: none;
@@ -671,6 +540,19 @@
 
         .btn-secondary:hover {
             box-shadow: 0 8px 25px rgba(100, 116, 139, 0.3);
+        }
+
+        /* Video controls */
+        .video-controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
 
         /* Responsive Design */
@@ -839,56 +721,11 @@
                 <!-- Voice options will be loaded here -->
             </div>
 
-            <!-- Custom Voice Section -->
-            <div class="custom-voice-section" id="customVoiceSection">
-                <div class="category-title">
-                    <i class="fas fa-user-edit"></i> 
-                    Create Your Own Voice
-                </div>
-                <p style="margin-bottom: 20px; color: #64748b;">
-                    Upload audio samples or record your voice to create a personalized voice clone for your avatar.
-                </p>
-
-                <!-- Voice Upload Area -->
-                <div class="upload-voice-area" id="uploadVoiceArea">
-                    <div class="upload-icon">
-                        <i class="fas fa-microphone-alt" style="color: #0ea5e9;"></i>
-                    </div>
-                    <h4 style="color: #0369a1;">Upload Voice Samples</h4>
-                    <p>Upload 3-5 audio files (MP3, WAV, M4A)</p>
-                    <small>Each file should be 30 seconds to 5 minutes long</small>
-                    <input type="file" id="voiceInput" accept="audio/*" multiple style="display: none;">
-                </div>
-
-                <!-- OR Divider -->
-                <div style="text-align: center; margin: 20px 0; position: relative;">
-                    <span style="background: #f0f9ff; padding: 0 15px; color: #64748b; font-weight: 500;">OR</span>
-                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #cbd5e1; z-index: -1;"></div>
-                </div>
-
-                <!-- Recording Controls -->
-                <div style="text-align: center;">
-                    <h4 style="margin-bottom: 15px; color: #0369a1;">Record Your Voice</h4>
-                    <div class="recording-controls">
-                        <button class="record-btn" id="recordBtn" title="Start/Stop Recording">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                        <div class="recording-timer" id="recordingTimer">00:00</div>
-                    </div>
-                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">
-                        Click to start recording. Speak clearly for 30 seconds to 2 minutes.
-                    </p>
-                </div>
-
-                <!-- Voice Samples List -->
-                <div class="voice-samples" id="voiceSamples" style="display: none;">
-                    <h4 style="margin-bottom: 15px; color: #0369a1;">Your Voice Samples</h4>
-                    <div id="samplesList"></div>
-                    
-                    <button class="btn" id="createCustomVoiceBtn" style="margin-top: 20px;" disabled>
-                        <i class="fas fa-magic"></i> Create Custom Voice
-                    </button>
-                </div>
+            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <p style="color: #64748b; margin-bottom: 10px;">Want to create your own voice?</p>
+                <a href="voice-setup.html" class="btn btn-secondary">
+                    <i class="fas fa-microphone-alt"></i> Create Custom Voice
+                </a>
             </div>
         </div>
 
@@ -909,12 +746,6 @@
             all: [],
             loaded: false
         };
-
-        // Custom voice recording
-        let mediaRecorder = null;
-        let recordingInterval = null;
-        let recordingStartTime = 0;
-        let voiceSamples = [];
 
         // Configuration
         const API_BASE_URL = 'http://localhost:2000/api';
@@ -1056,9 +887,6 @@
             // Avatar upload listeners
             setupAvatarUploadListeners();
             
-            // Custom voice listeners
-            setupCustomVoiceListeners();
-            
             // Logout button
             const logoutBtn = document.getElementById('logout-btn');
             if (logoutBtn) {
@@ -1092,31 +920,6 @@
             newPhotoInput.addEventListener('change', handleFileSelect);
 
             console.log('✅ Avatar upload listeners setup complete');
-        }
-
-        function setupCustomVoiceListeners() {
-            // Voice upload area
-            const uploadVoiceArea = document.getElementById('uploadVoiceArea');
-            const voiceInput = document.getElementById('voiceInput');
-            
-            if (uploadVoiceArea && voiceInput) {
-                uploadVoiceArea.addEventListener('click', () => voiceInput.click());
-                uploadVoiceArea.addEventListener('dragover', handleVoiceDragOver);
-                uploadVoiceArea.addEventListener('drop', handleVoiceDrop);
-                voiceInput.addEventListener('change', handleVoiceFileSelect);
-            }
-
-            // Recording controls
-            const recordBtn = document.getElementById('recordBtn');
-            if (recordBtn) {
-                recordBtn.addEventListener('click', toggleRecording);
-            }
-
-            // Create custom voice button
-            const createCustomVoiceBtn = document.getElementById('createCustomVoiceBtn');
-            if (createCustomVoiceBtn) {
-                createCustomVoiceBtn.addEventListener('click', createCustomVoice);
-            }
         }
 
         // AVATAR UPLOAD HANDLERS
@@ -1240,9 +1043,11 @@
                     <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created from your photo!</p>
                     <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">Avatar ID: ${avatarInfo.avatar_id}</p>
                     ${avatarInfo.type === 'talking_photo' ? '<p style="color: #10b981; font-size: 0.8rem;">Type: Custom Talking Photo</p>' : ''}
-                    <button onclick="generateTestVideo()" class="btn btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.9rem;">
-                        <i class="fas fa-video"></i> Generate Test Video
-                    </button>
+                    <div class="video-controls">
+                        <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
+                            <i class="fas fa-video"></i> Generate Test Video
+                        </button>
+                    </div>
                 `;
             }
 
@@ -1325,43 +1130,97 @@
             }
         }
 
-        // VOICE LOADING WITH ENHANCED SELECTION
+        // VOICE LOADING WITH ENHANCED SELECTION - FIXED TO INCLUDE CUSTOM VOICE
         async function loadVoicesFromAPI() {
             console.log('🎤 Loading voices from API...');
             const voiceLoading = document.getElementById('voiceLoading');
             if (voiceLoading) voiceLoading.style.display = 'flex';
             
             try {
+                // Load default voices from API
                 const response = await fetch(`${API_BASE_URL}/avatar/list-voices`);
                 const data = await response.json();
                 
                 if (data.status === 'success' && data.data && data.data.voices) {
                     availableVoices.all = data.data.voices;
-                    availableVoices.loaded = true;
-                    
-                    console.log(`✅ Loaded ${data.data.voices.length} voices from API`);
-                    renderVoiceOptions();
-                    
-                    // Set default voice
-                    if (availableVoices.all.length > 0) {
-                        avatarData.selectedVoice = availableVoices.all[0].voice_id;
-                        selectVoice(availableVoices.all[0].voice_id);
-                    }
-                    
-                    // Load user's saved preference
-                    loadUserVoicePreference();
-                    
+                    console.log(`✅ Loaded ${data.data.voices.length} default voices from API`);
                 } else {
-                    console.warn('⚠️ API returned success but no voice data:', data);
+                    console.warn('⚠️ API returned success but no voice data, using fallbacks');
                     loadFallbackVoices();
                 }
+                
+                // Load user's custom voice if they have one
+                await loadCustomUserVoice();
+                
+                availableVoices.loaded = true;
+                renderVoiceOptions();
+                
+                // Set default voice
+                if (availableVoices.all.length > 0) {
+                    avatarData.selectedVoice = availableVoices.all[0].voice_id;
+                    selectVoice(availableVoices.all[0].voice_id);
+                }
+                
+                // Load user's saved preference
+                loadUserVoicePreference();
                 
             } catch (error) {
                 console.error('❌ Failed to load voices from API:', error);
                 showAlert(`Unable to load voices from server. Using defaults.`, 'warning');
                 loadFallbackVoices();
+                availableVoices.loaded = true;
+                renderVoiceOptions();
             } finally {
                 if (voiceLoading) voiceLoading.style.display = 'none';
+            }
+        }
+
+        // NEW: Load user's custom voice from their profile
+        async function loadCustomUserVoice() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch profile');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.data) {
+                    const customVoiceId = data.data.voice_id || data.data.preferred_voice_id;
+                    
+                    // Check if this is a custom voice (not in the default list)
+                    if (customVoiceId && !availableVoices.all.find(v => v.voice_id === customVoiceId)) {
+                        // Check if it looks like a custom voice ID
+                        if (customVoiceId.startsWith('custom_') || customVoiceId.includes(data.data.id)) {
+                            console.log('📋 Found custom voice:', customVoiceId);
+                            
+                            // Add custom voice to the list
+                            const customVoice = {
+                                voice_id: customVoiceId,
+                                name: `${data.data.username}'s Voice (Custom)`,
+                                gender: 'Custom',
+                                language: 'English',
+                                style: 'Personal',
+                                description: 'Your personalized voice clone',
+                                is_custom: true
+                            };
+                            
+                            // Add at the beginning of the list
+                            availableVoices.all.unshift(customVoice);
+                            console.log('✅ Added custom voice to voice list');
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.warn('⚠️ Error loading custom user voice:', error);
+                // Don't show error to user - this is not critical
             }
         }
 
@@ -1394,15 +1253,6 @@
                     description: "Warm, approachable female voice great for lifestyle content"
                 }
             ];
-            
-            availableVoices.loaded = true;
-            renderVoiceOptions();
-            
-            // Set default voice
-            if (availableVoices.all.length > 0) {
-                avatarData.selectedVoice = availableVoices.all[0].voice_id;
-                selectVoice(availableVoices.all[0].voice_id);
-            }
         }
 
         function renderVoiceOptions() {
@@ -1422,16 +1272,49 @@
                 return;
             }
             
-            voiceContainer.innerHTML = `
-                <div class="voice-categories">
+            // Separate custom and default voices
+            const customVoices = voiceList.filter(v => v.is_custom);
+            const defaultVoices = voiceList.filter(v => !v.is_custom);
+            
+            let voiceHTML = '';
+            
+            // Add custom voices section if user has any
+            if (customVoices.length > 0) {
+                voiceHTML += `
                     <div class="voice-category">
                         <h4 class="category-title">
-                            <i class="fas fa-microphone"></i> Pre-made Voices (${voiceList.length} Options)
+                            <i class="fas fa-user-circle"></i> Your Custom Voice
                         </h4>
                         <div class="voice-grid">
-                            ${voiceList.map((voice, index) => `
-                                <div class="voice-option ${index === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
-                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 ? 'checked' : ''}>
+                            ${customVoices.map((voice, index) => `
+                                <div class="voice-option ${index === 0 && defaultVoices.length === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
+                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 && defaultVoices.length === 0 ? 'checked' : ''}>
+                                    <div class="voice-info">
+                                        <div class="voice-name">${voice.name}</div>
+                                        <div class="voice-details">${voice.language || 'English'} • ${voice.gender || 'Custom'} • ${voice.style || 'Personal'}</div>
+                                        ${voice.description ? `<div class="voice-details" style="margin-top: 4px; font-style: italic;">${voice.description}</div>` : ''}
+                                    </div>
+                                    <button class="voice-preview-btn" onclick="playVoicePreview('${voice.voice_id}', '${encodeURIComponent(voice.name)}')">
+                                        <i class="fas fa-play"></i> Preview
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add default voices section
+            if (defaultVoices.length > 0) {
+                voiceHTML += `
+                    <div class="voice-category">
+                        <h4 class="category-title">
+                            <i class="fas fa-microphone"></i> Pre-made Voices (${defaultVoices.length} Options)
+                        </h4>
+                        <div class="voice-grid">
+                            ${defaultVoices.map((voice, index) => `
+                                <div class="voice-option ${index === 0 && customVoices.length === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
+                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 && customVoices.length === 0 ? 'checked' : ''}>
                                     <div class="voice-info">
                                         <div class="voice-name">${voice.name}</div>
                                         <div class="voice-details">${voice.language || 'English'} • ${voice.gender || 'Unknown'} • ${voice.style || 'Standard'}</div>
@@ -1444,11 +1327,17 @@
                             `).join('')}
                         </div>
                     </div>
+                `;
+            }
+            
+            voiceContainer.innerHTML = `
+                <div class="voice-categories">
+                    ${voiceHTML}
                 </div>
             `;
             
             setupVoiceEventListeners();
-            console.log(`✅ Rendered ${voiceList.length} voice options`);
+            console.log(`✅ Rendered ${voiceList.length} voice options (${customVoices.length} custom, ${defaultVoices.length} default)`);
         }
 
         function setupVoiceEventListeners() {
@@ -1587,338 +1476,256 @@
             return voice ? voice.name : 'Selected Voice';
         }
 
-        // CUSTOM VOICE FUNCTIONALITY
-        function handleVoiceDragOver(e) {
-            e.preventDefault();
-            e.currentTarget.classList.add('dragover');
-        }
-
-        function handleVoiceDrop(e) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                processVoiceFiles(Array.from(files));
-            }
-        }
-
-        function handleVoiceFileSelect(e) {
-            const files = e.target.files;
-            if (files.length > 0) {
-                processVoiceFiles(Array.from(files));
-            }
-        }
-
-        function processVoiceFiles(files) {
-            console.log('🎵 Processing voice files:', files.length);
-            
-            // Validate files
-            const validFiles = [];
-            for (const file of files) {
-                if (file.type.startsWith('audio/')) {
-                    if (file.size <= 50 * 1024 * 1024) { // 50MB max
-                        validFiles.push(file);
-                    } else {
-                        showAlert(`File ${file.name} is too large. Maximum 50MB per file.`, 'warning');
-                    }
-                } else {
-                    showAlert(`File ${file.name} is not an audio file.`, 'warning');
-                }
-            }
-            
-            if (validFiles.length === 0) {
-                showAlert('No valid audio files found.', 'error');
-                return;
-            }
-            
-            // Add to voice samples
-            validFiles.forEach(file => {
-                const sampleId = Date.now() + Math.random();
-                voiceSamples.push({
-                    id: sampleId,
-                    file: file,
-                    name: file.name,
-                    duration: 'Unknown',
-                    type: 'upload'
-                });
-            });
-            
-            updateVoiceSamplesList();
-            showAlert(`Added ${validFiles.length} voice sample(s)`, 'success');
-        }
-
-        async function toggleRecording() {
-            const recordBtn = document.getElementById('recordBtn');
-            const timer = document.getElementById('recordingTimer');
-            
-            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    
-                    const chunks = [];
-                    mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
-                    
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(chunks, { type: 'audio/wav' });
-                        const sampleId = Date.now();
-                        const duration = formatDuration(Date.now() - recordingStartTime);
-                        
-                        voiceSamples.push({
-                            id: sampleId,
-                            file: new File([blob], `recording_${sampleId}.wav`, { type: 'audio/wav' }),
-                            name: `Recording ${voiceSamples.filter(s => s.type === 'recording').length + 1}`,
-                            duration: duration,
-                            type: 'recording'
-                        });
-                        
-                        updateVoiceSamplesList();
-                        showAlert('Recording saved!', 'success');
-                        
-                        // Stop all tracks
-                        stream.getTracks().forEach(track => track.stop());
-                    };
-                    
-                    recordingStartTime = Date.now();
-                    mediaRecorder.start();
-                    
-                    recordBtn.classList.add('recording');
-                    recordBtn.innerHTML = '<i class="fas fa-stop"></i>';
-                    
-                    // Start timer
-                    recordingInterval = setInterval(() => {
-                        const elapsed = Date.now() - recordingStartTime;
-                        timer.textContent = formatDuration(elapsed);
-                    }, 100);
-                    
-                } catch (error) {
-                    console.error('Recording error:', error);
-                    showAlert('Unable to access microphone. Please check permissions.', 'error');
-                }
-            } else {
-                // Stop recording
-                mediaRecorder.stop();
-                recordBtn.classList.remove('recording');
-                recordBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-                
-                if (recordingInterval) {
-                    clearInterval(recordingInterval);
-                    recordingInterval = null;
-                }
-                
-                timer.textContent = '00:00';
-            }
-        }
-
-        function updateVoiceSamplesList() {
-            const voiceSamplesSection = document.getElementById('voiceSamples');
-            const samplesList = document.getElementById('samplesList');
-            const createBtn = document.getElementById('createCustomVoiceBtn');
-            
-            if (voiceSamples.length === 0) {
-                voiceSamplesSection.style.display = 'none';
-                return;
-            }
-            
-            voiceSamplesSection.style.display = 'block';
-            
-            samplesList.innerHTML = voiceSamples.map(sample => `
-                <div class="sample-item">
-                    <div class="sample-info">
-                        <div class="sample-name">${sample.name}</div>
-                        <div class="sample-duration">${sample.duration} • ${sample.type}</div>
-                    </div>
-                    <div class="sample-actions">
-                        <button class="sample-btn play-btn" onclick="playSample(${sample.id})">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <button class="sample-btn delete-btn" onclick="deleteSample(${sample.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Enable create button if we have enough samples
-            createBtn.disabled = voiceSamples.length < 3;
-            createBtn.textContent = voiceSamples.length < 3 ? 
-                `Need ${3 - voiceSamples.length} more samples` : 
-                'Create Custom Voice';
-        }
-
-        function playSample(sampleId) {
-            const sample = voiceSamples.find(s => s.id === sampleId);
-            if (sample) {
-                const audio = new Audio(URL.createObjectURL(sample.file));
-                audio.play();
-            }
-        }
-
-        function deleteSample(sampleId) {
-            voiceSamples = voiceSamples.filter(s => s.id !== sampleId);
-            updateVoiceSamplesList();
-            showAlert('Sample deleted', 'info');
-        }
-
-        async function createCustomVoice() {
-            if (voiceSamples.length < 3) {
-                showAlert('Please provide at least 3 voice samples', 'error');
-                return;
-            }
-            
-            try {
-                const formData = new FormData();
-                voiceSamples.forEach((sample, index) => {
-                    formData.append('audio_samples', sample.file);
-                });
-                formData.append('voice_name', `${getCurrentUser().username}'s Voice`);
-                formData.append('description', 'Custom voice clone');
-                
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/voice/clone`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.status === 'success') {
-                    showAlert('Custom voice created successfully!', 'success');
-                    
-                    // Add custom voice to available voices
-                    const customVoice = {
-                        voice_id: data.data.voice_id,
-                        name: `${getCurrentUser().username}'s Voice (Custom)`,
-                        gender: 'Custom',
-                        language: 'English',
-                        style: 'Personal',
-                        description: 'Your personalized voice clone'
-                    };
-                    
-                    availableVoices.all.unshift(customVoice);
-                    renderVoiceOptions();
-                    selectVoice(customVoice.voice_id);
-                    
-                    // Clear samples
-                    voiceSamples = [];
-                    updateVoiceSamplesList();
-                    
-                } else {
-                    throw new Error(data.message || 'Failed to create custom voice');
-                }
-                
-            } catch (error) {
-                console.error('Custom voice creation error:', error);
-                showAlert(`Failed to create custom voice: ${error.message}`, 'error');
-            }
-        }
-
-        // TEST VIDEO GENERATION
+        // FIXED TEST VIDEO GENERATION
         async function generateTestVideo() {
-            if (!avatarData.avatarId) {
-                showAlert('No avatar available for test video', 'error');
-                return;
-            }
-            
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        avatar_id: avatarData.avatarId,
-                        text: 'Hello! This is a test of my AI avatar with my selected voice.',
-                        voice_id: avatarData.selectedVoice
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.status === 'success') {
-                    showAlert('Generating test video... This may take a minute.', 'info');
-                    
-                    if (data.data.video_url) {
-                        // Video ready immediately
-                        displayTestVideo(data.data.video_url);
-                    } else if (data.data.video_id) {
-                        // Poll for video completion
-                        pollVideoStatus(data.data.video_id);
-                    }
-                } else {
-                    throw new Error(data.message || 'Failed to generate test video');
-                }
-                
-            } catch (error) {
-                console.error('Test video generation error:', error);
-                showAlert(`Failed to generate test video: ${error.message}`, 'error');
-            }
-        }
-
-        async function pollVideoStatus(videoId) {
-            const maxAttempts = 30;
-            let attempts = 0;
-            
-            const checkStatus = async () => {
-                try {
-                    const token = localStorage.getItem('token');
-                    const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (response.ok && data.status === 'success') {
-                        if (data.data.status === 'completed' && data.data.video_url) {
-                            displayTestVideo(data.data.video_url);
-                            return;
-                        } else if (data.data.status === 'failed') {
-                            showAlert('Video generation failed', 'error');
-                            return;
-                        }
-                    }
-                    
-                    attempts++;
-                    if (attempts < maxAttempts) {
-                        setTimeout(checkStatus, 3000);
-                    } else {
-                        showAlert('Video generation timed out', 'warning');
-                    }
-                    
-                } catch (error) {
-                    console.error('Video status check error:', error);
-                    attempts++;
-                    if (attempts < maxAttempts) {
-                        setTimeout(checkStatus, 3000);
-                    }
-                }
-            };
-            
-            checkStatus();
-        }
-
-        function displayTestVideo(videoUrl) {
-            const preview = document.getElementById('avatarPreview');
-            if (preview) {
-                preview.innerHTML = `
-                    <video class="avatar-video" controls style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <source src="${videoUrl}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Test Video with ${getVoiceName(avatarData.selectedVoice)}</p>
-                    <p style="color: #5e60ce; font-size: 0.9rem;">✨ Your custom avatar in action!</p>
+    if (!avatarData.avatarId) {
+        showAlert('No avatar available for test video', 'error');
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        
+        showAlert('Generating test video... This may take 30-60 seconds.', 'info');
+        
+        // Update the preview to show generating state
+        const preview = document.getElementById('avatarPreview');
+        if (preview) {
+            const videoControls = preview.querySelector('.video-controls');
+            if (videoControls) {
+                videoControls.innerHTML = `
+                    <button class="btn btn-secondary btn-small" disabled>
+                        <i class="fas fa-spinner fa-spin"></i> Starting video generation...
+                    </button>
                 `;
             }
-            
-            showAlert('Test video generated successfully!', 'success');
         }
+        
+        console.log('🎬 Sending test video request...');
+        console.log('Avatar ID:', avatarData.avatarId);
+        console.log('Voice ID:', avatarData.selectedVoice);
+        
+        const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                avatar_id: avatarData.avatarId,
+                text: 'Hello! This is a test of my AI avatar with my selected voice. How does it look and sound?',
+                voice_id: avatarData.selectedVoice
+            })
+        });
+        
+        const data = await response.json();
+        console.log('📡 Test video response:', data);
+        
+        if (response.ok && data.status === 'success') {
+            if (data.data.video_id) {
+                // Start polling for video completion
+                pollVideoStatus(data.data.video_id, data.data.estimated_time || 30);
+            } else {
+                throw new Error('No video ID returned');
+            }
+        } else {
+            throw new Error(data.message || 'Failed to generate test video');
+        }
+        
+    } catch (error) {
+        console.error('❌ Test video generation error:', error);
+        showAlert(`Failed to generate test video: ${error.message}`, 'error');
+        
+        // Reset video controls
+        resetVideoControls();
+    }
+}
+
+async function pollVideoStatus(videoId, estimatedTime = 30) {
+    const maxAttempts = Math.max(20, Math.ceil(estimatedTime / 3)); // At least 20 attempts, or based on estimated time
+    let attempts = 0;
+    
+    console.log(`🔄 Starting to poll video status for: ${videoId}`);
+    console.log(`⏱️ Estimated time: ${estimatedTime}s, Max attempts: ${maxAttempts}`);
+    
+    const checkStatus = async () => {
+        try {
+            attempts++;
+            console.log(`📊 Checking video status (attempt ${attempts}/${maxAttempts})...`);
+            
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            const data = await response.json();
+            console.log(`📊 Video status response:`, data);
+            
+            if (response.ok && data.status === 'success') {
+                const videoStatus = data.data.status;
+                const progress = data.data.progress || 50;
+                const videoUrl = data.data.video_url;
+                const error = data.data.error;
+                
+                console.log(`📊 Video status: ${videoStatus}, Progress: ${progress}%`);
+                
+                // Update progress in UI
+                updateVideoProgress(progress, videoStatus);
+                
+                if (videoStatus === 'completed' && videoUrl) {
+                    console.log('✅ Video generation completed!');
+                    console.log('🎬 Video URL:', videoUrl);
+                    displayTestVideo(videoUrl);
+                    return;
+                } else if (videoStatus === 'failed' || videoStatus === 'error') {
+                    const errorMsg = error || 'Video generation failed';
+                    console.error('❌ Video generation failed:', errorMsg);
+                    showAlert(`Video generation failed: ${errorMsg}`, 'error');
+                    resetVideoControls();
+                    return;
+                }
+                
+                // Continue polling if still processing
+                if (attempts < maxAttempts && (videoStatus === 'processing' || videoStatus === 'pending' || videoStatus === 'queued')) {
+                    const delay = attempts < 5 ? 3000 : 5000; // Start with 3s, then 5s intervals
+                    setTimeout(checkStatus, delay);
+                } else if (attempts >= maxAttempts) {
+                    console.warn('⏱️ Video generation timed out');
+                    showAlert('Video generation is taking longer than expected. Please try again.', 'warning');
+                    resetVideoControls();
+                }
+            } else {
+                const errorMsg = data.message || 'Failed to check video status';
+                console.error('❌ Status check failed:', errorMsg);
+                
+                if (attempts < maxAttempts) {
+                    // Retry after a short delay
+                    setTimeout(checkStatus, 5000);
+                } else {
+                    showAlert(`Video status check failed: ${errorMsg}`, 'error');
+                    resetVideoControls();
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ Video status check error:', error);
+            
+            if (attempts < maxAttempts) {
+                // Retry after a short delay
+                setTimeout(checkStatus, 5000);
+            } else {
+                showAlert(`Video generation failed: ${error.message}`, 'error');
+                resetVideoControls();
+            }
+        }
+    };
+    
+    // Start checking status immediately
+    checkStatus();
+}
+
+function updateVideoProgress(progress, status = 'processing') {
+    const preview = document.getElementById('avatarPreview');
+    if (preview) {
+        const videoControls = preview.querySelector('.video-controls');
+        if (videoControls) {
+            let statusText = 'Generating...';
+            let iconClass = 'fas fa-spinner fa-spin';
+            
+            switch (status) {
+                case 'processing':
+                    statusText = 'Processing video...';
+                    break;
+                case 'pending':
+                    statusText = 'In queue...';
+                    break;
+                case 'queued':
+                    statusText = 'Queued for processing...';
+                    break;
+                default:
+                    statusText = 'Generating...';
+            }
+            
+            videoControls.innerHTML = `
+                <button class="btn btn-secondary btn-small" disabled>
+                    <i class="${iconClass}"></i> ${statusText} ${progress}%
+                </button>
+            `;
+        }
+    }
+}
+
+function resetVideoControls() {
+    const preview = document.getElementById('avatarPreview');
+    if (preview) {
+        const videoControls = preview.querySelector('.video-controls');
+        if (videoControls) {
+            videoControls.innerHTML = `
+                <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
+                    <i class="fas fa-video"></i> Generate Test Video
+                </button>
+            `;
+        }
+    }
+}
+
+function displayTestVideo(videoUrl) {
+    console.log('🎬 Displaying test video:', videoUrl);
+    
+    const preview = document.getElementById('avatarPreview');
+    if (preview) {
+        preview.innerHTML = `
+            <video class="avatar-video" controls autoplay style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                <source src="${videoUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Test Video with ${getVoiceName(avatarData.selectedVoice)}</p>
+            <p style="color: #5e60ce; font-size: 0.9rem;">✨ Your custom avatar in action!</p>
+            <div class="video-controls">
+                <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
+                    <i class="fas fa-redo"></i> Generate New Test
+                </button>
+                <a href="${videoUrl}" download="avatar-test-video.mp4" class="btn btn-small">
+                    <i class="fas fa-download"></i> Download
+                </a>
+                <button onclick="shareTestVideo('${videoUrl}')" class="btn btn-small">
+                    <i class="fas fa-share"></i> Share
+                </button>
+            </div>
+        `;
+    }
+    
+    showAlert('✅ Test video generated successfully! Check out your avatar in action.', 'success');
+}
+
+function shareTestVideo(videoUrl) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'My AI Avatar Test Video',
+            text: 'Check out my AI avatar!',
+            url: videoUrl
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(videoUrl).then(() => {
+            showAlert('Video URL copied to clipboard!', 'success');
+        }).catch(() => {
+            showAlert('Could not copy URL. Please copy it manually from the browser.', 'warning');
+        });
+    }
+}
+
+// Enhanced error handling for video operations
+window.addEventListener('error', function(event) {
+    if (event.message && event.message.includes('video')) {
+        console.error('💥 Video-related error:', event.error);
+        showAlert('A video error occurred. Please try again.', 'error');
+    }
+});
+
+console.log('🎬 Fixed video generation functions loaded');
 
         // UTILITY FUNCTIONS
         function formatFileSize(bytes) {
@@ -1927,13 +1734,6 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function formatDuration(ms) {
-            const seconds = Math.floor(ms / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
         }
 
         function getCurrentUser() {
@@ -1988,7 +1788,7 @@
             console.error('💥 Unhandled promise rejection:', event.reason);
         });
 
-        console.log('🎭 Avatar Setup page script loaded successfully');
+        console.log('🎭 Fixed Avatar Setup page script loaded successfully');
     </script>
 </body>
 </html>

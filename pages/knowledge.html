@@ -591,6 +591,15 @@
             </a>
         </nav>
         
+        <!-- Add this missing section -->
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <div class="user-name" id="user-name">Username</div>
+                    <div class="user-role">Influencer</div>
+                </div>
+            </div>
             <button id="logout-btn" class="logout-btn">Sign Out</button>
         </div>
     </aside>
@@ -814,7 +823,7 @@
             // Load existing knowledge data
             async function loadExistingKnowledge() {
                 try {
-                    const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
+                    const response = await fetch(`${CONFIG.API.BASE_URL}/influencer/profile`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
@@ -922,77 +931,57 @@
                 return true;
             }
             
-            async function uploadFile(file) {
-                const fileId = Date.now() + Math.random();
-                const fileItem = {
-                    id: fileId,
-                    name: file.name,
-                    size: file.size,
-                    type: file.type,
-                    status: 'uploading',
-                    progress: 0
-                };
+        async function uploadFile(file) {
+            const fileId = Date.now() + Math.random();
+            const fileItem = {
+                id: fileId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                status: 'uploading',
+                progress: 0
+            };
+            
+            uploadedFiles.push(fileItem);
+            renderFileList();
+            updateKnowledgeStats();
+            
+            try {
+                showProgress(true);
                 
-                uploadedFiles.push(fileItem);
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', 'knowledge_document');
+                
+                const response = await fetch(`${CONFIG.API.BASE_URL}/knowledge/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    fileItem.status = 'completed';
+                    fileItem.document_id = data.data.document_id;
+                    showAlert(`${file.name} uploaded successfully`, 'success');
+                } else {
+                    fileItem.status = 'error';
+                    showAlert(`Failed to upload ${file.name}: ${data.message || 'Unknown error'}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                fileItem.status = 'error';
+                showAlert(`Failed to upload ${file.name}`, 'error');
+            } finally {
+                showProgress(false);
                 renderFileList();
                 updateKnowledgeStats();
-                
-                try {
-                    // Show progress
-                    showProgress(true);
-                    
-                    const formData = new FormData();
-                    formData.append('file', file);
-                    formData.append('type', 'knowledge_document');
-                    
-                    const xhr = new XMLHttpRequest();
-                    
-                    xhr.upload.addEventListener('progress', (e) => {
-                        if (e.lengthComputable) {
-                            const progress = Math.round((e.loaded / e.total) * 100);
-                            updateProgress(progress);
-                            fileItem.progress = progress;
-                            renderFileList();
-                        }
-                    });
-                    
-                    xhr.onload = function() {
-                        showProgress(false);
-                        
-                        if (xhr.status === 200) {
-                            const response = JSON.parse(xhr.responseText);
-                            fileItem.status = 'completed';
-                            fileItem.url = response.url;
-                            showAlert(`${file.name} uploaded successfully`, 'success');
-                        } else {
-                            fileItem.status = 'error';
-                            showAlert(`Failed to upload ${file.name}`, 'error');
-                        }
-                        
-                        renderFileList();
-                        updateKnowledgeStats();
-                    };
-                    
-                    xhr.onerror = function() {
-                        showProgress(false);
-                        fileItem.status = 'error';
-                        showAlert(`Failed to upload ${file.name}`, 'error');
-                        renderFileList();
-                    };
-                    
-                    // Note: You'll need to implement this endpoint in your backend
-                    xhr.open('POST', `${API_BASE_URL}/knowledge/upload`);
-                    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-                    xhr.send(formData);
-                    
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    fileItem.status = 'error';
-                    showAlert(`Failed to upload ${file.name}`, 'error');
-                    renderFileList();
-                    showProgress(false);
-                }
             }
+        }
             
             function renderFileList() {
                 fileList.innerHTML = '';
@@ -1118,7 +1107,7 @@
                 };
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}/knowledge/personal-info`, {
+                    const response = await fetch(`${CONFIG.API.BASE_URL}/knowledge/personal-info`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,

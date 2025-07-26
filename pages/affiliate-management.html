@@ -723,6 +723,9 @@
     </style>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/api-client.js"></script>
 </head>
 <body>
     <!-- Sidebar navigation -->
@@ -769,6 +772,14 @@
             </a>
         </nav>
         
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <div class="user-name" id="user-name">Username</div>
+                    <div class="user-role">Influencer</div>
+                </div>
+            </div>
             <button id="logout-btn" class="logout-btn">Sign Out</button>
         </div>
     </aside>
@@ -923,218 +934,318 @@
     </div>
 
     <script>
-        // Configuration
-        const API_BASE_URL = 'http://localhost:2000/api';
-
-        // Global state
-        let affiliateState = {
-            platforms: [],
-            selectedPlatform: null,
-            stats: {
-                connectedPlatforms: 0,
-                totalProducts: 0,
-                recommendationsMade: 0,
-                earningsPotential: 0
-            }
-        };
-
-        // Platform configurations
-        const PLATFORM_CONFIGS = {
-            amazon: {
-                name: 'Amazon Associates',
-                logo: 'A',
-                fields: [
-                    { id: 'access_key', label: 'Access Key', type: 'text', required: true },
-                    { id: 'secret_key', label: 'Secret Key', type: 'password', required: true },
-                    { id: 'partner_tag', label: 'Associate Tag', type: 'text', required: true }
-                ],
-                help: 'Get your credentials from the Amazon Associates program dashboard.'
-            },
-            rakuten: {
-                name: 'Rakuten Advertising',
-                logo: 'R',
-                fields: [
-                    { id: 'merchant_id', label: 'Merchant ID', type: 'text', required: true },
-                    { id: 'token', label: 'API Token', type: 'password', required: true }
-                ],
-                help: 'Find your API credentials in your Rakuten Advertising account settings.'
-            },
-            shareasale: {
-                name: 'ShareASale',
-                logo: 'S',
-                fields: [
-                    { id: 'api_token', label: 'API Token', type: 'password', required: true },
-                    { id: 'secret_key', label: 'Secret Key', type: 'password', required: true },
-                    { id: 'affiliate_id', label: 'Affiliate ID', type: 'text', required: true }
-                ],
-                help: 'Get your API credentials from ShareASale\'s API documentation section.'
-            },
-            cj_affiliate: {
-                name: 'CJ Affiliate',
-                logo: 'CJ',
-                fields: [
-                    { id: 'api_key', label: 'API Key', type: 'password', required: true },
-                    { id: 'website_id', label: 'Website ID', type: 'text', required: true }
-                ],
-                help: 'Access your API key from the CJ Affiliate developer portal.'
-            },
-            skimlinks: {
-                name: 'Skimlinks',
-                logo: 'SK',
-                fields: [
-                    { id: 'api_key', label: 'API Key', type: 'password', required: true },
-                    { id: 'publisher_id', label: 'Publisher ID', type: 'text', required: true }
-                ],
-                help: 'Find your API credentials in the Skimlinks Hub under Developer Tools.'
-            }
-        };
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🔗 Initializing Affiliate Management Dashboard...');
+        // =============================================================================
+        // FIXED AFFILIATE MANAGEMENT DASHBOARD 
+        // =============================================================================
+        
+        (function() {
+            'use strict';
             
-            if (!initializeAuth()) {
-                return;
-            }
+            // =============================================================================
+            // CONFIGURATION & STATE
+            // =============================================================================
             
-            setupEventListeners();
-            loadAffiliateData();
-        });
-
-        function initializeAuth() {
-            const token = localStorage.getItem('token');
-            const userStr = localStorage.getItem('user');
+            // API Configuration
+            const API_BASE_URL = (typeof CONFIG !== 'undefined') ? CONFIG.API.BASE_URL : 'http://localhost:2000/api';
+            console.log('🌐 API Base URL:', API_BASE_URL);
             
-            if (!token || !userStr) {
-                console.warn('No authentication found, redirecting to login');
-                window.location.href = '../pages/login.html';
-                return false;
-            }
+            // Global state
+            let affiliateState = {
+                platforms: [],
+                selectedPlatform: null,
+                isLoading: false,
+                stats: {
+                    connectedPlatforms: 0,
+                    totalProducts: 0,
+                    recommendationsMade: 0,
+                    earningsPotential: 0
+                }
+            };
             
-            try {
-                const user = JSON.parse(userStr);
-                console.log('Authenticated user:', user.username);
+            // Platform configurations
+            const PLATFORM_CONFIGS = {
+                amazon: {
+                    name: 'Amazon Associates',
+                    logo: 'A',
+                    fields: [
+                        { id: 'access_key', label: 'Access Key', type: 'text', required: true },
+                        { id: 'secret_key', label: 'Secret Key', type: 'password', required: true },
+                        { id: 'partner_tag', label: 'Associate Tag', type: 'text', required: true }
+                    ],
+                    help: 'Get your credentials from the Amazon Associates program dashboard.'
+                },
+                rakuten: {
+                    name: 'Rakuten Advertising',
+                    logo: 'R',
+                    fields: [
+                        { id: 'merchant_id', label: 'Merchant ID', type: 'text', required: true },
+                        { id: 'token', label: 'API Token', type: 'password', required: true }
+                    ],
+                    help: 'Find your API credentials in your Rakuten Advertising account settings.'
+                },
+                shareasale: {
+                    name: 'ShareASale',
+                    logo: 'S',
+                    fields: [
+                        { id: 'api_token', label: 'API Token', type: 'password', required: true },
+                        { id: 'secret_key', label: 'Secret Key', type: 'password', required: true },
+                        { id: 'affiliate_id', label: 'Affiliate ID', type: 'text', required: true }
+                    ],
+                    help: 'Get your API credentials from ShareASale\'s API documentation section.'
+                },
+                cj_affiliate: {
+                    name: 'CJ Affiliate',
+                    logo: 'CJ',
+                    fields: [
+                        { id: 'api_key', label: 'API Key', type: 'password', required: true },
+                        { id: 'website_id', label: 'Website ID', type: 'text', required: true }
+                    ],
+                    help: 'Access your API key from the CJ Affiliate developer portal.'
+                },
+                skimlinks: {
+                    name: 'Skimlinks',
+                    logo: 'SK',
+                    fields: [
+                        { id: 'api_key', label: 'API Key', type: 'password', required: true },
+                        { id: 'publisher_id', label: 'Publisher ID', type: 'text', required: true }
+                    ],
+                    help: 'Find your API credentials in the Skimlinks Hub under Developer Tools.'
+                }
+            };
+            
+            // =============================================================================
+            // INITIALIZATION - FIXED AUTHENTICATION
+            // =============================================================================
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🚀 Initializing Affiliate Management Dashboard...');
                 
-                // Update UI with user info
-                document.getElementById('user-name').textContent = user.username;
-                if (user.username) {
-                    const initials = user.username.split(' ')
-                        .map(name => name[0])
-                        .join('')
-                        .toUpperCase()
-                        .substring(0, 2);
-                    document.getElementById('user-avatar').textContent = initials;
+                // Enforce authentication - FIXED to match working pages exactly
+                const token = localStorage.getItem('token');
+                const userStr = localStorage.getItem('user');
+                
+                if (!token || !userStr) {
+                    window.location.href = './login.html';
+                    return;
                 }
                 
-                return true;
-            } catch (error) {
-                console.error('Error parsing user data:', error);
-                window.location.href = '../pages/login.html';
-                return false;
-            }
-        }
-
-        function setupEventListeners() {
-            // Connect platform button
-            document.getElementById('connect-platform-btn').addEventListener('click', openConnectPlatformModal);
+                let user;
+                try {
+                    user = JSON.parse(userStr);
+                } catch (error) {
+                    console.error('Error parsing user data:', error);
+                    window.location.href = './login.html';
+                    return;
+                }
+                
+                if (user.userType !== 'influencer') {
+                    window.location.href = './login.html';
+                    return;
+                }
+                
+                // Update user display
+                if (user) {
+                    const userName = document.getElementById('user-name');
+                    const userAvatar = document.getElementById('user-avatar');
+                    
+                    if (userName) userName.textContent = user.username;
+                    
+                    if (userAvatar && user.username) {
+                        const initials = user.username.split(' ')
+                            .map(name => name[0])
+                            .join('')
+                            .toUpperCase()
+                            .substring(0, 2);
+                        userAvatar.textContent = initials;
+                    }
+                }
+                
+                // Setup event listeners
+                setupEventListeners();
+                
+                // Load affiliate data
+                loadAffiliateData();
+                
+                console.log('✅ Application initialized successfully');
+            });
             
-            // Logout button
-            document.getElementById('logout-btn').addEventListener('click', function() {
+            // =============================================================================
+            // EVENT LISTENERS
+            // =============================================================================
+            
+            function setupEventListeners() {
+                console.log('🎧 Setting up event listeners...');
+                
+                try {
+                    // Connect platform button
+                    const connectBtn = document.getElementById('connect-platform-btn');
+                    if (connectBtn) {
+                        connectBtn.addEventListener('click', openConnectPlatformModal);
+                    }
+                    
+                    // Logout button
+                    const logoutBtn = document.getElementById('logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', handleLogout);
+                    }
+                    
+                    // Modal close handlers
+                    document.addEventListener('click', handleModalClick);
+                    
+                    // Escape key to close modals
+                    document.addEventListener('keydown', handleKeyDown);
+                    
+                    console.log('✅ Event listeners setup successfully');
+                } catch (error) {
+                    console.error('❌ Error setting up event listeners:', error);
+                }
+            }
+            
+            function handleLogout() {
+                console.log('👋 Logging out...');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
-                window.location.href = '../pages/login.html';
-            });
+                window.location.href = './login.html';
+            }
             
-            // Modal close handlers
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('modal-overlay')) {
+            function handleModalClick(e) {
+                // Only close modal if clicking directly on the overlay background
+                if (e.target && e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
                     closeModal(e.target.id);
                 }
-            });
+            }
             
-            // Escape key to close modals
-            document.addEventListener('keydown', function(e) {
+            function handleKeyDown(e) {
                 if (e.key === 'Escape') {
                     closeAllModals();
                 }
-            });
-        }
-
-        async function loadAffiliateData() {
-            try {
-                console.log('📊 Loading affiliate data...');
+            }
+            
+            // =============================================================================
+            // DATA LOADING
+            // =============================================================================
+            
+            async function loadAffiliateData() {
+                if (affiliateState.isLoading) {
+                    console.log('⏳ Data loading already in progress...');
+                    return;
+                }
                 
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/affiliate`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+                try {
+                    affiliateState.isLoading = true;
+                    console.log('📊 Loading affiliate data...');
+                    
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        throw new Error('No authentication token available');
                     }
-                });
-                
-                if (response.ok) {
+                    
+                    const response = await fetch(`${API_BASE_URL}/affiliate`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            console.warn('⚠️ Authentication expired');
+                            window.location.href = './login.html';
+                            return;
+                        }
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
                     const data = await response.json();
                     
                     if (data.status === 'success') {
                         affiliateState.platforms = data.data.affiliate_links || [];
+                        console.log('✅ Loaded affiliate data:', affiliateState.platforms.length, 'platforms');
                         
-                        console.log('✅ Loaded affiliate data:', affiliateState.platforms);
-                        
-                        // Update stats
                         updateStats();
-                        
-                        // Render platform cards
                         renderPlatformCards();
                         
                         // Hide onboarding if platforms are connected
-                        if (affiliateState.platforms.length > 0) {
-                            document.getElementById('onboarding-guide').style.display = 'none';
+                        const onboardingElement = document.getElementById('onboarding-guide');
+                        if (onboardingElement) {
+                            onboardingElement.style.display = affiliateState.platforms.length > 0 ? 'none' : 'block';
                         }
                     } else {
-                        console.warn('Failed to load affiliate data:', data.message);
-                        showAlert('Failed to load affiliate data: ' + data.message, 'error');
+                        throw new Error(data.message || 'Failed to load affiliate data');
                     }
-                } else {
-                    console.error('Failed to load affiliate data:', response.status);
-                    showAlert('Failed to load affiliate data. Please try again.', 'error');
+                    
+                } catch (error) {
+                    console.error('❌ Error loading affiliate data:', error);
+                    showAlert('Failed to load affiliate data: ' + error.message, 'error');
+                } finally {
+                    affiliateState.isLoading = false;
                 }
-                
-            } catch (error) {
-                console.error('Error loading affiliate data:', error);
-                showAlert('Failed to load affiliate data: ' + error.message, 'error');
             }
-        }
-
-        function updateStats() {
-            const stats = {
-                connectedPlatforms: affiliateState.platforms.length,
-                totalProducts: affiliateState.platforms.reduce((sum, p) => sum + (p.product_count || 0), 0),
-                recommendationsMade: affiliateState.platforms.reduce((sum, p) => sum + (p.recommendations || 0), 0),
-                earningsPotential: affiliateState.platforms.reduce((sum, p) => sum + (p.potential_earnings || 0), 0)
-            };
             
-            document.getElementById('connected-platforms').textContent = stats.connectedPlatforms;
-            document.getElementById('total-products').textContent = stats.totalProducts.toLocaleString();
-            document.getElementById('recommendations-made').textContent = stats.recommendationsMade.toLocaleString();
-            document.getElementById('earnings-potential').textContent = `$${stats.earningsPotential.toLocaleString()}`;
+            // =============================================================================
+            // UI UPDATES
+            // =============================================================================
             
-            affiliateState.stats = stats;
-        }
-
-        function renderPlatformCards() {
-            const container = document.getElementById('platform-cards');
-            container.innerHTML = '';
+            function updateStats() {
+                try {
+                    const stats = {
+                        connectedPlatforms: affiliateState.platforms.length,
+                        totalProducts: affiliateState.platforms.reduce((sum, p) => sum + (p.product_count || 0), 0),
+                        recommendationsMade: affiliateState.platforms.reduce((sum, p) => sum + (p.recommendations || 0), 0),
+                        earningsPotential: affiliateState.platforms.reduce((sum, p) => sum + (p.potential_earnings || 0), 0)
+                    };
+                    
+                    const elements = {
+                        'connected-platforms': stats.connectedPlatforms,
+                        'total-products': stats.totalProducts.toLocaleString(),
+                        'recommendations-made': stats.recommendationsMade.toLocaleString(),
+                        'earnings-potential': `$${stats.earningsPotential.toLocaleString()}`
+                    };
+                    
+                    for (const [id, value] of Object.entries(elements)) {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            element.textContent = value;
+                        }
+                    }
+                    
+                    affiliateState.stats = stats;
+                    console.log('📊 Stats updated:', stats);
+                } catch (error) {
+                    console.error('❌ Error updating stats:', error);
+                }
+            }
             
-            // Get all available platforms
-            const allPlatforms = Object.keys(PLATFORM_CONFIGS);
+            function renderPlatformCards() {
+                try {
+                    const container = document.getElementById('platform-cards');
+                    if (!container) {
+                        console.error('❌ Platform cards container not found');
+                        return;
+                    }
+                    
+                    container.innerHTML = '';
+                    const allPlatforms = Object.keys(PLATFORM_CONFIGS);
+                    
+                    allPlatforms.forEach(platformKey => {
+                        const config = PLATFORM_CONFIGS[platformKey];
+                        const connected = affiliateState.platforms.find(p => p.platform === platformKey);
+                        
+                        const card = createPlatformCard(platformKey, config, connected);
+                        container.appendChild(card);
+                    });
+                    
+                    console.log('🎨 Platform cards rendered successfully');
+                } catch (error) {
+                    console.error('❌ Error rendering platform cards:', error);
+                }
+            }
             
-            allPlatforms.forEach(platformKey => {
-                const config = PLATFORM_CONFIGS[platformKey];
-                const connected = affiliateState.platforms.find(p => p.platform === platformKey);
-                
+            function createPlatformCard(platformKey, config, connected) {
                 const card = document.createElement('div');
                 card.className = 'platform-card';
+                
                 card.innerHTML = `
                     <div class="platform-header">
                         <div class="platform-info">
@@ -1152,7 +1263,7 @@
                         ${connected ? `
                             <div class="detail-row">
                                 <span class="detail-label">Affiliate ID:</span>
-                                <span class="detail-value">${connected.affiliate_id}</span>
+                                <span class="detail-value">${connected.affiliate_id || 'N/A'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">Products Available:</span>
@@ -1176,40 +1287,59 @@
                     
                     <div class="platform-actions">
                         ${connected ? `
-                            <button class="btn btn-secondary" onclick="copyAffiliateLink('${platformKey}')">
+                            <button class="btn btn-secondary" onclick="window.affiliateManager.copyAffiliateLink('${platformKey}')">
                                 <i class="fas fa-copy"></i> Copy Link
                             </button>
-                            <button class="btn btn-danger" onclick="removePlatform('${platformKey}', '${config.name}')">
+                            <button class="btn btn-danger" onclick="window.affiliateManager.removePlatform('${platformKey}', '${config.name}')">
                                 <i class="fas fa-trash"></i> Remove
                             </button>
                         ` : `
-                            <button class="btn" onclick="connectSpecificPlatform('${platformKey}')">
+                            <button class="btn" onclick="window.affiliateManager.connectSpecificPlatform('${platformKey}')">
                                 <i class="fas fa-plus"></i> Connect ${config.name}
                             </button>
                         `}
                     </div>
                 `;
                 
-                container.appendChild(card);
-            });
-        }
-
-        // Modal Functions
-        function openConnectPlatformModal() {
-            renderPlatformSelection();
-            openModal('connect-platform-modal');
-        }
-
-        function renderPlatformSelection() {
-            const container = document.getElementById('platform-selection');
-            container.innerHTML = '';
+                return card;
+            }
             
-            Object.keys(PLATFORM_CONFIGS).forEach(platformKey => {
-                const config = PLATFORM_CONFIGS[platformKey];
-                const connected = affiliateState.platforms.find(p => p.platform === platformKey);
+            // =============================================================================
+            // MODAL MANAGEMENT
+            // =============================================================================
+            
+            function openConnectPlatformModal() {
+                console.log('🔗 Opening connect platform modal...');
                 
-                if (connected) return; // Skip already connected platforms
+                try {
+                    renderPlatformSelection();
+                    openModal('connect-platform-modal');
+                } catch (error) {
+                    console.error('❌ Error opening connect platform modal:', error);
+                    showAlert('Error opening connection dialog', 'error');
+                }
+            }
+            
+            function renderPlatformSelection() {
+                const container = document.getElementById('platform-selection');
+                if (!container) {
+                    throw new Error('Platform selection container not found');
+                }
                 
+                container.innerHTML = '';
+                
+                Object.keys(PLATFORM_CONFIGS).forEach(platformKey => {
+                    const config = PLATFORM_CONFIGS[platformKey];
+                    const connected = affiliateState.platforms.find(p => p.platform === platformKey);
+                    
+                    if (connected) return; // Skip already connected platforms
+                    
+                    const option = createPlatformOption(platformKey, config);
+                    container.appendChild(option);
+                });
+            }
+            
+            function createPlatformOption(platformKey, config) {
                 const option = document.createElement('div');
                 option.className = 'platform-option';
                 
@@ -1230,80 +1360,160 @@
                     selectPlatform(platformKey);
                 });
                 
-                container.appendChild(option);
-            });
-        }
-
-        function selectPlatform(platformKey) {
-            affiliateState.selectedPlatform = platformKey;
+                return option;
+            }
             
-            // Update UI
-            document.querySelectorAll('.platform-option').forEach(option => {
-                const radio = option.querySelector('input');
-                if (radio.value === platformKey) {
-                    option.classList.add('selected');
-                } else {
-                    option.classList.remove('selected');
+            function selectPlatform(platformKey) {
+                console.log('✅ Platform selected:', platformKey);
+                affiliateState.selectedPlatform = platformKey;
+                
+                // Update UI
+                document.querySelectorAll('.platform-option').forEach(option => {
+                    const radio = option.querySelector('input');
+                    if (radio && radio.value === platformKey) {
+                        option.classList.add('selected');
+                    } else {
+                        option.classList.remove('selected');
+                    }
+                });
+                
+                // Enable continue button
+                const continueBtn = document.getElementById('continue-btn');
+                if (continueBtn) {
+                    continueBtn.disabled = false;
                 }
-            });
+            }
             
-            // Enable continue button
-            document.getElementById('continue-btn').disabled = false;
-        }
-
-        function proceedToStep2() {
-            if (!affiliateState.selectedPlatform) return;
-            
-            closeModal('connect-platform-modal');
-            
-            const config = PLATFORM_CONFIGS[affiliateState.selectedPlatform];
-            document.getElementById('selected-platform-name').textContent = config.name;
-            
-            renderPlatformConfigForm();
-            openModal('connect-platform-step2-modal');
-        }
-
-        function renderPlatformConfigForm() {
-            const container = document.getElementById('platform-config-form');
-            const config = PLATFORM_CONFIGS[affiliateState.selectedPlatform];
-            
-            container.innerHTML = `
-                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">
-                        <i class="fas fa-info-circle"></i> Setup Instructions
-                    </div>
-                    <div style="font-size: 0.85rem; color: #64748b;">
-                        ${config.help}
-                    </div>
-                </div>
+            function proceedToStep2() {
+                console.log('➡️ Proceeding to step 2...');
                 
-                ${config.fields.map(field => `
-                    <div class="form-group">
-                        <label class="form-label" for="${field.id}">
-                            ${field.label} ${field.required ? '<span style="color: #ef4444;">*</span>' : ''}
-                        </label>
-                        <input type="${field.type}" id="${field.id}" class="form-input" 
-                               placeholder="Enter your ${field.label.toLowerCase()}"
-                               ${field.required ? 'required' : ''}>
-                    </div>
-                `).join('')}
-            `;
-        }
-
-        function goBackToStep1() {
-            closeModal('connect-platform-step2-modal');
-            openModal('connect-platform-modal');
-        }
-
-        async function connectPlatform() {
-            try {
+                if (!affiliateState.selectedPlatform) {
+                    showAlert('Please select a platform first', 'error');
+                    return;
+                }
+                
                 const config = PLATFORM_CONFIGS[affiliateState.selectedPlatform];
-                const formData = {};
+                if (!config) {
+                    console.error('❌ Platform config not found:', affiliateState.selectedPlatform);
+                    showAlert('Platform configuration error', 'error');
+                    return;
+                }
                 
-                // Collect form data
+                try {
+                    // FIXED: Don't reset state when transitioning between modals
+                    closeModal('connect-platform-modal', false);
+                    
+                    const platformNameElement = document.getElementById('selected-platform-name');
+                    if (platformNameElement) {
+                        platformNameElement.textContent = config.name;
+                    }
+                    
+                    renderPlatformConfigForm();
+                    openModal('connect-platform-step2-modal');
+                } catch (error) {
+                    console.error('❌ Error proceeding to step 2:', error);
+                    showAlert('Error opening configuration form', 'error');
+                }
+            }
+            
+            function renderPlatformConfigForm() {
+                const container = document.getElementById('platform-config-form');
+                if (!container) {
+                    throw new Error('Platform config form container not found');
+                }
+                
+                const config = PLATFORM_CONFIGS[affiliateState.selectedPlatform];
+                if (!config) {
+                    throw new Error('Platform configuration not found');
+                }
+                
+                container.innerHTML = `
+                    <div style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="font-size: 0.9rem; color: #64748b; margin-bottom: 10px;">
+                            <i class="fas fa-info-circle"></i> Setup Instructions
+                        </div>
+                        <div style="font-size: 0.85rem; color: #64748b;">
+                            ${config.help}
+                        </div>
+                    </div>
+                    
+                    ${config.fields.map(field => `
+                        <div class="form-group">
+                            <label class="form-label" for="${field.id}">
+                                ${field.label} ${field.required ? '<span style="color: #ef4444;">*</span>' : ''}
+                            </label>
+                            <input type="${field.type}" id="${field.id}" class="form-input" 
+                                   placeholder="Enter your ${field.label.toLowerCase()}"
+                                   ${field.required ? 'required' : ''}>
+                        </div>
+                    `).join('')}
+                `;
+            }
+            
+            function goBackToStep1() {
+                closeModal('connect-platform-step2-modal');
+                openModal('connect-platform-modal');
+            }
+            
+            // =============================================================================
+            // PLATFORM OPERATIONS
+            // =============================================================================
+            
+            async function connectPlatform() {
+                console.log('🔗 Connecting platform...');
+                
+                if (!affiliateState.selectedPlatform) {
+                    showAlert('No platform selected', 'error');
+                    return;
+                }
+                
+                const config = PLATFORM_CONFIGS[affiliateState.selectedPlatform];
+                if (!config) {
+                    showAlert('Platform configuration error', 'error');
+                    return;
+                }
+                
+                try {
+                    const formData = collectFormData(config);
+                    if (!formData) {
+                        return; // Validation failed
+                    }
+                    
+                    const connectBtn = document.getElementById('connect-btn');
+                    if (connectBtn) {
+                        const originalText = connectBtn.innerHTML;
+                        connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+                        connectBtn.disabled = true;
+                        
+                        try {
+                            await submitPlatformConnection(formData);
+                            showAlert(`${config.name} connected successfully!`, 'success');
+                            closeModal('connect-platform-step2-modal');
+                            await loadAffiliateData();
+                        } finally {
+                            connectBtn.innerHTML = originalText;
+                            connectBtn.disabled = false;
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error connecting platform:', error);
+                    showAlert('Failed to connect platform: ' + error.message, 'error');
+                }
+            }
+            
+            function collectFormData(config) {
+                const formData = {};
                 let isValid = true;
+                
                 config.fields.forEach(field => {
                     const input = document.getElementById(field.id);
+                    if (!input) {
+                        console.error(`❌ Form field not found: ${field.id}`);
+                        isValid = false;
+                        return;
+                    }
+                    
                     const value = input.value.trim();
                     
                     if (field.required && !value) {
@@ -1317,17 +1527,18 @@
                 
                 if (!isValid) {
                     showAlert('Please fill in all required fields', 'error');
-                    return;
+                    return null;
                 }
                 
-                // Show loading state
-                const connectBtn = document.getElementById('connect-btn');
-                const originalText = connectBtn.innerHTML;
-                connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
-                connectBtn.disabled = true;
-                
-                // Send request to connect platform
+                return formData;
+            }
+            
+            async function submitPlatformConnection(formData) {
                 const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No authentication token');
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/affiliate`, {
                     method: 'POST',
                     headers: {
@@ -1340,134 +1551,202 @@
                     })
                 });
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    if (data.status === 'success') {
-                        showAlert(`${config.name} connected successfully!`, 'success');
-                        closeModal('connect-platform-step2-modal');
-                        
-                        // Reload data
-                        await loadAffiliateData();
-                    } else {
-                        showAlert(data.message || 'Failed to connect platform', 'error');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '../pages/login.html';
+                        return;
                     }
-                } else {
-                    const errorData = await response.json();
-                    showAlert(errorData.message || 'Failed to connect platform', 'error');
+                    
+                    const errorData = await response.json().catch(() => ({ message: 'Connection failed' }));
+                    throw new Error(errorData.message || `HTTP ${response.status}`);
                 }
                 
-                // Reset button
-                connectBtn.innerHTML = originalText;
-                connectBtn.disabled = false;
-                
-            } catch (error) {
-                console.error('Error connecting platform:', error);
-                showAlert('Failed to connect platform: ' + error.message, 'error');
-                
-                // Reset button
-                const connectBtn = document.getElementById('connect-btn');
-                connectBtn.innerHTML = '<i class="fas fa-link"></i> Connect Platform';
-                connectBtn.disabled = false;
+                const data = await response.json();
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Connection failed');
+                }
             }
-        }
-
-        function connectSpecificPlatform(platformKey) {
-            affiliateState.selectedPlatform = platformKey;
-            proceedToStep2();
-        }
-
-        function copyAffiliateLink(platformKey) {
-            const platform = affiliateState.platforms.find(p => p.platform === platformKey);
-            if (platform) {
+            
+            function connectSpecificPlatform(platformKey) {
+                console.log('🎯 Connecting specific platform:', platformKey);
+                
+                if (!PLATFORM_CONFIGS[platformKey]) {
+                    console.error('❌ Invalid platform key:', platformKey);
+                    showAlert('Invalid platform selected', 'error');
+                    return;
+                }
+                
+                affiliateState.selectedPlatform = platformKey;
+                proceedToStep2();
+            }
+            
+            function copyAffiliateLink(platformKey) {
+                const platform = affiliateState.platforms.find(p => p.platform === platformKey);
+                if (!platform) {
+                    showAlert('Platform not found', 'error');
+                    return;
+                }
+                
                 const link = `https://yoursite.com/recommend?platform=${platformKey}&id=${platform.affiliate_id}`;
-                navigator.clipboard.writeText(link).then(() => {
-                    showAlert('Affiliate link copied to clipboard!', 'success');
-                }).catch(() => {
-                    showAlert('Failed to copy link', 'error');
-                });
-            }
-        }
-
-        function removePlatform(platformKey, platformName) {
-            document.getElementById('platform-to-remove').textContent = platformName;
-            document.getElementById('confirm-remove-btn').onclick = () => confirmRemovePlatform(platformKey);
-            openModal('remove-platform-modal');
-        }
-
-        async function confirmRemovePlatform(platformKey) {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/affiliate/${platformKey}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
                 
-                if (response.ok) {
-                    const data = await response.json();
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(link).then(() => {
+                        showAlert('Affiliate link copied to clipboard!', 'success');
+                    }).catch(() => {
+                        showAlert('Failed to copy link', 'error');
+                    });
+                } else {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = link;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showAlert('Affiliate link copied to clipboard!', 'success');
+                }
+            }
+            
+            function removePlatform(platformKey, platformName) {
+                const platformElement = document.getElementById('platform-to-remove');
+                if (platformElement) {
+                    platformElement.textContent = platformName;
+                }
+                
+                const confirmBtn = document.getElementById('confirm-remove-btn');
+                if (confirmBtn) {
+                    confirmBtn.onclick = () => confirmRemovePlatform(platformKey);
+                }
+                
+                openModal('remove-platform-modal');
+            }
+            
+            async function confirmRemovePlatform(platformKey) {
+                console.log('🗑️ Removing platform:', platformKey);
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        window.location.href = '../pages/login.html';
+                        return;
+                    }
                     
+                    const response = await fetch(`${API_BASE_URL}/affiliate/${platformKey}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = './login.html';
+                            return;
+                        }
+                        
+                        const errorData = await response.json().catch(() => ({ message: 'Removal failed' }));
+                        throw new Error(errorData.message || `HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
                     if (data.status === 'success') {
                         showAlert('Platform removed successfully', 'success');
                         closeModal('remove-platform-modal');
-                        
-                        // Reload data
                         await loadAffiliateData();
                     } else {
-                        showAlert(data.message || 'Failed to remove platform', 'error');
+                        throw new Error(data.message || 'Removal failed');
                     }
-                } else {
-                    const errorData = await response.json();
-                    showAlert(errorData.message || 'Failed to remove platform', 'error');
+                    
+                } catch (error) {
+                    console.error('❌ Error removing platform:', error);
+                    showAlert('Failed to remove platform: ' + error.message, 'error');
+                }
+            }
+            
+            // =============================================================================
+            // MODAL UTILITIES
+            // =============================================================================
+            
+            function openModal(modalId) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            function closeModal(modalId, resetState = true) {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = 'auto';
                 }
                 
-            } catch (error) {
-                console.error('Error removing platform:', error);
-                showAlert('Failed to remove platform: ' + error.message, 'error');
+                // Reset forms only if explicitly requested (for cancellation, not transitions)
+                if (resetState && modalId === 'connect-platform-modal') {
+                    const continueBtn = document.getElementById('continue-btn');
+                    if (continueBtn) {
+                        continueBtn.disabled = true;
+                    }
+                    affiliateState.selectedPlatform = null;
+                }
             }
-        }
-
-        // Modal utilities
-        function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto';
             
-            // Reset forms
-            if (modalId === 'connect-platform-modal') {
-                document.getElementById('continue-btn').disabled = true;
-                affiliateState.selectedPlatform = null;
+            function closeAllModals() {
+                document.querySelectorAll('.modal-overlay').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                document.body.style.overflow = 'auto';
             }
-        }
-
-        function closeAllModals() {
-            document.querySelectorAll('.modal-overlay').forEach(modal => {
-                modal.classList.remove('active');
-            });
-            document.body.style.overflow = 'auto';
-        }
-
-        function showAlert(message, type = 'info', duration = 5000) {
-            const alert = document.getElementById('alert');
-            alert.className = `alert alert-${type} show`;
-            alert.textContent = message;
             
-            setTimeout(() => {
-                alert.classList.remove('show');
-            }, duration);
+            // =============================================================================
+            // UTILITY FUNCTIONS
+            // =============================================================================
             
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        console.log('🔗 Affiliate Management Dashboard loaded successfully');
+            function showAlert(message, type = 'info', duration = 5000) {
+                const alert = document.getElementById('alert');
+                if (alert) {
+                    alert.className = `alert alert-${type} show`;
+                    alert.textContent = message;
+                    
+                    setTimeout(() => {
+                        alert.classList.remove('show');
+                    }, duration);
+                    
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+            
+            // =============================================================================
+            // GLOBAL API (for inline onclick handlers)
+            // =============================================================================
+            
+            // Expose functions globally for inline onclick handlers
+            window.affiliateManager = {
+                connectSpecificPlatform,
+                copyAffiliateLink,
+                removePlatform,
+                confirmRemovePlatform,
+                proceedToStep2,
+                connectPlatform,
+                goBackToStep1,
+                closeModal
+            };
+            
+            // Also expose individual functions for backward compatibility
+            window.connectSpecificPlatform = connectSpecificPlatform;
+            window.copyAffiliateLink = copyAffiliateLink;
+            window.removePlatform = removePlatform;
+            window.confirmRemovePlatform = confirmRemovePlatform;
+            window.proceedToStep2 = proceedToStep2;
+            window.connectPlatform = connectPlatform;
+            window.goBackToStep1 = goBackToStep1;
+            window.closeModal = closeModal;
+            
+            console.log('✅ Affiliate Management Dashboard loaded successfully');
+            
+        })();
     </script>
 </body>
 </html>

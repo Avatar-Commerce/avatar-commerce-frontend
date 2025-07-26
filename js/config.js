@@ -1,5 +1,5 @@
 // =============================================================================
-// CONFIG.JS - Complete AvatarCommerce Configuration with ChatLinkManager - FIXED
+// CONFIG.JS - FIXED AvatarCommerce Configuration with ChatLinkManager
 // =============================================================================
 
 (function() {
@@ -28,8 +28,8 @@
         
         // Chat Configuration
         CHAT: {
-            DEFAULT_CHAT_PATH: '/chat.html',
-            EMBED_CHAT_PATH: '/chat.html',
+            DEFAULT_CHAT_PATH: '/pages/chat.html',
+            EMBED_CHAT_PATH: '/pages/chat.html',
             SESSION_STORAGE_KEY: 'chat_session',
             MESSAGE_STORAGE_KEY: 'chat_messages',
             MAX_STORED_MESSAGES: 50
@@ -75,7 +75,7 @@
     };
     
     // =============================================================================
-    // CHAT LINK MANAGER - INTEGRATED
+    // FIXED CHAT LINK MANAGER
     // =============================================================================
     
     class ChatLinkManager {
@@ -85,27 +85,36 @@
             this.initialized = false;
             this.config = CONFIG.EMBED;
             
+            // Bind methods to maintain context
+            this.handleCopyClick = this.handleCopyClick.bind(this);
+            
             this.init();
         }
         
         init() {
             console.log('🔗 ChatLinkManager initializing...');
             
-            // Auto-fix template variables on page load
-            this.fixTemplateVariables();
-            
-            // Setup event listeners
-            this.setupEventListeners();
-            
-            // Initialize copy buttons
-            this.initializeCopyButtons();
-            
-            this.initialized = true;
-            console.log('✅ ChatLinkManager initialized successfully');
+            try {
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Initialize copy buttons
+                this.initializeCopyButtons();
+                
+                this.initialized = true;
+                console.log('✅ ChatLinkManager initialized successfully');
+                
+                // Trigger custom event for other scripts
+                window.dispatchEvent(new CustomEvent('ChatLinkManagerReady'));
+                
+            } catch (error) {
+                console.error('❌ ChatLinkManager initialization failed:', error);
+                this.initialized = false;
+            }
         }
         
         // =============================================================================
-        // CHAT LINK GENERATION
+        // CHAT LINK GENERATION - FIXED
         // =============================================================================
         
         /**
@@ -115,8 +124,8 @@
          * @returns {string} Complete chat URL
          */
         generateChatUrl(username, options = {}) {
-            if (!username) {
-                throw new Error('Username is required for chat URL generation');
+            if (!username || typeof username !== 'string') {
+                throw new Error('Username is required and must be a string for chat URL generation');
             }
             
             const cleanUsername = encodeURIComponent(username.trim());
@@ -137,56 +146,36 @@
         }
         
         /**
-         * Generate a shareable chat link with additional metadata
-         * @param {string} username - The influencer's username
-         * @param {Object} metadata - Additional metadata
-         * @returns {Object} Chat link with metadata
-         */
-        generateShareableLink(username, metadata = {}) {
-            const chatUrl = this.generateChatUrl(username);
-            
-            return {
-                url: chatUrl,
-                shortUrl: chatUrl, // Could be shortened with a service
-                qrCodeUrl: this.generateQRCodeUrl(chatUrl),
-                socialText: `Chat with ${username}'s AI Avatar! 🤖`,
-                embedCode: this.generateEmbedCode(this.config, username),
-                metadata: {
-                    username,
-                    createdAt: new Date().toISOString(),
-                    ...metadata
-                }
-            };
-        }
-        
-        /**
          * Generate QR code URL for a given text
          * @param {string} text - Text to encode
          * @returns {string} QR code image URL
          */
         generateQRCodeUrl(text) {
+            if (!text) {
+                throw new Error('Text is required for QR code generation');
+            }
             return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
         }
         
         // =============================================================================
-        // EMBED CODE GENERATION
+        // EMBED CODE GENERATION - FIXED
         // =============================================================================
         
         /**
-         * Generate embed code for a widget
+         * Generate embed code for a widget - FIXED
          * @param {Object} config - Widget configuration
          * @param {string} username - The influencer's username
          * @returns {string} Complete embed code
          */
         generateEmbedCode(config, username) {
-            if (!username) {
-                throw new Error('Username is required for embed code generation');
+            if (!username || typeof username !== 'string') {
+                throw new Error('Username is required and must be a string for embed code generation');
             }
             
-            const validation = this.validateEmbedConfig(config);
-            if (!validation.isValid) {
-                throw new Error('Invalid embed configuration: ' + validation.errors.join(', '));
-            }
+            // Use default config if not provided or invalid
+            const safeConfig = this.sanitizeConfig(config || {});
+            
+            console.log('🎨 Generating embed code with config:', safeConfig);
             
             const chatUrl = this.generateChatUrl(username, { embed: true });
             const widgetId = `ac-widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -201,14 +190,14 @@
     const config = {
         username: '${username}',
         chatUrl: '${chatUrl}',
-        width: '${config.width || this.config.DEFAULT_WIDTH}',
-        height: '${config.height || this.config.DEFAULT_HEIGHT}',
-        position: '${config.position || this.config.DEFAULT_POSITION}',
-        theme: '${config.theme || this.config.DEFAULT_THEME}',
-        triggerText: '${config.trigger_text || this.config.DEFAULT_TRIGGER_TEXT}',
-        autoOpen: ${config.auto_open || false},
-        autoOpenDelay: ${config.auto_open_delay || this.config.AUTO_OPEN_DELAY},
-        customCSS: \`${config.custom_css || ''}\`
+        width: '${safeConfig.width}',
+        height: '${safeConfig.height}',
+        position: '${safeConfig.position}',
+        theme: '${safeConfig.theme}',
+        triggerText: '${safeConfig.trigger_text}',
+        autoOpen: ${safeConfig.auto_open},
+        autoOpenDelay: ${safeConfig.auto_open_delay || this.config.AUTO_OPEN_DELAY},
+        customCSS: \`${safeConfig.custom_css || ''}\`
     };
     
     // Create widget container
@@ -434,16 +423,60 @@
 </script>
 <!-- End AvatarCommerce Chat Widget -->`;
             
+            console.log('✅ Embed code generated successfully');
             return embedCode;
         }
         
         /**
-         * Generate live preview HTML for embed testing
+         * FIXED: Sanitize and validate configuration
+         * @param {Object} config - Raw configuration
+         * @returns {Object} Sanitized configuration
+         */
+        sanitizeConfig(config) {
+            const safeConfig = {
+                width: this.isValidSize(config.width) ? config.width : this.config.DEFAULT_WIDTH,
+                height: this.isValidSize(config.height) ? config.height : this.config.DEFAULT_HEIGHT,
+                position: this.config.VALID_POSITIONS.includes(config.position) ? config.position : this.config.DEFAULT_POSITION,
+                theme: this.config.VALID_THEMES.includes(config.theme) ? config.theme : this.config.DEFAULT_THEME,
+                trigger_text: this.sanitizeText(config.trigger_text) || this.config.DEFAULT_TRIGGER_TEXT,
+                auto_open: Boolean(config.auto_open),
+                auto_open_delay: Number(config.auto_open_delay) || this.config.AUTO_OPEN_DELAY,
+                custom_css: this.sanitizeCSS(config.custom_css) || ''
+            };
+            
+            console.log('🧹 Config sanitized:', safeConfig);
+            return safeConfig;
+        }
+        
+        /**
+         * Sanitize text input
+         * @param {string} text - Raw text
+         * @returns {string} Sanitized text
+         */
+        sanitizeText(text) {
+            if (!text || typeof text !== 'string') return '';
+            return text.replace(/[<>'"&]/g, '').substring(0, 50);
+        }
+        
+        /**
+         * Sanitize CSS input
+         * @param {string} css - Raw CSS
+         * @returns {string} Sanitized CSS
+         */
+        sanitizeCSS(css) {
+            if (!css || typeof css !== 'string') return '';
+            // Remove dangerous CSS properties and limit length
+            return css.replace(/javascript:|expression\(|@import|url\(/gi, '').substring(0, 2000);
+        }
+        
+        /**
+         * Generate live preview HTML for embed testing - FIXED
          * @param {Object} config - Widget configuration  
          * @param {string} username - The influencer's username
          * @returns {string} Preview HTML
          */
         generatePreviewHTML(config, username) {
+            const safeConfig = this.sanitizeConfig(config);
             const chatUrl = this.generateChatUrl(username, { embed: true });
             const widgetId = `preview-widget-${Date.now()}`;
             
@@ -456,12 +489,12 @@
                     
                     <div class="ac-widget" style="
                         position: absolute;
-                        ${this.getPositionStyles(config.position)}
+                        ${this.getPositionStyles(safeConfig.position)}
                         z-index: 10;
                         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     ">
                         <div class="ac-trigger" style="
-                            background: ${config.theme === 'dark' ? '#7c3aed' : '#5e60ce'};
+                            background: ${safeConfig.theme === 'dark' ? '#7c3aed' : '#5e60ce'};
                             color: white;
                             padding: 12px 20px;
                             border-radius: 25px;
@@ -478,15 +511,15 @@
                             gap: 8px;
                         " onclick="togglePreviewChat('${widgetId}')">
                             <i class="fas fa-comments"></i>
-                            <span>${config.trigger_text || 'Chat with me!'}</span>
+                            <span>${safeConfig.trigger_text}</span>
                         </div>
                         
                         <div class="ac-chat-container" style="
                             position: absolute;
-                            ${config.position.startsWith('top') ? 'top: 60px;' : 'bottom: 60px;'}
-                            ${config.position.endsWith('left') ? 'left: 0;' : 'right: 0;'}
-                            width: ${config.width};
-                            height: ${config.height};
+                            ${safeConfig.position.startsWith('top') ? 'top: 60px;' : 'bottom: 60px;'}
+                            ${safeConfig.position.endsWith('left') ? 'left: 0;' : 'right: 0;'}
+                            width: ${safeConfig.width};
+                            height: ${safeConfig.height};
                             max-width: 350px;
                             max-height: 300px;
                             background: white;
@@ -498,7 +531,7 @@
                             border: 1px solid rgba(0,0,0,0.1);
                         ">
                             <div class="ac-chat-header" style="
-                                background: ${config.theme === 'dark' ? '#374151' : '#5e60ce'};
+                                background: ${safeConfig.theme === 'dark' ? '#374151' : '#5e60ce'};
                                 color: white;
                                 padding: 12px 16px;
                                 display: flex;
@@ -549,7 +582,10 @@
                 <script>
                     window.togglePreviewChat = function(widgetId) {
                         const widget = document.getElementById(widgetId);
+                        if (!widget) return;
+                        
                         const chatContainer = widget.querySelector('.ac-chat-container');
+                        if (!chatContainer) return;
                         
                         if (chatContainer.style.display === 'none' || !chatContainer.style.display) {
                             chatContainer.style.display = 'flex';
@@ -559,52 +595,6 @@
                     };
                 </script>
             `;
-        }
-        
-        /**
-         * Validate embed configuration
-         * @param {Object} config - Configuration to validate
-         * @returns {Object} Validation result
-         */
-        validateEmbedConfig(config) {
-            const errors = [];
-            const warnings = [];
-            
-            // Validate width
-            if (config.width && !this.isValidSize(config.width)) {
-                errors.push('Width must be a valid CSS size (e.g., 400px, 100%)');
-            }
-            
-            // Validate height
-            if (config.height && !this.isValidSize(config.height)) {
-                errors.push('Height must be a valid CSS size (e.g., 600px, 100vh)');
-            }
-            
-            // Validate position
-            if (config.position && !this.config.VALID_POSITIONS.includes(config.position)) {
-                errors.push('Position must be one of: ' + this.config.VALID_POSITIONS.join(', '));
-            }
-            
-            // Validate theme
-            if (config.theme && !this.config.VALID_THEMES.includes(config.theme)) {
-                errors.push('Theme must be one of: ' + this.config.VALID_THEMES.join(', '));
-            }
-            
-            // Validate trigger text
-            if (config.trigger_text && config.trigger_text.length > 50) {
-                warnings.push('Trigger text should be 50 characters or less for better display');
-            }
-            
-            // Validate auto-open delay
-            if (config.auto_open_delay && (config.auto_open_delay < 1000 || config.auto_open_delay > 10000)) {
-                warnings.push('Auto-open delay should be between 1-10 seconds');
-            }
-            
-            return {
-                isValid: errors.length === 0,
-                errors,
-                warnings
-            };
         }
         
         /**
@@ -628,93 +618,38 @@
          * @returns {boolean} Whether the size is valid
          */
         isValidSize(size) {
+            if (!size || typeof size !== 'string') return false;
             const sizeRegex = /^(\d+(\.\d+)?(px|em|rem|%|vh|vw|vmin|vmax)|auto|inherit|initial)$/;
             return sizeRegex.test(size);
         }
         
         // =============================================================================
-        // TEMPLATE VARIABLE FIXING
+        // UTILITY FUNCTIONS - FIXED
         // =============================================================================
         
         /**
-         * Fix template variables in the current page
-         */
-        fixTemplateVariables() {
-            const user = this.getCurrentUser();
-            if (!user || !user.username) return;
-            
-            console.log('🔧 Fixing template variables for user:', user.username);
-            
-            // Fix href attributes
-            document.querySelectorAll('[href*="${user.username}"]').forEach(element => {
-                const newHref = element.href.replace(/\$\{user\.username\}/g, user.username);
-                element.href = newHref;
-            });
-            
-            // Fix text content
-            document.querySelectorAll('*').forEach(element => {
-                if (element.childNodes.length === 1 && 
-                    element.childNodes[0].nodeType === Node.TEXT_NODE &&
-                    element.textContent.includes('${user.username}')) {
-                    element.textContent = element.textContent.replace(/\$\{user\.username\}/g, user.username);
-                }
-            });
-            
-            // Fix input values
-            document.querySelectorAll('input[value*="${user.username}"]').forEach(element => {
-                element.value = element.value.replace(/\$\{user\.username\}/g, user.username);
-            });
-            
-            // Fix placeholder attributes
-            document.querySelectorAll('[placeholder*="${user.username}"]').forEach(element => {
-                element.placeholder = element.placeholder.replace(/\$\{user\.username\}/g, user.username);
-            });
-        }
-        
-        /**
-         * Set chat links for all elements on the page
-         */
-        setChatLinks() {
-            const user = this.getCurrentUser();
-            if (!user || !user.username) return;
-            
-            // Set chat link inputs
-            document.querySelectorAll('#chat-link, #chat-url, .chat-link-input').forEach(input => {
-                if (input && input.tagName === 'INPUT') {
-                    const chatUrl = this.generateChatUrl(user.username);
-                    input.value = chatUrl;
-                }
-            });
-            
-            // Set preview chat links
-            document.querySelectorAll('#preview-chat-link, .preview-chat-link').forEach(link => {
-                if (link && link.tagName === 'A') {
-                    const chatUrl = this.generateChatUrl(user.username);
-                    link.href = chatUrl;
-                }
-            });
-            
-            // Set direct chat links
-            document.querySelectorAll('#direct-chat-link, .direct-chat-link').forEach(link => {
-                if (link && link.tagName === 'A') {
-                    const chatUrl = this.generateChatUrl(user.username);
-                    link.href = chatUrl;
-                }
-            });
-        }
-        
-        // =============================================================================
-        // UTILITY FUNCTIONS
-        // =============================================================================
-        
-        /**
-         * Get current user from localStorage
+         * Get current user from localStorage - FIXED
          * @returns {Object|null} User object or null
          */
         getCurrentUser() {
             try {
                 const userStr = localStorage.getItem(CONFIG.AUTH.USER_KEY);
-                return userStr ? JSON.parse(userStr) : null;
+                if (!userStr) return null;
+                
+                const userData = JSON.parse(userStr);
+                
+                // Handle different user data structures
+                if (userData.user && userData.user.username) {
+                    return {
+                        ...userData.user,
+                        userType: userData.userType || 'influencer'
+                    };
+                } else if (userData.username) {
+                    return userData;
+                } else {
+                    console.warn('⚠️ Invalid user data structure:', userData);
+                    return null;
+                }
             } catch (error) {
                 console.error('Error getting current user:', error);
                 return null;
@@ -722,14 +657,20 @@
         }
         
         /**
-         * Copy text to clipboard
+         * Copy text to clipboard - FIXED
          * @param {string} text - Text to copy
          * @returns {Promise<boolean>} Success status
          */
         async copyToClipboard(text) {
+            if (!text || typeof text !== 'string') {
+                console.error('❌ Invalid text for copying');
+                return false;
+            }
+            
             try {
                 if (navigator.clipboard && window.isSecureContext) {
                     await navigator.clipboard.writeText(text);
+                    console.log('✅ Text copied to clipboard');
                     return true;
                 } else {
                     // Fallback for older browsers
@@ -738,6 +679,7 @@
                     textArea.style.position = 'fixed';
                     textArea.style.opacity = '0';
                     textArea.style.left = '-999px';
+                    textArea.style.top = '-999px';
                     document.body.appendChild(textArea);
                     textArea.focus();
                     textArea.select();
@@ -745,14 +687,16 @@
                     try {
                         const successful = document.execCommand('copy');
                         document.body.removeChild(textArea);
+                        console.log(successful ? '✅ Text copied (fallback)' : '❌ Copy failed (fallback)');
                         return successful;
                     } catch (err) {
                         document.body.removeChild(textArea);
+                        console.error('❌ Fallback copy failed:', err);
                         return false;
                     }
                 }
             } catch (error) {
-                console.error('Error copying to clipboard:', error);
+                console.error('❌ Error copying to clipboard:', error);
                 return false;
             }
         }
@@ -763,6 +707,8 @@
          * @param {Element} element - Element to show message near
          */
         showSuccessMessage(message, element) {
+            if (!element || !message) return;
+            
             const successEl = document.createElement('div');
             successEl.textContent = message;
             successEl.style.cssText = `
@@ -780,6 +726,7 @@
                 transform: translateY(10px);
                 transition: all 0.3s ease;
                 pointer-events: none;
+                white-space: nowrap;
             `;
             
             element.style.position = 'relative';
@@ -804,66 +751,135 @@
         }
         
         /**
-         * Setup event listeners for automatic functionality
+         * Setup event listeners for automatic functionality - FIXED
          */
         setupEventListeners() {
-            // Set chat links when page loads
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    setTimeout(() => {
-                        this.setChatLinks();
-                        this.fixTemplateVariables();
-                    }, 100);
-                });
-            } else {
-                setTimeout(() => {
-                    this.setChatLinks();
-                    this.fixTemplateVariables();
-                }, 100);
-            }
-            
             // Re-run when user data changes
             window.addEventListener('storage', (e) => {
                 if (e.key === CONFIG.AUTH.USER_KEY) {
-                    this.fixTemplateVariables();
-                    this.setChatLinks();
+                    console.log('🔄 User data changed, updating links...');
+                    setTimeout(() => {
+                        this.updateAllChatLinks();
+                    }, 100);
+                }
+            });
+            
+            // Update links when page becomes visible
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    this.updateAllChatLinks();
                 }
             });
         }
         
         /**
-         * Initialize copy functionality for elements
+         * Update all chat links on the page - FIXED
+         */
+        updateAllChatLinks() {
+            const user = this.getCurrentUser();
+            if (!user || !user.username) return;
+            
+            console.log('🔄 Updating all chat links for:', user.username);
+            
+            try {
+                const chatUrl = this.generateChatUrl(user.username);
+                
+                // Update main chat link inputs
+                document.querySelectorAll('#chat-link, #chat-url, .chat-link-input').forEach(input => {
+                    if (input && input.tagName === 'INPUT') {
+                        input.value = chatUrl;
+                    }
+                });
+                
+                // Update copy buttons
+                document.querySelectorAll('[data-copy-target="chat-link"], #copy-chat-link-btn').forEach(btn => {
+                    btn.setAttribute('data-copy', chatUrl);
+                });
+                
+                // Update preview links
+                document.querySelectorAll('#preview-chat-link, .preview-chat-link').forEach(link => {
+                    if (link && link.tagName === 'A') {
+                        link.href = chatUrl;
+                    }
+                });
+                
+                console.log('✅ All chat links updated');
+            } catch (error) {
+                console.error('❌ Error updating chat links:', error);
+            }
+        }
+        
+        /**
+         * Initialize copy functionality for elements - FIXED
          * @param {string} selector - CSS selector for copy buttons
          */
         initializeCopyButtons(selector = '.copy-btn, [data-copy]') {
-            const buttons = document.querySelectorAll(selector);
+            console.log('🔧 Initializing copy buttons with selector:', selector);
             
-            buttons.forEach(button => {
+            const buttons = document.querySelectorAll(selector);
+            console.log(`📋 Found ${buttons.length} copy buttons`);
+            
+            buttons.forEach((button, index) => {
                 // Remove existing listeners
                 button.removeEventListener('click', this.handleCopyClick);
                 
                 // Add new listener
-                button.addEventListener('click', this.handleCopyClick.bind(this));
+                button.addEventListener('click', this.handleCopyClick);
+                
+                console.log(`✅ Copy button ${index + 1} initialized`);
             });
         }
         
         /**
-         * Handle copy button click
+         * Handle copy button click - FIXED
          * @param {Event} e - Click event
          */
         async handleCopyClick(e) {
+            e.preventDefault();
+            
             const button = e.target.closest('.copy-btn, [data-copy]');
             if (!button) return;
             
-            const textToCopy = button.dataset.copy || 
-                             button.getAttribute('data-copy') ||
-                             button.previousElementSibling?.value || 
-                             button.parentElement?.querySelector('input')?.value ||
-                             button.parentElement?.querySelector('textarea')?.value;
+            console.log('📋 Copy button clicked:', button);
+            
+            // Get text to copy from various sources
+            let textToCopy = button.dataset.copy || 
+                           button.getAttribute('data-copy');
+            
+            // If no direct data-copy, try to find text from related elements
+            if (!textToCopy) {
+                const targetId = button.dataset.copyTarget || button.getAttribute('data-copy-target');
+                if (targetId) {
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        textToCopy = targetElement.value || targetElement.textContent || targetElement.innerText;
+                    }
+                }
+            }
+            
+            // Try sibling elements
+            if (!textToCopy) {
+                const input = button.previousElementSibling;
+                if (input && (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA')) {
+                    textToCopy = input.value;
+                }
+            }
+            
+            // Try parent container
+            if (!textToCopy) {
+                const container = button.parentElement;
+                const input = container?.querySelector('input, textarea');
+                if (input) {
+                    textToCopy = input.value;
+                }
+            }
+            
+            console.log('📋 Text to copy:', textToCopy ? textToCopy.substring(0, 50) + '...' : 'NOT FOUND');
             
             if (textToCopy) {
                 const success = await this.copyToClipboard(textToCopy);
                 if (success) {
+                    // Update button to show success
                     const originalHTML = button.innerHTML;
                     button.innerHTML = '<i class="fas fa-check"></i> Copied!';
                     button.style.pointerEvents = 'none';
@@ -877,11 +893,14 @@
                 } else {
                     this.showSuccessMessage('Failed to copy', button);
                 }
+            } else {
+                console.error('❌ No text found to copy');
+                this.showSuccessMessage('No text to copy', button);
             }
         }
         
         // =============================================================================
-        // SOCIAL SHARING
+        // SOCIAL SHARING - FIXED
         // =============================================================================
         
         /**
@@ -890,6 +909,10 @@
          * @returns {Object} Social sharing URLs
          */
         generateSocialUrls(username) {
+            if (!username) {
+                throw new Error('Username is required for social URLs');
+            }
+            
             const chatUrl = this.generateChatUrl(username);
             const shareText = `Chat with ${username}'s AI Avatar! 🤖`;
             
@@ -901,46 +924,6 @@
                 telegram: `https://t.me/share/url?url=${encodeURIComponent(chatUrl)}&text=${encodeURIComponent(shareText)}`
             };
         }
-        
-        // =============================================================================
-        // PUBLIC API
-        // =============================================================================
-        
-        /**
-         * Get a complete shareable package for an influencer
-         * @param {string} username - The influencer's username
-         * @returns {Object} Complete sharing package
-         */
-        getSharePackage(username) {
-            const chatLink = this.generateShareableLink(username);
-            const embedCode = this.generateEmbedCode(this.config, username);
-            const socialUrls = this.generateSocialUrls(username);
-            
-            return {
-                chatLink,
-                embedCode,
-                socialUrls,
-                qrCode: chatLink.qrCodeUrl,
-                analytics: {
-                    trackingId: `ac-${username}-${Date.now()}`,
-                    events: ['chat_opened', 'message_sent', 'product_clicked']
-                }
-            };
-        }
-        
-        /**
-         * Update live preview
-         * @param {string} containerId - Container element ID
-         * @param {Object} config - Widget configuration
-         * @param {string} username - Username
-         */
-        updateLivePreview(containerId, config, username) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            
-            const previewHTML = this.generatePreviewHTML(config, username);
-            container.innerHTML = previewHTML;
-        }
     }
     
     // =============================================================================
@@ -948,7 +931,7 @@
     // =============================================================================
     
     window.UTILS = {
-        // Authentication utilities - FIXED with getToken method
+        // Authentication utilities - FIXED
         auth: {
             /**
              * Get authentication token
@@ -967,7 +950,22 @@
             getCurrentUser: () => {
                 try {
                     const userStr = localStorage.getItem(CONFIG.AUTH.USER_KEY);
-                    return userStr ? JSON.parse(userStr) : null;
+                    if (!userStr) return null;
+                    
+                    const userData = JSON.parse(userStr);
+                    
+                    // Handle different user data structures
+                    if (userData.user && userData.user.username) {
+                        return {
+                            ...userData.user,
+                            userType: userData.userType || 'influencer'
+                        };
+                    } else if (userData.username) {
+                        return userData;
+                    } else {
+                        console.warn('⚠️ Invalid user data structure:', userData);
+                        return null;
+                    }
                 } catch (error) {
                     console.error('Error getting current user:', error);
                     return null;
@@ -977,7 +975,7 @@
             requireInfluencer: () => {
                 const user = window.UTILS.auth.getCurrentUser();
                 if (!user || user.userType !== 'influencer') {
-                    window.location.href = '../pages/login.html';
+                    window.location.href = './login.html';
                     return false;
                 }
                 return true;
@@ -987,7 +985,7 @@
                 localStorage.removeItem(CONFIG.AUTH.TOKEN_KEY);
                 localStorage.removeItem(CONFIG.AUTH.USER_KEY);
                 localStorage.removeItem(CONFIG.AUTH.REFRESH_TOKEN_KEY);
-                window.location.href = '../pages/login.html';
+                window.location.href = './login.html';
             }
         },
         
@@ -1082,7 +1080,7 @@
     };
     
     // =============================================================================
-    // INITIALIZE GLOBAL INSTANCES
+    // INITIALIZE GLOBAL INSTANCES - FIXED
     // =============================================================================
     
     // Create global ChatLinkManager instance
@@ -1092,10 +1090,9 @@
     window.initializeAvatarCommerce = function() {
         console.log('🚀 AvatarCommerce initialized');
         
-        // Fix any remaining template variables
-        if (window.ChatLinkManager) {
-            window.ChatLinkManager.fixTemplateVariables();
-            window.ChatLinkManager.setChatLinks();
+        // Update all links when initialized
+        if (window.ChatLinkManager && window.ChatLinkManager.initialized) {
+            window.ChatLinkManager.updateAllChatLinks();
         }
     };
     
@@ -1103,9 +1100,9 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', window.initializeAvatarCommerce);
     } else {
-        window.initializeAvatarCommerce();
+        setTimeout(window.initializeAvatarCommerce, 100);
     }
     
-    console.log('📦 AvatarCommerce Config.js loaded with integrated ChatLinkManager - FIXED');
+    console.log('📦 AvatarCommerce Config.js loaded with FIXED ChatLinkManager');
     
 })();
