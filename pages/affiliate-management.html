@@ -1331,7 +1331,7 @@
                 try {
                     const token = localStorage.getItem('token');
                     
-                    // Load platform status
+                    // Load platform status using the fixed endpoint
                     const response = await fetch(`${this.API_BASE}/affiliate/platform-status`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -1348,7 +1348,9 @@
                     if (data.status === 'success') {
                         this.platformsData = data.data.platforms;
                         this.stats = data.data.stats;
-                        console.log('✅ Platform data loaded');
+                        console.log('✅ Platform data loaded successfully');
+                        console.log('Platforms:', this.platformsData);
+                        console.log('Stats:', this.stats);
                     } else {
                         throw new Error(data.message || 'Failed to load platform data');
                     }
@@ -1356,7 +1358,7 @@
                 } catch (error) {
                     console.error('❌ Error loading platform data:', error);
                     
-                    // Fallback to default platform data with FIXED Rakuten credentials
+                    // Fallback to default platform data
                     this.loadDefaultPlatformData();
                 }
             }
@@ -1741,12 +1743,12 @@
                     console.log('🔍 Test connection response:', data);
 
                     if (data.status === 'success') {
-                        this.showAlert(`✅ ${this.platformsData[this.selectedPlatform].name} connection successful!`, 'success');
+                        this.showAlert(`✅ ${this.platformsData[this.selectedPlatform].name} credentials validated!`, 'success');
                         
                         // Enable connect button
                         document.getElementById('connect-btn').disabled = false;
                     } else {
-                        this.showAlert(`❌ Connection failed: ${data.message}`, 'error');
+                        this.showAlert(`❌ Validation failed: ${data.message}`, 'error');
                     }
 
                 } catch (error) {
@@ -1772,16 +1774,20 @@
                     console.log('🔗 Connecting platform', this.selectedPlatform, 'with data:', formData);
 
                     const token = localStorage.getItem('token');
+                    
+                    // FIXED: Send platform and credentials in the correct format
+                    const requestData = {
+                        platform: this.selectedPlatform,
+                        ...formData  // Spread the form data directly
+                    };
+
                     const response = await fetch(`${this.API_BASE}/affiliate`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${token}`,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            platform: this.selectedPlatform,
-                            ...formData
-                        })
+                        body: JSON.stringify(requestData)
                     });
 
                     const data = await response.json();
@@ -1807,6 +1813,7 @@
                 }
             }
 
+
             // FIXED: Updated form data collection to handle new Rakuten format
             collectFormData() {
                 const formData = {};
@@ -1829,7 +1836,7 @@
                             isValid = false;
                         } else {
                             input.style.borderColor = '#e2e8f0';
-                            if (value) {  // Only add if there's a value
+                            if (value) {
                                 formData[fieldConfig.id] = value;
                             }
                         }

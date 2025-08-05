@@ -823,36 +823,69 @@
             // Load existing knowledge data
             async function loadExistingKnowledge() {
                 try {
-                    const response = await fetch(`${CONFIG.API.BASE_URL}/influencer/profile`, {
+                    // Load personal information from profile
+                    const profileResponse = await fetch(`${CONFIG.API.BASE_URL}/influencer/profile`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
                     });
                     
-                    const data = await response.json();
+                    const profileData = await profileResponse.json();
                     
-                    if (data.status === 'success' && data.data) {
+                    if (profileData.status === 'success' && profileData.data) {
                         // Load existing text information
-                        if (data.data.bio) {
-                            document.getElementById('bio').value = data.data.bio;
+                        if (profileData.data.bio) {
+                            document.getElementById('bio').value = profileData.data.bio;
                             updateCharCount('bio');
                         }
-                        if (data.data.expertise) {
-                            document.getElementById('expertise').value = data.data.expertise;
+                        if (profileData.data.expertise) {
+                            document.getElementById('expertise').value = profileData.data.expertise;
                             updateCharCount('expertise');
                         }
-                        if (data.data.personality) {
-                            document.getElementById('personality').value = data.data.personality;
+                        if (profileData.data.personality) {
+                            document.getElementById('personality').value = profileData.data.personality;
                             updateCharCount('personality');
                         }
-                        
-                        // Load existing documents (if API supports it)
-                        // This would require backend support for storing document metadata
-                        if (data.data.knowledge_documents) {
-                            uploadedFiles = data.data.knowledge_documents;
-                            renderFileList();
-                        }
                     }
+                    
+                    // FIXED: Load documents from separate endpoint
+                    try {
+                        const documentsResponse = await fetch(`${CONFIG.API.BASE_URL}/knowledge/documents`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        const documentsData = await documentsResponse.json();
+                        
+                        if (documentsData.status === 'success' && documentsData.data.documents) {
+                            // Convert database format to frontend format
+                            uploadedFiles = documentsData.data.documents.map(doc => ({
+                                id: doc.id,
+                                name: doc.name,
+                                size: doc.size,
+                                type: doc.type,
+                                status: doc.status,
+                                document_id: doc.document_id,
+                                processed: doc.processed,
+                                chunk_count: doc.chunk_count || 0
+                            }));
+                            
+                            renderFileList();
+                            updateKnowledgeStats();
+                            
+                            console.log(`📚 Loaded ${uploadedFiles.length} existing documents`);
+                            
+                            // Show success message if documents exist
+                            if (uploadedFiles.length > 0) {
+                                showAlert(`Found ${uploadedFiles.length} uploaded documents`, 'success', 3000);
+                            }
+                        }
+                    } catch (docError) {
+                        console.error('Error loading documents:', docError);
+                        console.log('📝 No existing documents found (this is normal for new users)');
+                    }
+                    
                 } catch (error) {
                     console.error('Error loading knowledge:', error);
                 }
