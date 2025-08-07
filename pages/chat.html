@@ -778,6 +778,12 @@
                 font-size: 1.4rem;
             }
         }
+
+        .product-recommendations { color: #2ecc71; font-weight: bold; margin: 10px 0; }
+        .bot-message { margin: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+        .bot-message a { color: #3498db; text-decoration: underline; }
+        .user-message { margin: 10px; padding: 10px; background: #e0f7fa; border-radius: 5px; }
+
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -1683,5 +1689,49 @@
             }
         });
     </script>
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('user-message');
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            const chatOutput = document.getElementById('chat-output');
+            chatOutput.innerHTML += `<div class="user-message">${message}</div>`;
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        username: 'ademicho123',
+                        session_id: localStorage.getItem('session_id') || null,
+                        voice_mode: false,
+                        video_mode: false
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const botResponse = data.data.text.replace(/\n/g, '<br>'); // Convert newlines to HTML
+                    chatOutput.innerHTML += `<div class="bot-message">${botResponse}</div>`;
+                    if (data.data.products_included) {
+                        chatOutput.innerHTML += `<div class="product-recommendations">🛍️ Product Recommendations Included!</div>`;
+                    }
+                    chatOutput.scrollTop = chatOutput.scrollHeight;
+                } else {
+                    chatOutput.innerHTML += `<div class="bot-message error">Error: ${data.message}</div>`;
+                }
+            } catch (error) {
+                chatOutput.innerHTML += `<div class="bot-message error">Error: Failed to get response</div>`;
+            }
+            
+            messageInput.value = '';
+        }
+        </script>
+
 </body>
 </html>
