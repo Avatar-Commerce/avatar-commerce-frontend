@@ -642,6 +642,13 @@
         </nav>
         
         <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <div class="user-name" id="user-name">User</div>
+                    <div class="user-role">Influencer</div>
+                </div>
+            </div>
             <button id="logout-btn" class="logout-btn">Sign Out</button>
         </div>
     </aside>
@@ -650,6 +657,9 @@
     <main class="main-content">
         <div class="header">
             <h1 class="page-title">Avatar Setup</h1>
+            <a href="#" id="preview-chat-link" class="preview-chat-link">
+                <i class="fas fa-comments"></i> Preview Chat
+            </a>
         </div>
 
         <!-- Alert container -->
@@ -732,14 +742,15 @@
     </main>
 
     <script>
-        // FIXED AVATAR SETUP JAVASCRIPT
+        // ENHANCED AVATAR SETUP WITH AUTOMATIC LOADING AND VOICE INTEGRATION
         
         // Global variables
         let avatarData = {
             avatarId: null,
             avatarUrl: null,
             selectedVoice: '2d5b0e6cf36f460aa7fc47e3eee4ba54', // Default voice
-            isReady: false
+            isReady: false,
+            isNewlyCreated: false
         };
 
         let availableVoices = {
@@ -747,27 +758,28 @@
             loaded: false
         };
 
+        let userProfile = null;
+
         // Configuration
         const API_BASE_URL = 'http://localhost:2000/api';
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🎭 Initializing Avatar Setup page...');
+            console.log('🎭 Initializing Enhanced Avatar Setup page...');
             
             // Initialize authentication first
             if (!initializeAuth()) {
                 return;
             }
             
-            // Setup event listeners ONLY ONCE
+            // Setup event listeners
             setupEventListeners();
             
-            // Load voices and existing avatar
-            loadVoicesFromAPI();
-            loadExistingAvatar();
+            // Load user profile and existing avatar
+            loadUserProfile();
         });
 
-        // FIXED AUTHENTICATION
+        // ENHANCED AUTHENTICATION
         function initializeAuth() {
             console.log('🔐 Checking authentication...');
             
@@ -780,107 +792,297 @@
                 return false;
             }
             
-            let userData;
             try {
-                userData = JSON.parse(userStr);
+                const userData = JSON.parse(userStr);
+                let user;
+                
+                if (userData.user && userData.user.username) {
+                    user = { ...userData.user, userType: userData.userType || 'influencer' };
+                } else if (userData.username) {
+                    user = userData;
+                } else {
+                    throw new Error('Invalid user data structure');
+                }
+                
+                if (!user.username) {
+                    throw new Error('No username found');
+                }
+                
+                // Update UI with user info
+                updateUIWithUserInfo(user);
+                
+                console.log('✅ Authentication successful for user:', user.username);
+                return true;
+                
             } catch (error) {
                 console.error('❌ Error parsing user data:', error);
                 window.location.href = './login.html';
                 return false;
             }
-            
-            // Handle different user data structures
-            let user;
-            if (userData.user && userData.user.username) {
-                user = {
-                    ...userData.user,
-                    userType: userData.userType || 'influencer'
-                };
-            } else if (userData.username) {
-                user = userData;
-            } else {
-                console.error('❌ Invalid user data structure');
-                window.location.href = './login.html';
-                return false;
-            }
-            
-            if (!user.username) {
-                console.error('❌ No username found');
-                window.location.href = './login.html';
-                return false;
-            }
-            
-            // Update UI with user info
-            updateUIWithUserInfo(user);
-            
-            console.log('✅ Authentication successful for user:', user.username);
-            return true;
         }
 
         function updateUIWithUserInfo(user) {
-            // Update user name
+            // Update user name and avatar
             const userNameElement = document.getElementById('user-name');
+            const userAvatarElement = document.getElementById('user-avatar');
+            const previewChatLink = document.getElementById('preview-chat-link');
+            
             if (userNameElement) {
                 userNameElement.textContent = user.username || 'User';
             }
             
-            // Update user avatar initials
-            const userAvatarElement = document.getElementById('user-avatar');
             if (userAvatarElement && user.username) {
-                const initials = user.username.split(' ')
-                    .map(name => name[0])
-                    .join('')
-                    .toUpperCase()
-                    .substring(0, 2);
-                userAvatarElement.textContent = initials || 'U';
+                const initials = user.username.substring(0, 2).toUpperCase();
+                userAvatarElement.textContent = initials;
             }
             
-            // Set preview chat link with retry mechanism
-            setPreviewChatLink(user);
+            if (previewChatLink) {
+                const chatUrl = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
+                previewChatLink.href = chatUrl;
+            }
         }
 
-        function setPreviewChatLink(user) {
-            const previewChatLink = document.getElementById('preview-chat-link');
-            if (!previewChatLink || !user.username) return;
-            
-            let retryCount = 0;
-            const maxRetries = 10;
-            
-            function trySetLink() {
-                try {
-                    if (window.ChatLinkManager && window.ChatLinkManager.initialized) {
-                        const chatUrl = window.ChatLinkManager.generateChatUrl(user.username);
-                        previewChatLink.href = chatUrl;
-                        console.log('🔗 Preview chat link set:', chatUrl);
-                        return true;
+        // ENHANCED: Load complete user profile with avatar and voice data
+        async function loadUserProfile() {
+            try {
+                console.log('👤 Loading user profile with avatar and voice data...');
+                showAlert('Loading your profile and avatar...', 'info');
+                
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
-                } catch (error) {
-                    console.warn('⚠️ ChatLinkManager error:', error);
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: Failed to fetch profile`);
                 }
                 
-                // Fallback URL generation
-                const fallbackUrl = `${window.location.origin}/chat.html?username=${encodeURIComponent(user.username)}`;
-                previewChatLink.href = fallbackUrl;
-                console.log('🔄 Using fallback preview link:', fallbackUrl);
-                return false;
-            }
-            
-            // Try immediately
-            if (trySetLink()) {
-                return;
-            }
-            
-            // Retry with intervals
-            const retryInterval = setInterval(() => {
-                retryCount++;
+                const data = await response.json();
                 
-                if (trySetLink() || retryCount >= maxRetries) {
-                    clearInterval(retryInterval);
+                if (data.status === 'success' && data.data) {
+                    userProfile = data.data;
+                    console.log('✅ Profile loaded:', {
+                        username: userProfile.username,
+                        has_avatar: userProfile.has_avatar,
+                        avatar_id: userProfile.avatar_id,
+                        voice_id: userProfile.preferred_voice_id
+                    });
+                    
+                    // Set avatar data if exists
+                    if (userProfile.avatar_id) {
+                        avatarData.avatarId = userProfile.avatar_id;
+                        avatarData.isReady = userProfile.has_avatar;
+                        console.log('📋 Found existing avatar:', avatarData.avatarId);
+                    }
+                    
+                    // Set voice preference
+                    if (userProfile.preferred_voice_id) {
+                        avatarData.selectedVoice = userProfile.preferred_voice_id;
+                        console.log('🎤 Found voice preference:', avatarData.selectedVoice);
+                    }
+                    
+                    // Load voices first, then display avatar
+                    await loadVoicesFromAPI();
+                    
+                    // Display existing avatar or upload area
+                    if (avatarData.avatarId && avatarData.isReady) {
+                        await displayExistingAvatar();
+                    } else {
+                        showUploadArea();
+                    }
+                    
+                } else {
+                    throw new Error(data.message || 'Failed to load profile');
                 }
-            }, 200);
+                
+            } catch (error) {
+                console.error('❌ Error loading user profile:', error);
+                showAlert(`Failed to load profile: ${error.message}`, 'error');
+                // Still show upload area and load voices
+                showUploadArea();
+                await loadVoicesFromAPI();
+            }
         }
 
-        // FIXED EVENT LISTENERS - prevent multiple bindings
+        // ENHANCED: Display existing avatar with proper preview
+        async function displayExistingAvatar() {
+            try {
+                console.log('🎭 Displaying existing avatar...');
+                
+                // Validate avatar still exists on HeyGen
+                const isValid = await validateAvatarExists(avatarData.avatarId);
+                
+                if (isValid) {
+                    // Display avatar info
+                    displayAvatarInfo({
+                        avatar_id: avatarData.avatarId,
+                        type: userProfile.avatar_type || 'talking_photo',
+                        status: 'ready'
+                    });
+                    
+                    showAlert(`Avatar loaded! Selected voice: ${getVoiceName(avatarData.selectedVoice)}`, 'success');
+                    
+                    // Auto-generate test video after a brief delay
+                    setTimeout(() => {
+                        if (avatarData.avatarId && avatarData.selectedVoice) {
+                            generateTestVideoAuto();
+                        }
+                    }, 2000);
+                    
+                } else {
+                    // Avatar no longer exists
+                    console.log('❌ Avatar no longer exists on HeyGen');
+                    showAvatarNotFound();
+                    showAlert('Your previous avatar is no longer available. Please create a new one.', 'warning');
+                    
+                    // Clear invalid avatar from database
+                    await clearInvalidAvatar();
+                }
+                
+            } catch (error) {
+                console.error('❌ Error displaying existing avatar:', error);
+                showUploadArea();
+                showAlert('Error loading existing avatar. Please create a new one.', 'warning');
+            }
+        }
+
+        // NEW: Validate if avatar still exists on HeyGen servers
+        async function validateAvatarExists(avatarId) {
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Test avatar by attempting a quick validation call
+                const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        avatar_id: avatarId,
+                        text: 'validation test',
+                        voice_id: avatarData.selectedVoice,
+                        validate_only: true
+                    })
+                });
+                
+                if (response.status === 404) {
+                    const errorData = await response.json();
+                    if (errorData.error_type === 'avatar_not_found') {
+                        return false;
+                    }
+                }
+                
+                return response.ok || response.status === 202; // Accept "processing" status as valid
+                
+            } catch (error) {
+                console.warn('⚠️ Avatar validation failed:', error);
+                return true; // Assume valid if we can't verify
+            }
+        }
+
+        // NEW: Clear invalid avatar from database
+        async function clearInvalidAvatar() {
+            try {
+                const token = localStorage.getItem('token');
+                
+                await fetch(`${API_BASE_URL}/influencer/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        heygen_avatar_id: null,
+                        avatar_training_status: 'none',
+                        avatar_type: 'none'
+                    })
+                });
+                
+                // Update local data
+                avatarData.avatarId = null;
+                avatarData.isReady = false;
+                
+                console.log('🗑️ Cleared invalid avatar from database');
+                
+            } catch (error) {
+                console.error('❌ Error clearing invalid avatar:', error);
+            }
+        }
+
+        // ENHANCED: Display avatar information
+        function displayAvatarInfo(avatarInfo) {
+            const preview = document.getElementById('avatarPreview');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="placeholder-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        <i class="fas fa-user-astronaut" style="color: white;"></i>
+                    </div>
+                    <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
+                    <p style="color: #5e60ce; font-size: 0.9rem;">✨ Ready for chat and video!</p>
+                    <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">Avatar ID: ${avatarInfo.avatar_id}</p>
+                    <p style="color: #10b981; font-size: 0.8rem;">Type: ${avatarInfo.type || 'Custom Talking Photo'}</p>
+                    <div class="video-controls">
+                        <button onclick="generateTestVideoWithCurrentVoice()" class="btn btn-secondary btn-small">
+                            <i class="fas fa-video"></i> Generate Test Video
+                        </button>
+                    </div>
+                `;
+            }
+
+            // Update status
+            const status = document.getElementById('avatarStatus');
+            if (status) {
+                status.innerHTML = `
+                    <span class="status-indicator status-ready">
+                        <i class="fas fa-check-circle"></i>
+                        Avatar ready for chat
+                    </span>
+                `;
+            }
+
+            // Show replace option
+            if (uploadArea) {
+                uploadArea.innerHTML = `
+                    <div class="upload-icon" style="color: #5e60ce;">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h4 style="color: #1e293b;">Replace Avatar</h4>
+                    <p style="color: #64748b;">Upload a new photo to replace your current avatar</p>
+                    <small style="color: #94a3b8;">Best results with clear face photos (JPG, PNG)</small>
+                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                `;
+                setupAvatarUploadListeners();
+            }
+        }
+
+        function showAvatarNotFound() {
+            const preview = document.getElementById('avatarPreview');
+            if (preview) {
+                preview.innerHTML = `
+                    <div class="placeholder-avatar" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
+                        <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+                    </div>
+                    <p style="margin-top: 15px; color: #ef4444; font-weight: 600;">Avatar No Longer Available</p>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-top: 8px;">Your avatar was removed from HeyGen servers.</p>
+                    <p style="color: #64748b; font-size: 0.9rem;">Please upload a new photo to create a fresh avatar.</p>
+                    <div class="video-controls" style="margin-top: 15px;">
+                        <button onclick="document.getElementById('uploadArea').scrollIntoView({behavior: 'smooth'})" class="btn btn-small">
+                            <i class="fas fa-upload"></i> Create New Avatar
+                        </button>
+                    </div>
+                `;
+            }
+            
+            avatarData.avatarId = null;
+            avatarData.isReady = false;
+            showUploadArea();
+        }
+
         function setupEventListeners() {
             console.log('🎯 Setting up event listeners...');
             
@@ -900,10 +1102,9 @@
             }
         }
 
-        // FIXED: Prevent multiple event listener bindings
         function setupAvatarUploadListeners() {
             const uploadArea = document.getElementById('uploadArea');
-            const photoInput = document.getElementById('photoInput');
+            const photoInput = uploadArea ? uploadArea.querySelector('#photoInput') : null;
 
             if (!uploadArea || !photoInput) return;
 
@@ -1001,22 +1202,23 @@
                     body: formData
                 });
 
-                let data;
-                try {
-                    data = await response.json();
-                } catch (parseError) {
-                    throw new Error('Invalid response from server');
-                }
+                const data = await response.json();
 
                 if (response.ok && data.status === 'success') {
                     avatarData.avatarId = data.data.avatar_id;
                     avatarData.isReady = true;
+                    avatarData.isNewlyCreated = true;
 
                     showAlert('✅ Custom avatar created from your photo!', 'success');
-                    displayAvatar(data.data);
+                    
+                    // Display avatar with new flag
+                    displayAvatarInfo({
+                        ...data.data,
+                        is_new: true
+                    });
                     
                 } else {
-                    throw new Error(data.message || 'Failed to create avatar - no avatar ID returned');
+                    throw new Error(data.message || 'Failed to create avatar');
                 }
 
             } catch (error) {
@@ -1029,144 +1231,48 @@
             }
         }
 
-        // FIXED: Display avatar with proper preview
-        function displayAvatar(avatarInfo) {
-            const preview = document.getElementById('avatarPreview');
-            const status = document.getElementById('avatarStatus');
-            
-            if (preview) {
-                preview.innerHTML = `
-                    <div class="placeholder-avatar">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Your Custom Avatar</p>
-                    <p style="color: #5e60ce; font-size: 0.9rem;">✨ Created from your photo!</p>
-                    <p style="color: #64748b; font-size: 0.8rem; margin-top: 5px;">Avatar ID: ${avatarInfo.avatar_id}</p>
-                    ${avatarInfo.type === 'talking_photo' ? '<p style="color: #10b981; font-size: 0.8rem;">Type: Custom Talking Photo</p>' : ''}
-                    <div class="video-controls">
-                        <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
-                            <i class="fas fa-video"></i> Generate Test Video
-                        </button>
-                    </div>
-                `;
-            }
-
-            if (status) {
-                status.innerHTML = `
-                    <span class="status-indicator status-ready">
-                        <i class="fas fa-check-circle"></i>
-                        Avatar ready for chat
-                    </span>
-                `;
-            }
-
-            showReplaceAvatarOption();
-        }
-
-        function showReplaceAvatarOption() {
-            const uploadArea = document.getElementById('uploadArea');
-            if (uploadArea) {
-                uploadArea.style.display = 'flex';
-                uploadArea.innerHTML = `
-                    <div class="upload-icon">
-                        <i class="fas fa-sync-alt"></i>
-                    </div>
-                    <h4>Replace Avatar</h4>
-                    <p>Upload a new photo to replace your current avatar</p>
-                    <small>Best results with clear face photos (JPG, PNG)</small>
-                    <input type="file" id="photoInput" accept="image/*" style="display: none;">
-                `;
-                
-                // Re-setup event listeners for the new input
-                setupAvatarUploadListeners();
-            }
-        }
-
         function showUploadArea() {
             const uploadArea = document.getElementById('uploadArea');
             if (uploadArea) {
                 uploadArea.style.display = 'flex';
+                setupAvatarUploadListeners();
             }
         }
 
-        // ENHANCED: Load existing avatar with proper preview
-        async function loadExistingAvatar() {
-            try {
-                console.log('📋 Checking for existing avatar...');
-                
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch profile');
-                }
-                
-                const data = await response.json();
-                
-                if (data.status === 'success' && data.data && data.data.avatar_id) {
-                    console.log('📋 Found existing avatar:', data.data.avatar_id);
-                    
-                    avatarData.avatarId = data.data.avatar_id;
-                    avatarData.isReady = data.data.has_avatar || true;
-                    
-                    displayAvatar({
-                        avatar_id: data.data.avatar_id,
-                        type: 'existing'
-                    });
-                    
-                    showAlert('Existing avatar loaded. You can replace it by uploading a new photo.', 'info');
-                    
-                } else {
-                    console.log('📋 No existing avatar found');
-                    showUploadArea();
-                }
-            } catch (error) {
-                console.warn('⚠️ Error checking for existing avatar:', error);
-                showUploadArea();
-            }
-        }
-
-        // VOICE LOADING WITH ENHANCED SELECTION - FIXED TO INCLUDE CUSTOM VOICE
+        // ENHANCED VOICE LOADING WITH AUTOMATIC SELECTION
         async function loadVoicesFromAPI() {
             console.log('🎤 Loading voices from API...');
             const voiceLoading = document.getElementById('voiceLoading');
             if (voiceLoading) voiceLoading.style.display = 'flex';
             
             try {
-                // Load default voices from API
+                // Load available voices
                 const response = await fetch(`${API_BASE_URL}/avatar/list-voices`);
                 const data = await response.json();
                 
                 if (data.status === 'success' && data.data && data.data.voices) {
                     availableVoices.all = data.data.voices;
-                    console.log(`✅ Loaded ${data.data.voices.length} default voices from API`);
+                    console.log(`✅ Loaded ${data.data.voices.length} voices from API`);
                 } else {
-                    console.warn('⚠️ API returned success but no voice data, using fallbacks');
+                    console.warn('⚠️ API returned no voice data, using fallbacks');
                     loadFallbackVoices();
                 }
                 
-                // Load user's custom voice if they have one
+                // Load user's custom voice if exists
                 await loadCustomUserVoice();
                 
                 availableVoices.loaded = true;
                 renderVoiceOptions();
                 
-                // Set default voice
-                if (availableVoices.all.length > 0) {
-                    avatarData.selectedVoice = availableVoices.all[0].voice_id;
-                    selectVoice(availableVoices.all[0].voice_id);
+                // ENHANCED: Select user's preferred voice or default
+                const voiceToSelect = avatarData.selectedVoice || availableVoices.all[0]?.voice_id;
+                if (voiceToSelect) {
+                    selectVoice(voiceToSelect);
                 }
-                
-                // Load user's saved preference
-                loadUserVoicePreference();
                 
             } catch (error) {
                 console.error('❌ Failed to load voices from API:', error);
-                showAlert(`Unable to load voices from server. Using defaults.`, 'warning');
+                showAlert('Unable to load voices from server. Using defaults.', 'warning');
                 loadFallbackVoices();
                 availableVoices.loaded = true;
                 renderVoiceOptions();
@@ -1175,52 +1281,29 @@
             }
         }
 
-        // NEW: Load user's custom voice from their profile
+        // Load user's custom voice
         async function loadCustomUserVoice() {
             try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/influencer/profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch profile');
-                }
-                
-                const data = await response.json();
-                
-                if (data.status === 'success' && data.data) {
-                    const customVoiceId = data.data.voice_id || data.data.preferred_voice_id;
+                if (userProfile && userProfile.voice_id && userProfile.voice_id.startsWith('custom_')) {
+                    console.log('🔍 Found custom voice:', userProfile.voice_id);
                     
-                    // Check if this is a custom voice (not in the default list)
-                    if (customVoiceId && !availableVoices.all.find(v => v.voice_id === customVoiceId)) {
-                        // Check if it looks like a custom voice ID
-                        if (customVoiceId.startsWith('custom_') || customVoiceId.includes(data.data.id)) {
-                            console.log('📋 Found custom voice:', customVoiceId);
-                            
-                            // Add custom voice to the list
-                            const customVoice = {
-                                voice_id: customVoiceId,
-                                name: `${data.data.username}'s Voice (Custom)`,
-                                gender: 'Custom',
-                                language: 'English',
-                                style: 'Personal',
-                                description: 'Your personalized voice clone',
-                                is_custom: true
-                            };
-                            
-                            // Add at the beginning of the list
-                            availableVoices.all.unshift(customVoice);
-                            console.log('✅ Added custom voice to voice list');
-                        }
-                    }
+                    const customVoice = {
+                        voice_id: userProfile.voice_id,
+                        name: `${userProfile.username}'s Voice (Custom)`,
+                        gender: 'Custom',
+                        language: 'English',
+                        style: 'Personal',
+                        description: 'Your personalized voice clone',
+                        is_custom: true
+                    };
+                    
+                    // Add at the beginning of the list
+                    availableVoices.all.unshift(customVoice);
+                    console.log('✅ Added custom voice to voice list');
                 }
                 
             } catch (error) {
                 console.warn('⚠️ Error loading custom user voice:', error);
-                // Don't show error to user - this is not critical
             }
         }
 
@@ -1286,13 +1369,13 @@
                             <i class="fas fa-user-circle"></i> Your Custom Voice
                         </h4>
                         <div class="voice-grid">
-                            ${customVoices.map((voice, index) => `
-                                <div class="voice-option ${index === 0 && defaultVoices.length === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
-                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 && defaultVoices.length === 0 ? 'checked' : ''}>
+                            ${customVoices.map(voice => `
+                                <div class="voice-option" data-voice="${voice.voice_id}">
+                                    <input type="radio" name="voice" value="${voice.voice_id}">
                                     <div class="voice-info">
                                         <div class="voice-name">${voice.name}</div>
-                                        <div class="voice-details">${voice.language || 'English'} • ${voice.gender || 'Custom'} • ${voice.style || 'Personal'}</div>
-                                        ${voice.description ? `<div class="voice-details" style="margin-top: 4px; font-style: italic;">${voice.description}</div>` : ''}
+                                        <div class="voice-details">${voice.language} • ${voice.gender} • ${voice.style}</div>
+                                        <div class="voice-details" style="margin-top: 4px; font-style: italic;">${voice.description}</div>
                                     </div>
                                     <button class="voice-preview-btn" onclick="playVoicePreview('${voice.voice_id}', '${encodeURIComponent(voice.name)}')">
                                         <i class="fas fa-play"></i> Preview
@@ -1312,13 +1395,13 @@
                             <i class="fas fa-microphone"></i> Pre-made Voices (${defaultVoices.length} Options)
                         </h4>
                         <div class="voice-grid">
-                            ${defaultVoices.map((voice, index) => `
-                                <div class="voice-option ${index === 0 && customVoices.length === 0 ? 'selected' : ''}" data-voice="${voice.voice_id}">
-                                    <input type="radio" name="voice" value="${voice.voice_id}" ${index === 0 && customVoices.length === 0 ? 'checked' : ''}>
+                            ${defaultVoices.map(voice => `
+                                <div class="voice-option" data-voice="${voice.voice_id}">
+                                    <input type="radio" name="voice" value="${voice.voice_id}">
                                     <div class="voice-info">
                                         <div class="voice-name">${voice.name}</div>
-                                        <div class="voice-details">${voice.language || 'English'} • ${voice.gender || 'Unknown'} • ${voice.style || 'Standard'}</div>
-                                        ${voice.description ? `<div class="voice-details" style="margin-top: 4px; font-style: italic;">${voice.description}</div>` : ''}
+                                        <div class="voice-details">${voice.language} • ${voice.gender} • ${voice.style}</div>
+                                        <div class="voice-details" style="margin-top: 4px; font-style: italic;">${voice.description}</div>
                                     </div>
                                     <button class="voice-preview-btn" onclick="playVoicePreview('${voice.voice_id}', '${encodeURIComponent(voice.name)}')">
                                         <i class="fas fa-play"></i> Preview
@@ -1337,7 +1420,7 @@
             `;
             
             setupVoiceEventListeners();
-            console.log(`✅ Rendered ${voiceList.length} voice options (${customVoices.length} custom, ${defaultVoices.length} default)`);
+            console.log(`✅ Rendered ${voiceList.length} voice options`);
         }
 
         function setupVoiceEventListeners() {
@@ -1350,7 +1433,7 @@
             });
         }
 
-        // ENHANCED: Voice selection with proper saving
+        // ENHANCED: Voice selection with automatic video regeneration
         function selectVoice(voiceId) {
             console.log('🎤 Selecting voice:', voiceId);
             
@@ -1358,21 +1441,18 @@
             document.querySelectorAll('.voice-option').forEach(option => {
                 option.classList.remove('selected');
                 const radio = option.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = false;
-                }
+                if (radio) radio.checked = false;
             });
             
             const selectedOption = document.querySelector(`[data-voice="${voiceId}"]`);
             if (selectedOption) {
                 selectedOption.classList.add('selected');
                 const radio = selectedOption.querySelector('input[type="radio"]');
-                if (radio) {
-                    radio.checked = true;
-                }
+                if (radio) radio.checked = true;
             }
             
             // Update state
+            const previousVoice = avatarData.selectedVoice;
             avatarData.selectedVoice = voiceId;
             localStorage.setItem('selectedVoice', voiceId);
             
@@ -1381,6 +1461,147 @@
             
             const voiceName = getVoiceName(voiceId);
             showAlert(`Voice changed to ${voiceName}`, 'success');
+            
+            // ENHANCED: Auto-regenerate video if avatar exists and voice changed
+            if (previousVoice !== voiceId && avatarData.avatarId && avatarData.isReady) {
+                console.log('🔄 Voice changed - regenerating video with new voice');
+                showAlert(`Generating new video with ${voiceName}...`, 'info');
+                
+                setTimeout(() => {
+                    generateTestVideoWithCurrentVoice();
+                }, 1500);
+            }
+        }
+
+        // NEW: Generate test video with current voice selection
+        async function generateTestVideoWithCurrentVoice() {
+            if (!avatarData.avatarId) {
+                showAlert('No avatar available for test video', 'error');
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Update preview to show generating state
+                const preview = document.getElementById('avatarPreview');
+                if (preview) {
+                    const videoControls = preview.querySelector('.video-controls');
+                    if (videoControls) {
+                        videoControls.innerHTML = `
+                            <button class="btn btn-secondary btn-small" disabled>
+                                <i class="fas fa-spinner fa-spin"></i> Generating with ${getVoiceName(avatarData.selectedVoice)}...
+                            </button>
+                        `;
+                    }
+                }
+                
+                console.log('🎬 Generating test video with current voice...');
+                console.log('Avatar ID:', avatarData.avatarId);
+                console.log('Voice ID:', avatarData.selectedVoice);
+                
+                const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        avatar_id: avatarData.avatarId,
+                        text: `Hello! This is a test of my AI avatar with my ${getVoiceName(avatarData.selectedVoice)} voice. How does it look and sound?`,
+                        voice_id: avatarData.selectedVoice,
+                        is_newly_created: avatarData.isNewlyCreated
+                    })
+                });
+                
+                const data = await response.json();
+                console.log('📡 Video response:', data);
+                
+                if (response.ok && data.status === 'success') {
+                    if (data.data.video_id) {
+                        // Start polling for video completion
+                        pollVideoStatus(data.data.video_id, data.data.estimated_time || 30);
+                    } else {
+                        throw new Error('No video ID returned');
+                    }
+                } else {
+                    // Handle specific error types
+                    if (data.error_type === 'avatar_processing') {
+                        showAvatarProcessingWithCountdown(data.retry_delay || 60, avatarData.isNewlyCreated);
+                    } else if (data.error_type === 'avatar_not_found') {
+                        showAvatarNotFound();
+                        showAlert('Avatar not found. Please create a new one.', 'error');
+                    } else {
+                        throw new Error(data.message || 'Failed to generate test video');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Video generation error:', error);
+                showAlert(`Video generation failed: ${error.message}`, 'error');
+                resetVideoControls();
+            }
+        }
+
+        // Alias for backward compatibility
+        function generateTestVideoAuto() {
+            generateTestVideoWithCurrentVoice();
+        }
+
+        function showAvatarProcessingWithCountdown(retryDelay = 60, isNewlyCreated = false) {
+            const preview = document.getElementById('avatarPreview');
+            if (!preview) return;
+            
+            const videoControls = preview.querySelector('.video-controls');
+            if (!videoControls) return;
+            
+            let countdown = retryDelay;
+            
+            function updateCountdown() {
+                const minutes = Math.floor(countdown / 60);
+                const seconds = countdown % 60;
+                const timeString = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+                
+                videoControls.innerHTML = `
+                    <div style="text-align: center;">
+                        <p style="color: #f59e0b; font-size: 0.9rem; margin-bottom: 10px;">
+                            <i class="fas fa-clock"></i> ${isNewlyCreated ? 'New avatar processing' : 'Avatar not ready'}
+                        </p>
+                        <p style="color: #64748b; font-size: 0.8rem; margin-bottom: 15px;">
+                            Auto-retry in ${timeString}
+                        </p>
+                        <button onclick="retryVideoGeneration()" class="btn btn-secondary btn-small">
+                            <i class="fas fa-redo"></i> Retry Now
+                        </button>
+                    </div>
+                `;
+                
+                countdown--;
+                
+                if (countdown < 0) {
+                    console.log('⏰ Auto-retrying video generation...');
+                    retryVideoGeneration();
+                }
+            }
+            
+            updateCountdown();
+            const countdownInterval = setInterval(() => {
+                if (countdown >= 0) {
+                    updateCountdown();
+                } else {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }
+
+        function retryVideoGeneration() {
+            if (avatarData.avatarId) {
+                showAlert('Retrying video generation...', 'info');
+                avatarData.isNewlyCreated = false; // No longer newly created after first retry
+                generateTestVideoWithCurrentVoice();
+            } else {
+                showAlert('No avatar available. Please create a new avatar first.', 'error');
+            }
         }
 
         // ENHANCED: Save voice preference with proper error handling
@@ -1402,43 +1623,28 @@
                 
                 if (response.ok && data.status === 'success') {
                     console.log('✅ Voice preference saved to backend');
+                    
+                    // Update user profile in localStorage
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        try {
+                            const userData = JSON.parse(userStr);
+                            if (userData.user) {
+                                userData.user.preferred_voice_id = voiceId;
+                            } else {
+                                userData.preferred_voice_id = voiceId;
+                            }
+                            localStorage.setItem('user', JSON.stringify(userData));
+                        } catch (e) {
+                            console.warn('Could not update localStorage user data');
+                        }
+                    }
                 } else {
                     throw new Error(data.message || 'Failed to save voice preference');
                 }
                 
             } catch (error) {
                 console.warn('⚠️ Failed to save voice preference to backend:', error);
-                // Don't show error to user - this is not critical
-            }
-        }
-
-        async function loadUserVoicePreference() {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_BASE_URL}/voice/preference`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok && data.status === 'success' && data.data.preferred_voice_id) {
-                    const preferredVoice = data.data.preferred_voice_id;
-                    console.log('👤 Loading user voice preference:', preferredVoice);
-                    
-                    // Check if this voice exists in our list
-                    const voiceExists = availableVoices.all.find(v => v.voice_id === preferredVoice);
-                    if (voiceExists) {
-                        selectVoice(preferredVoice);
-                    } else {
-                        console.warn('⚠️ Preferred voice not found in available voices:', preferredVoice);
-                    }
-                }
-                
-            } catch (error) {
-                console.warn('⚠️ Error loading user voice preference:', error);
-                // Don't show error to user - this is not critical
             }
         }
 
@@ -1447,9 +1653,9 @@
             console.log('🔊 Playing voice preview for:', voiceName);
             
             const previewTexts = {
-                '2d5b0e6cf36f460aa7fc47e3eee4ba54': "Hello! I'm Rachel, your professional AI assistant. I'm excited to help your fans discover amazing products!",
-                'd7bbcdd6964c47bdaae26decade4a933': "Hey there! I'm David, ready to provide personalized recommendations for your audience.",
-                'default': `Hi! I'm ${voiceName}, ready to help your fans with personalized recommendations!`
+                '2d5b0e6cf36f460aa7fc47e3eee4ba54': "Hello! I'm Rachel, your professional AI assistant. I'm excited to help your audience!",
+                'd7bbcdd6964c47bdaae26decade4a933': "Hey there! I'm David, ready to provide expert recommendations.",
+                'default': `Hi! I'm ${voiceName}, ready to help your audience with personalized recommendations!`
             };
 
             const text = previewTexts[voiceId] || previewTexts['default'];
@@ -1476,256 +1682,151 @@
             return voice ? voice.name : 'Selected Voice';
         }
 
-        // FIXED TEST VIDEO GENERATION
-        async function generateTestVideo() {
-    if (!avatarData.avatarId) {
-        showAlert('No avatar available for test video', 'error');
-        return;
-    }
-    
-    try {
-        const token = localStorage.getItem('token');
-        
-        showAlert('Generating test video... This may take 30-60 seconds.', 'info');
-        
-        // Update the preview to show generating state
-        const preview = document.getElementById('avatarPreview');
-        if (preview) {
-            const videoControls = preview.querySelector('.video-controls');
-            if (videoControls) {
-                videoControls.innerHTML = `
-                    <button class="btn btn-secondary btn-small" disabled>
-                        <i class="fas fa-spinner fa-spin"></i> Starting video generation...
-                    </button>
+        // VIDEO STATUS POLLING
+        async function pollVideoStatus(videoId, estimatedTime = 30) {
+            const maxAttempts = Math.max(20, Math.ceil(estimatedTime / 3));
+            let attempts = 0;
+            
+            console.log(`📹 Polling video status for: ${videoId}`);
+            
+            const checkStatus = async () => {
+                try {
+                    attempts++;
+                    console.log(`📊 Checking video status (attempt ${attempts}/${maxAttempts})...`);
+                    
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.status === 'success') {
+                        const videoStatus = data.data.status;
+                        const progress = data.data.progress || 50;
+                        const videoUrl = data.data.video_url;
+                        
+                        updateVideoProgress(progress, videoStatus);
+                        
+                        if (videoStatus === 'completed' && videoUrl) {
+                            console.log('✅ Video generation completed!');
+                            displayTestVideo(videoUrl);
+                            return;
+                        } else if (videoStatus === 'failed') {
+                            throw new Error(data.data.error || 'Video generation failed');
+                        }
+                        
+                        // Continue polling if still processing
+                        if (attempts < maxAttempts) {
+                            const delay = attempts < 5 ? 3000 : 5000;
+                            setTimeout(checkStatus, delay);
+                        } else {
+                            throw new Error('Video generation timed out');
+                        }
+                    } else {
+                        throw new Error(data.message || 'Status check failed');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Video status check error:', error);
+                    if (attempts < maxAttempts) {
+                        setTimeout(checkStatus, 5000);
+                    } else {
+                        showAlert(`Video generation failed: ${error.message}`, 'error');
+                        resetVideoControls();
+                    }
+                }
+            };
+            
+            checkStatus();
+        }
+
+        function updateVideoProgress(progress, status = 'processing') {
+            const preview = document.getElementById('avatarPreview');
+            if (preview) {
+                const videoControls = preview.querySelector('.video-controls');
+                if (videoControls) {
+                    let statusText = 'Generating...';
+                    
+                    switch (status) {
+                        case 'processing': statusText = 'Creating your video...'; break;
+                        case 'pending': statusText = 'Preparing...'; break;
+                        case 'queued': statusText = 'In queue...'; break;
+                    }
+                    
+                    videoControls.innerHTML = `
+                        <button class="btn btn-secondary btn-small" disabled>
+                            <i class="fas fa-spinner fa-spin"></i> ${statusText} ${progress}%
+                        </button>
+                        <p style="font-size: 0.8rem; color: #64748b; margin-top: 8px;">
+                            Voice: ${getVoiceName(avatarData.selectedVoice)}
+                        </p>
+                    `;
+                }
+            }
+        }
+
+        function resetVideoControls() {
+            const preview = document.getElementById('avatarPreview');
+            if (preview) {
+                const videoControls = preview.querySelector('.video-controls');
+                if (videoControls) {
+                    videoControls.innerHTML = `
+                        <button onclick="generateTestVideoWithCurrentVoice()" class="btn btn-secondary btn-small">
+                            <i class="fas fa-video"></i> Generate Test Video
+                        </button>
+                    `;
+                }
+            }
+        }
+
+        function displayTestVideo(videoUrl) {
+            console.log('🎬 Displaying test video:', videoUrl);
+            
+            const preview = document.getElementById('avatarPreview');
+            if (preview) {
+                preview.innerHTML = `
+                    <video class="avatar-video" controls autoplay style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <source src="${videoUrl}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Preview with ${getVoiceName(avatarData.selectedVoice)}</p>
+                    <p style="color: #5e60ce; font-size: 0.9rem;">✨ Your custom avatar with selected voice!</p>
+                    <div class="video-controls">
+                        <button onclick="generateTestVideoWithCurrentVoice()" class="btn btn-secondary btn-small">
+                            <i class="fas fa-redo"></i> Regenerate Video
+                        </button>
+                        <a href="${videoUrl}" download="avatar-preview.mp4" class="btn btn-small">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                        <button onclick="shareTestVideo('${videoUrl}')" class="btn btn-small">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
                 `;
             }
+            
+            // Mark as no longer newly created after first successful video
+            avatarData.isNewlyCreated = false;
+            
+            showAlert('✅ Video generated successfully! Voice changes will auto-regenerate.', 'success');
         }
-        
-        console.log('🎬 Sending test video request...');
-        console.log('Avatar ID:', avatarData.avatarId);
-        console.log('Voice ID:', avatarData.selectedVoice);
-        
-        const response = await fetch(`${API_BASE_URL}/avatar/test-video`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                avatar_id: avatarData.avatarId,
-                text: 'Hello! This is a test of my AI avatar with my selected voice. How does it look and sound?',
-                voice_id: avatarData.selectedVoice
-            })
-        });
-        
-        const data = await response.json();
-        console.log('📡 Test video response:', data);
-        
-        if (response.ok && data.status === 'success') {
-            if (data.data.video_id) {
-                // Start polling for video completion
-                pollVideoStatus(data.data.video_id, data.data.estimated_time || 30);
+
+        function shareTestVideo(videoUrl) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My AI Avatar Test Video',
+                    text: 'Check out my AI avatar!',
+                    url: videoUrl
+                }).catch(err => console.log('Error sharing:', err));
             } else {
-                throw new Error('No video ID returned');
-            }
-        } else {
-            throw new Error(data.message || 'Failed to generate test video');
-        }
-        
-    } catch (error) {
-        console.error('❌ Test video generation error:', error);
-        showAlert(`Failed to generate test video: ${error.message}`, 'error');
-        
-        // Reset video controls
-        resetVideoControls();
-    }
-}
-
-async function pollVideoStatus(videoId, estimatedTime = 30) {
-    const maxAttempts = Math.max(20, Math.ceil(estimatedTime / 3)); // At least 20 attempts, or based on estimated time
-    let attempts = 0;
-    
-    console.log(`🔄 Starting to poll video status for: ${videoId}`);
-    console.log(`⏱️ Estimated time: ${estimatedTime}s, Max attempts: ${maxAttempts}`);
-    
-    const checkStatus = async () => {
-        try {
-            attempts++;
-            console.log(`📊 Checking video status (attempt ${attempts}/${maxAttempts})...`);
-            
-            const token = localStorage.getItem('token');
-            const response = await fetch(`${API_BASE_URL}/avatar/video-status/${videoId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            
-            const data = await response.json();
-            console.log(`📊 Video status response:`, data);
-            
-            if (response.ok && data.status === 'success') {
-                const videoStatus = data.data.status;
-                const progress = data.data.progress || 50;
-                const videoUrl = data.data.video_url;
-                const error = data.data.error;
-                
-                console.log(`📊 Video status: ${videoStatus}, Progress: ${progress}%`);
-                
-                // Update progress in UI
-                updateVideoProgress(progress, videoStatus);
-                
-                if (videoStatus === 'completed' && videoUrl) {
-                    console.log('✅ Video generation completed!');
-                    console.log('🎬 Video URL:', videoUrl);
-                    displayTestVideo(videoUrl);
-                    return;
-                } else if (videoStatus === 'failed' || videoStatus === 'error') {
-                    const errorMsg = error || 'Video generation failed';
-                    console.error('❌ Video generation failed:', errorMsg);
-                    showAlert(`Video generation failed: ${errorMsg}`, 'error');
-                    resetVideoControls();
-                    return;
-                }
-                
-                // Continue polling if still processing
-                if (attempts < maxAttempts && (videoStatus === 'processing' || videoStatus === 'pending' || videoStatus === 'queued')) {
-                    const delay = attempts < 5 ? 3000 : 5000; // Start with 3s, then 5s intervals
-                    setTimeout(checkStatus, delay);
-                } else if (attempts >= maxAttempts) {
-                    console.warn('⏱️ Video generation timed out');
-                    showAlert('Video generation is taking longer than expected. Please try again.', 'warning');
-                    resetVideoControls();
-                }
-            } else {
-                const errorMsg = data.message || 'Failed to check video status';
-                console.error('❌ Status check failed:', errorMsg);
-                
-                if (attempts < maxAttempts) {
-                    // Retry after a short delay
-                    setTimeout(checkStatus, 5000);
-                } else {
-                    showAlert(`Video status check failed: ${errorMsg}`, 'error');
-                    resetVideoControls();
-                }
-            }
-            
-        } catch (error) {
-            console.error('❌ Video status check error:', error);
-            
-            if (attempts < maxAttempts) {
-                // Retry after a short delay
-                setTimeout(checkStatus, 5000);
-            } else {
-                showAlert(`Video generation failed: ${error.message}`, 'error');
-                resetVideoControls();
+                navigator.clipboard.writeText(videoUrl).then(() => {
+                    showAlert('Video URL copied to clipboard!', 'success');
+                }).catch(() => {
+                    showAlert('Could not copy URL. Please copy it manually.', 'warning');
+                });
             }
         }
-    };
-    
-    // Start checking status immediately
-    checkStatus();
-}
-
-function updateVideoProgress(progress, status = 'processing') {
-    const preview = document.getElementById('avatarPreview');
-    if (preview) {
-        const videoControls = preview.querySelector('.video-controls');
-        if (videoControls) {
-            let statusText = 'Generating...';
-            let iconClass = 'fas fa-spinner fa-spin';
-            
-            switch (status) {
-                case 'processing':
-                    statusText = 'Processing video...';
-                    break;
-                case 'pending':
-                    statusText = 'In queue...';
-                    break;
-                case 'queued':
-                    statusText = 'Queued for processing...';
-                    break;
-                default:
-                    statusText = 'Generating...';
-            }
-            
-            videoControls.innerHTML = `
-                <button class="btn btn-secondary btn-small" disabled>
-                    <i class="${iconClass}"></i> ${statusText} ${progress}%
-                </button>
-            `;
-        }
-    }
-}
-
-function resetVideoControls() {
-    const preview = document.getElementById('avatarPreview');
-    if (preview) {
-        const videoControls = preview.querySelector('.video-controls');
-        if (videoControls) {
-            videoControls.innerHTML = `
-                <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
-                    <i class="fas fa-video"></i> Generate Test Video
-                </button>
-            `;
-        }
-    }
-}
-
-function displayTestVideo(videoUrl) {
-    console.log('🎬 Displaying test video:', videoUrl);
-    
-    const preview = document.getElementById('avatarPreview');
-    if (preview) {
-        preview.innerHTML = `
-            <video class="avatar-video" controls autoplay style="max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                <source src="${videoUrl}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-            <p style="margin-top: 15px; color: #64748b; font-weight: 600;">Test Video with ${getVoiceName(avatarData.selectedVoice)}</p>
-            <p style="color: #5e60ce; font-size: 0.9rem;">✨ Your custom avatar in action!</p>
-            <div class="video-controls">
-                <button onclick="generateTestVideo()" class="btn btn-secondary btn-small">
-                    <i class="fas fa-redo"></i> Generate New Test
-                </button>
-                <a href="${videoUrl}" download="avatar-test-video.mp4" class="btn btn-small">
-                    <i class="fas fa-download"></i> Download
-                </a>
-                <button onclick="shareTestVideo('${videoUrl}')" class="btn btn-small">
-                    <i class="fas fa-share"></i> Share
-                </button>
-            </div>
-        `;
-    }
-    
-    showAlert('✅ Test video generated successfully! Check out your avatar in action.', 'success');
-}
-
-function shareTestVideo(videoUrl) {
-    if (navigator.share) {
-        navigator.share({
-            title: 'My AI Avatar Test Video',
-            text: 'Check out my AI avatar!',
-            url: videoUrl
-        }).catch(err => console.log('Error sharing:', err));
-    } else {
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(videoUrl).then(() => {
-            showAlert('Video URL copied to clipboard!', 'success');
-        }).catch(() => {
-            showAlert('Could not copy URL. Please copy it manually from the browser.', 'warning');
-        });
-    }
-}
-
-// Enhanced error handling for video operations
-window.addEventListener('error', function(event) {
-    if (event.message && event.message.includes('video')) {
-        console.error('💥 Video-related error:', event.error);
-        showAlert('A video error occurred. Please try again.', 'error');
-    }
-});
-
-console.log('🎬 Fixed video generation functions loaded');
 
         // UTILITY FUNCTIONS
         function formatFileSize(bytes) {
@@ -1734,25 +1835,6 @@ console.log('🎬 Fixed video generation functions loaded');
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function getCurrentUser() {
-            try {
-                const userStr = localStorage.getItem('user');
-                if (!userStr) return null;
-                
-                const userData = JSON.parse(userStr);
-                
-                if (userData.user && userData.user.username) {
-                    return userData.user;
-                } else if (userData.username) {
-                    return userData;
-                }
-                
-                return null;
-            } catch (error) {
-                return null;
-            }
         }
 
         function showAlert(message, type = 'info', duration = 5000) {
@@ -1779,16 +1861,7 @@ console.log('🎬 Fixed video generation functions loaded');
             console.log(`📢 Alert [${type.toUpperCase()}]: ${message}`);
         }
 
-        // Error handling for unhandled errors
-        window.addEventListener('error', function(event) {
-            console.error('💥 Unhandled error:', event.error);
-        });
-
-        window.addEventListener('unhandledrejection', function(event) {
-            console.error('💥 Unhandled promise rejection:', event.reason);
-        });
-
-        console.log('🎭 Fixed Avatar Setup page script loaded successfully');
+        console.log('🎭 Enhanced Avatar Setup with Auto-Loading and Voice Integration loaded');
     </script>
 </body>
 </html>

@@ -1396,13 +1396,41 @@
                 rakuten: {
                     name: 'Rakuten Advertising',
                     logo: 'R',
-                    description: 'Global leader in affiliate marketing with premium brands',
-                    commission_range: '2-15%',
-                    min_payout: '$50',
-                    payment_schedule: 'Monthly',
-                    special_features: ['Premium brands', 'Global reach', 'Advanced analytics'],
-                    connected: false,
-                    estimated_products: 0
+                    fields: [
+                        { 
+                            id: 'client_id', 
+                            label: 'Client ID', 
+                            type: 'text', 
+                            required: true, 
+                            placeholder: 'Your Rakuten Client ID (e.g., abc123def456)',
+                            help: 'Get this from your Rakuten Advertising Developer Portal'
+                        },
+                        { 
+                            id: 'client_secret', 
+                            label: 'Client Secret', 
+                            type: 'password', 
+                            required: true, 
+                            placeholder: 'Your Rakuten Client Secret',
+                            help: 'Keep this secret! Get it from the same place as your Client ID'
+                        },
+                        { 
+                            id: 'application_id', 
+                            label: 'Application ID (Optional)', 
+                            type: 'text', 
+                            required: false, 
+                            placeholder: 'Your Application ID (if available)',
+                            help: 'Optional - only needed for some advanced features'
+                        }
+                    ],
+                    help: 'Get your credentials from the Rakuten Advertising Developer Portal at https://developers.rakutenadvertising.com/',
+                    setup_steps: [
+                        'Go to https://developers.rakutenadvertising.com/',
+                        'Log in with your Rakuten Advertising account',
+                        'Navigate to "Developer" → "API Access" or "App Management"',
+                        'Create a new application or select existing one',
+                        'Copy your Client ID and Client Secret',
+                        'Paste them in the form below to connect your account'
+                    ]
                 },
                 shareasale: {
                     name: 'ShareASale',
